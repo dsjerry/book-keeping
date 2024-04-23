@@ -1,0 +1,17 @@
+{
+  "extends": "@react-native/typescript-config/tsconfig.json",
+  "compilerOptions": {
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "allowSyntheticDefaultImports": true,
+    "paths": {
+      "utils/*": ["./src/utils/*"],
+      "hooks/*": ["./src/hooks/*"],
+      "components/*": ["./src/components/*"],
+      "pages/*": ["./src/pages/*"],
+      "consts/*": ["./src/consts/*"]
+    }
+  },
+  "include": ["types", "src"],
+  "exclude": ["node_modules"]
+}
