@@ -2,16 +2,19 @@ import React from 'react'
 import { useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { TextInput, Chip, Button } from 'react-native-paper'
+import { useNavigation } from '@react-navigation/native'
 
-import { OutTypes, CountTypeList } from 'consts/Data'
+import { CountTypeList } from 'consts/Data'
 import { useAdding } from './hooks/useAdding'
-import OutTypePane from './OutTypePane'
-import CountTypePicker from './CountTypePicker'
+import OutTypePane from './components/OutTypePane'
+import CountTypePicker from './components/CountTypePicker'
 
 const Adding = () => {
+  const [tips, setTips] = useState('')
+
   const {
     action,
-    outTypePicked,
+    outTypes,
     chipS,
     setChipS,
     count,
@@ -20,18 +23,25 @@ const Adding = () => {
     setCountTypeIndex,
   } = useAdding()
 
-  const pressChip = (item: OutType) => action.pickOutType(item)
+  const navigation = useNavigation()
 
   const onAddPress = () => {
+    if (count.trim() === '') {
+      setTimeout(() => setTips(''), 1500)
+      return setTips('请输入金额')
+    }
+
     action.add({
       id: Date.now().toString(),
       count: Number(count),
       type: chipS === 'in' ? 'in' : 'out',
-      countType: OutTypes[countTypeIndex].name,
-      tags: outTypePicked,
+      countType: CountTypeList[countTypeIndex],
+      tags: outTypes.filter(chip => chip.isChecked),
       isChecked: false,
       date: Date.now(),
     })
+
+    navigation.goBack()
   }
 
   return (
@@ -44,6 +54,11 @@ const Adding = () => {
           onChangeText={text => setCount(text)}
           keyboardType="numeric"
           style={{ flex: 3 }}
+          right={
+            tips && (
+              <TextInput.Icon icon="alert-circle-outline" color="#6750a4" />
+            )
+          }
         />
         <CountTypePicker />
       </View>
@@ -58,14 +73,14 @@ const Adding = () => {
           支出
         </Chip>
       </View>
-      {chipS === 'out' && <OutTypePane onPress={pressChip} />}
+      {chipS === 'out' && <OutTypePane />}
       <TextInput
         label="备注"
         style={{ width: '100%', height: 100, marginTop: 20 }}
         mode="outlined"
         multiline
       />
-      <Button mode="outlined" onPress={onAddPress}>
+      <Button mode="outlined" style={style.addBtn} onPress={onAddPress}>
         提交
       </Button>
     </View>
@@ -93,6 +108,10 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
+  },
+  addBtn: {
+    width: '100%',
+    marginTop: 20,
   },
 })
 

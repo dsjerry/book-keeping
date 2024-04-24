@@ -9,11 +9,11 @@ const AddingButton: React.FC<Props> = ({ onPress }) => {
     <Button
       icon={'plus-box'}
       mode="contained"
-      buttonColor="#05a5d1"
+      buttonColor="#6d57a7"
       onPress={onPress}>
       记一笔
     </Button>
   )
 }
 
-export default AddingButton
+export { AddingButton }

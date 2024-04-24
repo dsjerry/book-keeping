@@ -1,7 +1,7 @@
 import React from 'react'
 import WheelPicker from 'react-native-wheely'
 
-import { useAdding } from './hooks/useAdding'
+import { useAdding } from '../hooks/useAdding'
 import { CountTypeList } from 'consts/Data'
 
 export default function CountTypePicker() {

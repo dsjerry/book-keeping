@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
-import { OutTypes } from 'consts/Data'
 import { useKeepingStore } from 'hooks/useStore'
+import { OutTypes } from 'consts/Data'
 
 export const useAdding = () => {
   const [count, setCount] = useState('')
@@ -14,6 +14,8 @@ export const useAdding = () => {
 
   const action = {
     add: (item: KeepingItem) => {
+      console.log(item)
+
       add({
         ...item,
         isChecked: false,
@@ -36,7 +38,9 @@ export const useAdding = () => {
     countTypeIndex,
     setCountTypeIndex,
     outTypes,
+    setOutTypes,
     outTypePicked,
+    setOutTypePicked,
     action,
   }
 }
