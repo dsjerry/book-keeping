@@ -1,57 +1,106 @@
 import React from 'react'
-import { useState } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
+import { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, Keyboard } from 'react-native'
 import { TextInput, Chip, Button } from 'react-native-paper'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 
 import { CountTypeList } from 'consts/Data'
 import { useAdding } from './hooks/useAdding'
 import OutTypePane from './components/OutTypePane'
 import CountTypePicker from './components/CountTypePicker'
+import ImagePicker from 'components/ImagePicker'
 
-const Adding = () => {
+const Adding: React.FC<Props> = ({ route }) => {
   const [tips, setTips] = useState('')
-
+  const [version, setVersion] = useState(0)
+  const [keyboardStatus, setKeyboardStatus] = useState<'showed' | 'hidden'>(
+    'hidden',
+  )
   const {
     action,
     outTypes,
-    chipS,
-    setChipS,
-    count,
-    setCount,
+    setOutTypes,
     countTypeIndex,
     setCountTypeIndex,
+    form,
+    setForm,
   } = useAdding()
 
   const navigation = useNavigation()
+  const { params }: ScreenParam.Adding = useRoute()
+
+  useEffect(() => {
+    if (params && params?.isEdit) {
+      action.edit({
+        ...params.item,
+      })
+    }
+    const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardStatus('showed')
+    })
+    const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardStatus('hidden')
+    })
+
+    return () => {
+      showSubscription.remove()
+      hideSubscription.remove()
+    }
+  }, [])
+
+  const handleReset = () => {
+    setVersion(version + 1)
+  }
 
   const onAddPress = () => {
-    if (count.trim() === '') {
+    if (form.count === 0) {
       setTimeout(() => setTips(''), 1500)
       return setTips('请输入金额')
     }
-
-    action.add({
-      id: Date.now().toString(),
-      count: Number(count),
-      type: chipS === 'in' ? 'in' : 'out',
-      countType: CountTypeList[countTypeIndex],
-      tags: outTypes.filter(chip => chip.isChecked),
-      isChecked: false,
-      date: Date.now(),
-    })
+    if (params?.isEdit) {
+      action.update({
+        ...form,
+        countType: CountTypeList[countTypeIndex],
+        tags: outTypes.filter(chip => chip.isChecked),
+        isChecked: false,
+      })
+    } else {
+      action.add({
+        id: Date.now().toString(),
+        count: form.count,
+        type: form.type,
+        countType: CountTypeList[countTypeIndex],
+        tags: outTypes.filter(chip => chip.isChecked),
+        isChecked: false,
+        date: Date.now(),
+        note: form.note,
+        image: form.image,
+      })
+    }
 
     navigation.goBack()
+    handleReset()
+  }
+
+  const onChipPress = (chip: OutType) => {
+    setOutTypes(
+      outTypes.map(item => {
+        if (item.id === chip.id) {
+          return { ...item, isChecked: !item.isChecked }
+        }
+        return item
+      }),
+    )
   }
 
   return (
-    <View style={style.container}>
+    <View style={style.container} key={version}>
       <Text>记一笔</Text>
       <View style={style.count}>
         <TextInput
           label="金额"
-          value={count}
-          onChangeText={text => setCount(text)}
+          value={form.count === 0 ? '' : form.count.toString()}
+          onChangeText={text => setForm({ ...form, count: Number(text) })}
           keyboardType="numeric"
           style={{ flex: 3 }}
           right={
@@ -60,25 +109,35 @@ const Adding = () => {
             )
           }
         />
-        <CountTypePicker />
+        <CountTypePicker index={countTypeIndex} setIndex={setCountTypeIndex} />
       </View>
       <View style={style.countType}>
-        <Chip selected={chipS === 'in'} onPress={() => setChipS('in')}>
+        <Chip
+          selected={form.type === 'in'}
+          onPress={() => setForm({ ...form, type: 'in' })}>
           收入
         </Chip>
         <Chip
-          selected={chipS === 'out'}
+          selected={form.type === 'out'}
           style={{ marginLeft: 5 }}
-          onPress={() => setChipS('out')}>
+          onPress={() => setForm({ ...form, type: 'out' })}>
           支出
         </Chip>
       </View>
-      {chipS === 'out' && <OutTypePane />}
+      {form.type === 'out' && (
+        <OutTypePane outTypes={outTypes} onChipPress={onChipPress} />
+      )}
       <TextInput
         label="备注"
         style={{ width: '100%', height: 100, marginTop: 20 }}
         mode="outlined"
         multiline
+        value={form.note}
+        onChangeText={text => setForm({ ...form, note: text })}
+      />
+      <ImagePicker
+        uploaded={assets => setForm({ ...form, image: assets })}
+        isShow={keyboardStatus !== 'showed'}
       />
       <Button mode="outlined" style={style.addBtn} onPress={onAddPress}>
         提交
@@ -114,5 +173,9 @@ const style = StyleSheet.create({
     marginTop: 20,
   },
 })
+
+interface Props {
+  route?: ScreenParam.Adding
+}
 
 export default Adding

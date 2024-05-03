@@ -35,12 +35,6 @@ const style = StyleSheet.create({
   menu: {},
 })
 
-interface MenuItem {
-  id: string
-  name: string
-  icon: string
-}
-
 interface Props {
   items: MenuItem[]
   position?: { x: number; y: number }

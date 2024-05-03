@@ -87,3 +87,15 @@ export const chipPane = StyleSheet.create({
 })
 
 export const detailCard = StyleSheet.create({})
+
+export const homeStyle = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  btnArea: {
+    position: 'absolute',
+    bottom: 20,
+  },
+})

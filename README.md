@@ -37,3 +37,29 @@ yarn add babel-plugin-module-resolver
   },
 ]
 ```
+
+## 本地图片
+
+安卓开启权限，修改`android/app/src/main/AndroidManifest.xml`，在`<manifest>`标签内添加：
+
+```xml
+<uses-permission android:name="android.permission.CAMERA" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+```
+
+需要额外安装依赖：
+
+```shell
+yarn add react-native-image-picker
+```
+
+使用：
+
+```ts
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker'
+
+const handleImage = async () => {
+  const result = await launchImageLibrary()
+}
+```

@@ -1,24 +1,16 @@
-import { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Chip } from 'react-native-paper'
 
-import { useAdding } from '../hooks/useAdding'
-
 // Chip 没有设置 onPress，点击的时候不会有样式变化
 
-const OutTypePane = () => {
-  const { outTypes, setOutTypes } = useAdding()
-
-  const onChipPress = (item: OutType) => {
-    setOutTypes(prev => {
-      const index = prev.findIndex(chip => chip.id === item.id)
-      prev[index] = { ...prev[index], isChecked: !prev[index].isChecked }
-      return [...prev]
-    })
+const OutTypePane: React.FC<Props> = ({ outTypes, onChipPress }) => {
+  const onPress = (item: OutType) => {
+    const _item = { ...item, isChecked: !item.isChecked }
+    onChipPress(_item)
   }
   return (
     <View style={style.pane}>
-      {outTypes?.map(item => (
+      {outTypes.map(item => (
         <Chip
           selected={item.isChecked}
           showSelectedOverlay
@@ -26,7 +18,7 @@ const OutTypePane = () => {
           style={{ marginRight: 5, marginTop: 5 }}
           icon={item.icon}
           mode="outlined"
-          onPress={() => onChipPress(item)}>
+          onPress={() => onPress(item)}>
           {item.name}
         </Chip>
       ))}
@@ -44,5 +36,10 @@ const style = StyleSheet.create({
     marginTop: 10,
   },
 })
+
+interface Props {
+  outTypes: OutType[]
+  onChipPress: (item: OutType) => void
+}
 
 export default OutTypePane

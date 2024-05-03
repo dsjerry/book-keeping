@@ -5,8 +5,10 @@ interface KeepingItem {
   countType: string
   tags: OutType[]
   date: number
-  note?: string
+  note: string
+  image: string
   isChecked?: boolean
+  no?: number
 }
 
 interface KeepingStore {
@@ -15,6 +17,7 @@ interface KeepingStore {
   remove: (id: string) => void
   update: (item: KeepingItem) => void
   toggle: (id: string) => void
+  load: () => void
 }
 
 interface RequestOptions {

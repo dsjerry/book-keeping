@@ -1,46 +1,48 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 import { useKeepingStore } from 'hooks/useStore'
 import { OutTypes } from 'consts/Data'
 
 export const useAdding = () => {
-  const [count, setCount] = useState('')
-  const [chipS, setChipS] = useState<'in' | 'out'>('out')
   const [countTypeIndex, setCountTypeIndex] = useState(0)
   const [outTypes, setOutTypes] = useState<OutType[]>(OutTypes)
-  const [outTypePicked, setOutTypePicked] = useState<OutType[]>([])
+  const [form, setForm] = useState<KeepingItem>({
+    id: Date.now().toString(),
+    count: 0,
+    type: 'out',
+    countType: '人民币',
+    tags: [],
+    isChecked: false,
+    note: '',
+    image: '',
+    no: 0,
+    date: Date.now(),
+  })
 
-  const { add } = useKeepingStore()
+  const { add, update } = useKeepingStore()
 
   const action = {
     add: (item: KeepingItem) => {
-      console.log(item)
-
       add({
         ...item,
         isChecked: false,
       })
     },
-    pickOutType: (item: OutType) => {
-      if (item.isChecked) {
-        setOutTypePicked(prev => [...prev, item])
-      } else {
-        setOutTypePicked(prev => prev.filter(chip => chip.id !== item.id))
-      }
+    edit: (item: KeepingItem) => {
+      setForm(prev => ({ ...prev, ...item }))
+    },
+    update: (item: KeepingItem) => {
+      update(item)
     },
   }
 
   return {
-    count,
-    setCount,
-    chipS,
-    setChipS,
     countTypeIndex,
     setCountTypeIndex,
     outTypes,
     setOutTypes,
-    outTypePicked,
-    setOutTypePicked,
+    form,
+    setForm,
     action,
   }
 }

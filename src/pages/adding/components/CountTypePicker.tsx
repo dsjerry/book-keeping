@@ -1,16 +1,14 @@
 import React from 'react'
 import WheelPicker from 'react-native-wheely'
 
-import { useAdding } from '../hooks/useAdding'
 import { CountTypeList } from 'consts/Data'
 
-export default function CountTypePicker() {
-  const { countTypeIndex, setCountTypeIndex } = useAdding()
+export default function CountTypePicker({ index, setIndex }: Props) {
   return (
     <WheelPicker
-      selectedIndex={countTypeIndex}
+      selectedIndex={index}
       options={CountTypeList}
-      onChange={index => setCountTypeIndex(index)}
+      onChange={index => setIndex(index)}
       selectedIndicatorStyle={{ backgroundColor: '#e8e1ed' }}
       containerStyle={{
         flex: 1,
@@ -19,4 +17,9 @@ export default function CountTypePicker() {
       itemTextStyle={{ color: '#6b4faa' }}
     />
   )
+}
+
+interface Props {
+  index: number
+  setIndex: (index: number) => void
 }

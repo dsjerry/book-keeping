@@ -1,56 +1,50 @@
-import { StatusBar, View, StyleSheet } from 'react-native'
-import { Colors } from 'react-native/Libraries/NewAppScreen'
+import { useEffect } from 'react'
+import { View, Pressable } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 
 import { AddingButton, KeepingList } from './components'
 import { useKeepingStore } from 'hooks/useStore'
+import { homeStyle } from './style'
+import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
+import Modal from 'components/Modal'
 
 const HomeScreen = () => {
-  // const isDarkMode = useColorScheme() === 'dark'
-  const isDarkMode = false
+  const navigation = useNavigation()
+  const dispatch = useHomeStoreDispatch()
+  const { items, remove, toggle, load } = useKeepingStore()
+  const { isShowModal, activeKeeping } = useHomeStore()
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  useEffect(() => {
+    load()
+  }, [])
+
+  const doModalCancel = () => dispatch({ type: 'isShowModal', payload: false })
+  const doModalAccess = () => {
+    activeKeeping.forEach(id => remove(id))
+    dispatch({ type: 'isShowModal', payload: false })
   }
 
-  const navigation = useNavigation()
-  const { items } = useKeepingStore()
   return (
     <>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <View
-        style={{
-          backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          ...style.container,
-        }}>
-        <KeepingList item={items} />
-        <View style={style.btnArea}>
+      <Pressable
+        style={homeStyle.container}
+        onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
+        <KeepingList item={items} toggle={toggle} />
+        <View style={homeStyle.btnArea}>
           {/* 不知道为啥它接收 never */}
           <AddingButton
-            onPress={() => {
-              console.log(items)
-              navigation.navigate('Adding' as never)
-            }}
+            onPress={() => navigation.navigate('Adding' as never)}
           />
         </View>
-      </View>
+      </Pressable>
+      {/* 提示框 */}
+      <Modal
+        visible={isShowModal}
+        onCancel={doModalCancel}
+        onAccess={doModalAccess}
+      />
     </>
   )
 }
-
-const style = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-  },
-  btnArea: {
-    position: 'absolute',
-    bottom: 20,
-  },
-})
 
 export default HomeScreen

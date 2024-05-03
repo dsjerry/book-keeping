@@ -13,16 +13,23 @@ import { useState } from 'react'
 import dayjs from 'dayjs'
 
 import LongPressMenu from 'components/LongPressMenu'
+import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
 
 /**
  * Checkbox 长按的时候再显示
  */
-const Item: React.FC<ItemProps> = ({ item, doNavigate, doMenuShow }) => {
+const Item: React.FC<ItemProps> = ({
+  item,
+  doNavigate,
+  doMenuShow,
+  toggle,
+}) => {
   return (
     <Pressable
       style={({ pressed }) => ({
         ...style.item,
         backgroundColor: pressed ? '#fffbfe' : '#fff',
+        elevation: pressed ? 8 : 2,
       })}
       onPress={() => doNavigate(item.id)}
       onLongPress={e => doMenuShow(item.id, e)}>
@@ -32,7 +39,10 @@ const Item: React.FC<ItemProps> = ({ item, doNavigate, doMenuShow }) => {
         </Text>
       </View>
       <View style={style.itemBody}>
-        <Checkbox status="unchecked" onPress={() => console.log(123)} />
+        <Checkbox
+          status={item.isChecked ? 'checked' : 'unchecked'}
+          onPress={() => toggle(item.id)}
+        />
         <Text>支出</Text>
         <Text style={style.itemCount}>{item.count}</Text>
         <Text>元</Text>
@@ -53,16 +63,12 @@ const Item: React.FC<ItemProps> = ({ item, doNavigate, doMenuShow }) => {
   )
 }
 
-const KeepingList: React.FC<Props> = ({ item }) => {
-  const [isShowMenu, setIsShowMenu] = useState(false)
-  const [menu, setMenu] = useState([
-    { id: '1', icon: 'information', name: '信息', alias: 'info' },
-    { id: '2', icon: 'delete', name: '删除', alias: 'del' },
-  ])
+const KeepingList: React.FC<Props> = ({ item, toggle }) => {
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
 
   const navigation = useNavigation()
-  const route = useRoute()
+  const dispatch = useHomeStoreDispatch()
+  const { isShowMenu, longPressMenu: menu } = useHomeStore()
 
   // 长按菜单显示范围
   const screenWidth = Dimensions.get('screen').width
@@ -71,10 +77,9 @@ const KeepingList: React.FC<Props> = ({ item }) => {
 
   const doNavigate = (id: string) => {
     navigation.navigate('Detail' as never, { id } as never)
-    console.log(route.path)
   }
   // 菜单的显示或隐藏
-  const doMenuShow = (id: string, e: GestureResponderEvent) => {
+  const doMenuShow = (id: KeepingItem['id'], e: GestureResponderEvent) => {
     const { locationX, locationY } = e.nativeEvent
 
     if (locationX > safeArea) {
@@ -83,25 +88,32 @@ const KeepingList: React.FC<Props> = ({ item }) => {
       setMenuPosition({ x: locationX, y: locationY })
     }
 
-    if (id) {
-      console.log('点击了菜单:', id)
+    dispatch({ type: 'isShowMenu', payload: !isShowMenu })
+    dispatch({ type: 'activeKeeping', payload: [id] })
+  }
+  const onMenuClick = (id: MenuItem['id']) => {
+    const item = menu.find(item => item.id === id)
+    if (item?.alias === 'del') {
+      dispatch({ type: 'isShowModal', payload: true })
     }
 
-    setIsShowMenu(prev => !prev)
+    dispatch({ type: 'isShowMenu', payload: false })
   }
 
   return (
     <View style={style.container}>
       {isShowMenu && (
         <LongPressMenu
-          onPress={doMenuShow}
+          onPress={onMenuClick}
           items={menu}
           position={menuPosition}
         />
       )}
       <FlatList
         data={item}
-        renderItem={({ item }) => Item({ item, doNavigate, doMenuShow })}
+        renderItem={({ item }) =>
+          Item({ item, doNavigate, doMenuShow, toggle })
+        }
       />
     </View>
   )
@@ -109,17 +121,20 @@ const KeepingList: React.FC<Props> = ({ item }) => {
 
 interface Props {
   item: KeepingItem[]
+  toggle: KeepingStore['toggle']
 }
 
 interface ItemProps {
   item: KeepingItem
   doNavigate: (id: string) => void
   doMenuShow: (id: string, e: GestureResponderEvent) => void
+  toggle: (id: string) => void
 }
 
 const style = StyleSheet.create({
   container: {
     width: '100%',
+    paddingTop: 10,
   },
   item: {
     width: '96%',
@@ -129,8 +144,8 @@ const style = StyleSheet.create({
     marginRight: 'auto',
     padding: 5,
     paddingRight: 10,
-    borderWidth: 0.5,
     borderRadius: 5,
+    elevation: 2,
   },
   itemHeader: {},
   itemBody: {
@@ -153,10 +168,9 @@ const tag = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     flexWrap: 'wrap',
-    marginLeft: 10,
+    marginLeft: 30,
   },
   item: {
-    marginLeft: 10,
     transform: [{ scale: 0.8 }],
   },
 })
