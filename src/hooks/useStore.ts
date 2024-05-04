@@ -1,6 +1,7 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { logging } from 'utils/logger'
+import { logging } from '~utils/logger'
 
 export const useKeepingStore = create<KeepingStore>(set => ({
   items: [],
@@ -30,6 +31,19 @@ export const useKeepingStore = create<KeepingStore>(set => ({
       ),
     }))
   },
+  empty: () => {
+    set(state => {
+      state.items = []
+      return state
+    })
+    AsyncStorage.removeItem('data')
+      .then(() => {
+        logging.info('清空本地数据成功')
+      })
+      .catch(err => {
+        logging.error(err)
+      })
+  },
   load: async () => {
     const data = await AsyncStorage.getItem('data')
     logging.info('本地数据:', data)
@@ -41,6 +55,7 @@ export const useKeepingStore = create<KeepingStore>(set => ({
 }))
 
 export const useUserStore = create<User & UserStoreAction>(set => ({
+  id: '',
   username: '',
   password: '',
   avatar: '',
@@ -51,6 +66,7 @@ export const useUserStore = create<User & UserStoreAction>(set => ({
 }))
 
 const unsub = useKeepingStore.subscribe((state, prevState) => {
+  logging.info(state, '---', prevState)
   AsyncStorage.setItem('data', JSON.stringify(state.items))
     .then(() => {
       logging.info('持久化存储成功')

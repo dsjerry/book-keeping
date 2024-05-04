@@ -18,6 +18,7 @@ interface KeepingStore {
   update: (item: KeepingItem) => void
   toggle: (id: string) => void
   load: () => void
+  empty: () => void
 }
 
 interface RequestOptions {

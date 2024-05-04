@@ -4,11 +4,11 @@ import { View, Text, StyleSheet, Keyboard } from 'react-native'
 import { TextInput, Chip, Button } from 'react-native-paper'
 import { useNavigation, useRoute } from '@react-navigation/native'
 
-import { CountTypeList } from 'consts/Data'
+import { CountTypeList } from '~consts/Data'
 import { useAdding } from './hooks/useAdding'
 import OutTypePane from './components/OutTypePane'
 import CountTypePicker from './components/CountTypePicker'
-import ImagePicker from 'components/ImagePicker'
+import ImagePicker from '~components/ImagePicker'
 
 const Adding: React.FC<Props> = ({ route }) => {
   const [tips, setTips] = useState('')

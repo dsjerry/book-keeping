@@ -5,7 +5,7 @@ import { useRoute, useNavigation } from '@react-navigation/native'
 
 import LinearCard from './components/LinearCard'
 import { layout } from './style'
-import { useKeepingStore } from 'hooks/useStore'
+import { useKeepingStore } from '~hooks/useStore'
 
 const Detail = () => {
   const [isShowNote, setIsShowNote] = useState(true)

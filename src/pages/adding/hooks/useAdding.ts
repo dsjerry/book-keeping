@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
-import { useKeepingStore } from 'hooks/useStore'
-import { OutTypes } from 'consts/Data'
+import { useKeepingStore } from '~hooks/useStore'
+import { OutTypes } from '~consts/Data'
 
 export const useAdding = () => {
   const [countTypeIndex, setCountTypeIndex] = useState(0)

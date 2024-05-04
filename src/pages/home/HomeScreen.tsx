@@ -3,10 +3,10 @@ import { View, Pressable } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 
 import { AddingButton, KeepingList } from './components'
-import { useKeepingStore } from 'hooks/useStore'
+import { useKeepingStore } from '~hooks/useStore'
 import { homeStyle } from './style'
 import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
-import Modal from 'components/Modal'
+import Modal from '~components/Modal'
 
 const HomeScreen = () => {
   const navigation = useNavigation()
@@ -14,9 +14,9 @@ const HomeScreen = () => {
   const { items, remove, toggle, load } = useKeepingStore()
   const { isShowModal, activeKeeping } = useHomeStore()
 
-  useEffect(() => {
-    load()
-  }, [])
+  // useEffect(() => {
+  //   load()
+  // }, [])
 
   const doModalCancel = () => dispatch({ type: 'isShowModal', payload: false })
   const doModalAccess = () => {

@@ -12,7 +12,7 @@ import { useNavigation, useRoute } from '@react-navigation/native'
 import { useState } from 'react'
 import dayjs from 'dayjs'
 
-import LongPressMenu from 'components/LongPressMenu'
+import LongPressMenu from '~components/LongPressMenu'
 import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
 
 /**

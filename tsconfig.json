@@ -5,11 +5,12 @@
     "noUnusedParameters": false,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "utils/*": ["./src/utils/*"],
-      "hooks/*": ["./src/hooks/*"],
-      "components/*": ["./src/components/*"],
-      "pages/*": ["./src/pages/*"],
-      "consts/*": ["./src/consts/*"]
+      "~utils/*": ["./src/utils/*"],
+      "~hooks/*": ["./src/hooks/*"],
+      "~components/*": ["./src/components/*"],
+      "~pages/*": ["./src/pages/*"],
+      "~consts/*": ["./src/consts/*"],
+      "~store/*": ["./src/store/*"]
     }
   },
   "include": ["types", "src"],
