@@ -1,14 +1,22 @@
-import React from 'react'
+import { useState } from 'react'
 import { View, Text, StyleSheet } from 'react-native'
 import { Avatar } from 'react-native-paper'
-import { useFormStore } from './hooks/useUser'
+import { useUserContext } from './contexts/UserContext'
+import NoUser from './widgets/NoUser'
 
 const UserHome = () => {
-  const { username } = useFormStore()
+  const [haveUser, setHaveUser] = useState(false)
+  const { state } = useUserContext()
   return (
     <View style={style.container}>
-      <Avatar.Text label={username}></Avatar.Text>
-      <Text>{username ? username : 'testuser'}</Text>
+      {!haveUser ? (
+        <NoUser />
+      ) : (
+        <>
+          <Avatar.Text label={state.username}></Avatar.Text>
+          <Text>{state.username ? state.username : 'testuser'}</Text>
+        </>
+      )}
     </View>
   )
 }

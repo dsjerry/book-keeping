@@ -4,3 +4,7 @@ interface MenuItem {
   icon: string
   alias?: string
 }
+
+interface AppSettings {
+  useOnline: boolean
+}

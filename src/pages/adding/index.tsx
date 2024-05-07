@@ -53,7 +53,7 @@ const Adding: React.FC<Props> = ({ route }) => {
   }
 
   const onAddPress = () => {
-    if (form.count === 0) {
+    if (form.count === `0`) {
       setTimeout(() => setTips(''), 1500)
       return setTips('请输入金额')
     }
@@ -99,8 +99,8 @@ const Adding: React.FC<Props> = ({ route }) => {
       <View style={style.count}>
         <TextInput
           label="金额"
-          value={form.count === 0 ? '' : form.count.toString()}
-          onChangeText={text => setForm({ ...form, count: Number(text) })}
+          value={form.count}
+          onChangeText={text => setForm({ ...form, count: text })}
           keyboardType="numeric"
           style={{ flex: 3 }}
           right={

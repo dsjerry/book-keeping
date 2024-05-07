@@ -6,11 +6,7 @@ interface Props {
 
 const AddingButton: React.FC<Props> = ({ onPress }) => {
   return (
-    <Button
-      icon={'plus-box'}
-      mode="contained"
-      buttonColor="#6d57a7"
-      onPress={onPress}>
+    <Button icon={'keyboard-outline'} mode="elevated" onPress={onPress}>
       记一笔
     </Button>
   )

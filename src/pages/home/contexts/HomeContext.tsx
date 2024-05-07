@@ -41,9 +41,7 @@ const reducer = (state: State, action: Action) => {
 
 const HomeContext = createContext<State>(initialState)
 
-const HomeDispatchContext = createContext<Dispatch<Action>>(
-  null as unknown as Dispatch<Action>, // ?
-)
+const HomeDispatchContext = createContext<Dispatch<Action> | null>(null)
 
 export const HomeProvider: React.FC<Props> = ({ children }) => {
   // 这里初始化的时候，reducer 函数里面要实现对应的操作
@@ -59,11 +57,19 @@ export const HomeProvider: React.FC<Props> = ({ children }) => {
 }
 
 export const useHomeStore = () => {
-  return useContext(HomeContext)
+  const context = useContext(HomeContext)
+  if (!context) {
+    throw new Error('useHomeStore 要在 HomeProvider 中使用')
+  }
+  return context
 }
 
 export const useHomeStoreDispatch = () => {
-  return useContext(HomeDispatchContext)
+  const context = useContext(HomeDispatchContext)
+  if (!context) {
+    throw new Error('useHomeStoreDispatch 要在 HomeProvider 中使用')
+  }
+  return context
 }
 
 interface Props {

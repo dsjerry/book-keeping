@@ -1,9 +1,8 @@
-import { useEffect } from 'react'
 import { View, Pressable } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 
-import { AddingButton, KeepingList } from './components'
-import { useKeepingStore } from '~hooks/useStore'
+import { AddingButton, KeepingList, NothingHere } from './components'
+import { useKeepingStore } from '~store/keepingStore'
 import { homeStyle } from './style'
 import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
 import Modal from '~components/Modal'
@@ -11,7 +10,7 @@ import Modal from '~components/Modal'
 const HomeScreen = () => {
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
-  const { items, remove, toggle, load } = useKeepingStore()
+  const { items, remove, toggle } = useKeepingStore()
   const { isShowModal, activeKeeping } = useHomeStore()
 
   // useEffect(() => {
@@ -30,6 +29,7 @@ const HomeScreen = () => {
         style={homeStyle.container}
         onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
         <KeepingList item={items} toggle={toggle} />
+        {items.length === 0 && <NothingHere />}
         <View style={homeStyle.btnArea}>
           {/* 不知道为啥它接收 never */}
           <AddingButton

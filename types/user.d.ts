@@ -4,6 +4,7 @@ interface User {
   password: string
   avatar?: string
   note?: string
+  useOnline?: boolean
 }
 
 interface UserStoreAction {

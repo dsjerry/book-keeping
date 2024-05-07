@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { View } from 'react-native'
 import { List, Switch } from 'react-native-paper'
-import { useKeepingStore } from '~hooks/useStore'
+import { useKeepingStore } from '~store/keepingStore'
+import { useAppSettingsStore } from '~store/settingStore'
 const Settings = () => {
   const [switchStatus, setSwitchStatus] = useState({
     del: false,
@@ -10,12 +11,13 @@ const Settings = () => {
 
   const [clearConfirm, setClearConfirm] = useState(0)
 
-  const { empty } = useKeepingStore()
+  // const { empty } = useKeepingStore()
+  const { useOnline, toggleUseOnline } = useAppSettingsStore()
 
   const clearCache = () => {
     setClearConfirm(prev => prev + 1)
     if (clearConfirm === 2) {
-      empty()
+      // empty()
       setClearConfirm(0)
     }
   }
@@ -58,6 +60,13 @@ const Settings = () => {
             )}
           />
         </List.Accordion>
+        <List.Item
+          title="启用同步"
+          left={props => <List.Icon {...props} icon="cloud-upload-outline" />}
+          right={() => (
+            <Switch value={useOnline} onValueChange={toggleUseOnline} />
+          )}
+        />
         <List.Item
           title="清除缓存"
           left={props => <List.Icon {...props} icon="delete-forever-outline" />}

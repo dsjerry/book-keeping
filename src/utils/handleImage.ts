@@ -1,19 +1,20 @@
-import { launchImageLibrary } from 'react-native-image-picker'
-import type { MediaType } from 'react-native-image-picker'
+import { launchImageLibrary, launchCamera } from 'react-native-image-picker'
+import type { MediaType, ImagePickerResponse } from 'react-native-image-picker'
 import { logging } from './logger'
 
-interface Options {
-  limit?: number
-  type?: MediaType
-}
-
-export const handleImage = async (options: Options) => {
+export const handleImage: HandleImage = async (options, target) => {
+  const launchOptions = {
+    mediaType: options.type || 'photo',
+    includeBase64: true,
+    selectionLimit: options.limit,
+  }
   try {
-    const result = await launchImageLibrary({
-      mediaType: options.type || 'photo',
-      includeBase64: true,
-      selectionLimit: options.limit,
-    })
+    let result = null
+    if (target === 'camera') {
+      result = await launchCamera(launchOptions)
+    } else {
+      result = await launchImageLibrary(launchOptions)
+    }
 
     logging.info(result)
     return result.assets
@@ -21,3 +22,11 @@ export const handleImage = async (options: Options) => {
     logging.error(error)
   }
 }
+
+type HandleImage = (
+  options: {
+    limit?: number
+    type?: MediaType
+  },
+  target?: 'camera' | 'gallery',
+) => Promise<ImagePickerResponse['assets']>

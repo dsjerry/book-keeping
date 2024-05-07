@@ -1,19 +1,14 @@
-import React from 'react'
 import { useState } from 'react'
-import { View } from 'react-native'
+import { Text, View } from 'react-native'
 import { HelperText, TextInput, Button } from 'react-native-paper'
+import { CheckBox } from '@rneui/themed'
 import { useNavigation } from '@react-navigation/native'
 
-import { useFormStore } from './hooks/useUser'
-
-interface InputPane {
-  label: string
-  value: string
-  tips?: string
-  pw?: boolean
-  showpw?: boolean
-  onChangeText: (text: string) => void
-}
+import { useUserContext } from './contexts/UserContext'
+import { checkUsername, checkPassword } from '~utils'
+import { logging } from '~utils'
+import { loginStyle } from './styles'
+import { useAppSettingsStore } from '~store/settingStore'
 
 const InputPane: React.FC<InputPane> = ({
   value,
@@ -40,63 +35,102 @@ const InputPane: React.FC<InputPane> = ({
 }
 
 const LoginPane = () => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [isRegister, setIsRegister] = useState(false)
-
   const navigation = useNavigation()
-  const { isShowPassword, passwordTwo } = useFormStore()
+  const { state, dispatch } = useUserContext()
+  const [badNameTips, setBadNameTips] = useState('')
+  const [badPassTips, setBadPassTips] = useState('')
+  const [badPassTwoTips, setBadPassTwoTips] = useState('')
+
+  const { useOnline, toggleUseOnline } = useAppSettingsStore()
 
   const onLogin = () => {
     // TEST
-    // return navigation.navigate('UserHome' as never)
+    return navigation.navigate('UserHome' as never)
+
+    const username = checkUsername(state.username)
+    const password = checkPassword(state.password)
+    if (!username || !password) {
+      !username && setBadNameTips('Username is invalid!')
+      !password && setBadPassTips('Password is invalid!')
+      setTimeout(() => {
+        setBadNameTips('')
+        setBadPassTips('')
+      }, 1500)
+      return logging.error('invalid username or password:', username, password)
+    }
   }
 
   const onRegister = () => {}
 
   return (
-    <View>
+    <View style={loginStyle.container}>
       <InputPane
-        label="Username"
-        value={username}
-        tips="Username is invalid!"
-        onChangeText={text => setUsername(text)}
+        label="用户名"
+        value={state.username}
+        tips={badNameTips}
+        onChangeText={text => dispatch({ type: 'username', payload: text })}
       />
       <InputPane
-        label="Password"
-        value={password}
-        tips="Password is invalid!"
+        label="密码"
+        value={state.password}
+        tips={badPassTips}
         pw
-        showpw={isShowPassword}
-        onChangeText={text => setPassword(text)}
+        showpw={state.isShowPassword}
+        onChangeText={text => dispatch({ type: 'password', payload: text })}
       />
-      {isRegister && (
+      {state.isRegister && (
         <InputPane
-          label="Password"
-          value={passwordTwo}
-          tips="Password is invalid!"
+          label="确认密码"
+          value={state.passwordTwo}
+          tips={badPassTwoTips}
           pw
-          showpw={isShowPassword}
-          onChangeText={text => setPassword(text)}
+          showpw={state.isShowPassword}
+          onChangeText={text => dispatch({ type: 'password', payload: text })}
         />
       )}
-      <Button
-        mode="outlined"
-        onPress={() => {
-          if (isRegister) return onRegister()
-          onLogin()
-        }}>
-        {isRegister ? 'register' : 'login'}
-      </Button>
-      <Button
-        mode="text"
-        onPress={() => {
-          setIsRegister(prev => !prev)
-        }}>
-        {isRegister ? 'login' : 'register'}
-      </Button>
+      <View style={loginStyle.submitPane}>
+        <Button
+          mode="outlined"
+          style={loginStyle.submitBtn}
+          onPress={() => {
+            if (state.isRegister) return onRegister()
+            onLogin()
+          }}>
+          {state.isRegister ? 'register' : 'login'}
+        </Button>
+      </View>
+      <View style={loginStyle.formBtn}>
+        <Button
+          mode="text"
+          style={{ marginLeft: 10 }}
+          onPress={() => {
+            dispatch({ type: 'isRegister', payload: !state.isRegister })
+          }}>
+          {state.isRegister ? 'login' : 'register'}
+        </Button>
+        <CheckBox
+          checked={useOnline}
+          title="启用同步"
+          size={16}
+          textStyle={{ fontSize: 12 }}
+          containerStyle={{
+            backgroundColor: 'transparent',
+          }}
+          checkedColor="#6b4faa"
+          onPress={toggleUseOnline}
+        />
+      </View>
     </View>
   )
+}
+
+interface InputPane {
+  label: string
+  value: string
+  tips?: string
+  pw?: boolean
+  showpw?: boolean
+  onChangeText: (text: string) => void
 }
 
 export default LoginPane

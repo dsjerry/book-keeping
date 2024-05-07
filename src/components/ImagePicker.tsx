@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { Pressable, Image, StyleSheet, Text, View } from 'react-native'
 import { Icon, IconButton } from 'react-native-paper'
-import { handleImage } from '~utils/handleImage'
-import { logging } from '~utils/logger'
+import { handleImage } from '~utils'
+import { logging } from '~utils'
 
 const ImagePicker: React.FC<Props> = ({ isShow = true, uploaded }) => {
   const [image, setImage] = useState('')

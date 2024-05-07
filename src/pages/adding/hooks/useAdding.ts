@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-import { useKeepingStore } from '~hooks/useStore'
+import { useKeepingStore } from '~store/keepingStore'
 import { OutTypes } from '~consts/Data'
 
 export const useAdding = () => {
@@ -8,7 +8,7 @@ export const useAdding = () => {
   const [outTypes, setOutTypes] = useState<OutType[]>(OutTypes)
   const [form, setForm] = useState<KeepingItem>({
     id: Date.now().toString(),
-    count: 0,
+    count: '',
     type: 'out',
     countType: '人民币',
     tags: [],

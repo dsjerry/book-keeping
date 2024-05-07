@@ -7,13 +7,13 @@ import {
   GestureResponderEvent,
   Dimensions,
 } from 'react-native'
-import { Checkbox, Chip } from 'react-native-paper'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { Checkbox, Chip, Icon } from 'react-native-paper'
+import { useNavigation } from '@react-navigation/native'
 import { useState } from 'react'
-import dayjs from 'dayjs'
 
 import LongPressMenu from '~components/LongPressMenu'
 import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
+import { _date } from '~utils'
 
 /**
  * Checkbox 长按的时候再显示
@@ -34,8 +34,11 @@ const Item: React.FC<ItemProps> = ({
       onPress={() => doNavigate(item.id)}
       onLongPress={e => doMenuShow(item.id, e)}>
       <View style={style.itemHeader}>
-        <Text style={{ marginLeft: 'auto' }}>
-          {dayjs(item.date).format('YYYY-MM-DD')}
+        {item.note && <Icon source={'note-text-outline'} size={14} />}
+        {item.image && <Icon source={'image-outline'} size={14} />}
+        <Text style={{ color: '#6d57a7', marginLeft: 5 }}>
+          {/* {dayjs(item.date).format('YYYY-MM-DD')} */}
+          {_date(item.date)}
         </Text>
       </View>
       <View style={style.itemBody}>
@@ -76,7 +79,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle }) => {
   const safeArea = screenWidth - menuWidth
 
   const doNavigate = (id: string) => {
-    navigation.navigate('Detail' as never, { id } as never)
+    navigation.navigate('DetailScreen' as never, { id } as never)
   }
   // 菜单的显示或隐藏
   const doMenuShow = (id: KeepingItem['id'], e: GestureResponderEvent) => {
@@ -147,7 +150,11 @@ const style = StyleSheet.create({
     borderRadius: 5,
     elevation: 2,
   },
-  itemHeader: {},
+  itemHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+  },
   itemBody: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
@@ -171,7 +178,8 @@ const tag = StyleSheet.create({
     marginLeft: 30,
   },
   item: {
-    transform: [{ scale: 0.8 }],
+    marginHorizontal: -10,
+    transform: [{ scale: 0.65 }],
   },
 })
 
