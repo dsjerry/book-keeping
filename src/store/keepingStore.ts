@@ -19,6 +19,12 @@ export const useKeepingStore = create<KeepingStore>()(
       remove: id => {
         set(state => ({ items: state.items.filter(item => item.id !== id) }))
       },
+      removeChecked: () => {
+        const items = get().items
+        set(state => ({
+          items: items.filter(item => !item.isChecked),
+        }))
+      },
       update: item => {
         set(state => ({
           items: state.items.map(i => (i.id === item.id ? item : i)),
@@ -31,8 +37,26 @@ export const useKeepingStore = create<KeepingStore>()(
           ),
         }))
       },
+      selectAll: () => {
+        const items = get().items
+        items.forEach(item => {
+          item.isChecked = true
+        })
+        set(state => ({ ...state, items }))
+      },
+      selectInverse: () => {
+        const items = get().items
+        items.forEach(item => {
+          item.isChecked = !item.isChecked
+        })
+        set(state => ({ ...state, items }))
+      },
       setSortBy: sortBy => set({ sortBy }),
       setSortOrder: sortOrder => set({ sortOrder }),
+      setFilterBy: filterBy =>
+        set(state => {
+          return { ...state, filterBy }
+        }),
       sort: ({ sortBy, sortOrder }) => {
         let items = get().items
         // 按日期排序
@@ -45,7 +69,29 @@ export const useKeepingStore = create<KeepingStore>()(
         }
         set({ items })
       },
-      filter: () => {},
+      filter: () => {
+        const items = get().items
+        const filterBy = get().filterBy
+        if (filterBy.length === 0) {
+          items.forEach(item => {
+            item.isShow = true
+          })
+          return set(state => ({ ...state, items }))
+        }
+        for (let i = 0; i < items.length; i++) {
+          for (let j = 0; j < filterBy.length; j++) {
+            let outtype = items[i].tags
+            outtype.forEach(item => {
+              if (item.alias !== filterBy[j]) {
+                items[i].isShow = false
+              } else {
+                items[i].isShow = true
+              }
+            })
+          }
+        }
+        set(state => ({ ...state, items }))
+      },
     }),
     {
       name: 'keeping',

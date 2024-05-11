@@ -4,22 +4,26 @@ import { Chip } from 'react-native-paper'
 
 import { OutTypes, CountTypeWithIconList } from '~consts/Data'
 import CustomDivider from '~components/CustomDivider'
+import { useKeepingStore } from '~store/keepingStore'
 
 interface FilterPaneProps {
   onFilterChange?: (value: string) => void
 }
 export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
   const [outTypes, setOutTypes] = useState([...OutTypes])
-  const onOutTypePress = (item: OutType) => {
-    setOutTypes(prev =>
-      prev.map(i => {
-        if (i.id === item.id) {
-          return { ...i, isChecked: !i.isChecked }
-        }
-        return i
-      }),
-    )
+  const [countType, setCountType] = useState([...CountTypeWithIconList])
+  const { filterBy, setFilterBy } = useKeepingStore()
+
+  const onChipPress = (item: string) => {
+    const array = [...filterBy]
+    if (array.includes(item)) {
+      array.splice(array.indexOf(item), 1)
+    } else {
+      array.push(item)
+    }
+    setFilterBy([...array])
   }
+
   return (
     <View style={{ paddingHorizontal: 10, paddingVertical: 10 }}>
       <CustomDivider text="内容" textPosi="left" />
@@ -28,10 +32,18 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
         <Chip
           icon={'note-text-outline'}
           mode="outlined"
-          style={{ marginRight: 10 }}>
+          style={{ marginRight: 10 }}
+          selected={filterBy.includes('note')}
+          showSelectedOverlay
+          onPress={() => onChipPress('note')}>
           备注
         </Chip>
-        <Chip icon={'image-outline'} mode="outlined">
+        <Chip
+          icon={'image-outline'}
+          mode="outlined"
+          selected={filterBy.includes('image')}
+          showSelectedOverlay
+          onPress={() => onChipPress('image')}>
           图片
         </Chip>
       </View>
@@ -45,9 +57,11 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
             icon={item.icon}
             mode="outlined"
             style={style.chip}
-            selected={item.isChecked}
+            selected={filterBy.includes(item.alias)}
             showSelectedOverlay
-            onPress={() => onOutTypePress(item)}>
+            onPress={() => {
+              onChipPress(item.alias)
+            }}>
             {item.name}
           </Chip>
         ))}
@@ -56,14 +70,15 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
       <CustomDivider text="货币" textPosi="left" />
 
       <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-        {CountTypeWithIconList.map(item => (
+        {countType.map(item => (
           <Chip
             key={item.id}
             icon={item.icon}
             mode="outlined"
             style={style.chip}
-            selected={item.isChecked}
-            showSelectedOverlay>
+            selected={filterBy.includes(item.alias)}
+            showSelectedOverlay
+            onPress={() => onChipPress(item.alias)}>
             {item.name}
           </Chip>
         ))}

@@ -5,6 +5,7 @@ import type { DrawerHeaderProps } from '@react-navigation/drawer'
 
 import HalfModal from '~components/HalfModal'
 import { useKeepingStore } from '~store/keepingStore'
+import { logging } from '~utils'
 import {
   SortByPane,
   FilterByPane,
@@ -19,7 +20,17 @@ interface HeaderProps extends DrawerHeaderProps {
 export type RightMenuItem = 'sort' | 'filter' | 'all' | 'invert' | 'delete'
 
 const Header: React.FC<HeaderProps> = ({ route, navigation, options }) => {
-  const { items, sort, sortBy, sortOrder } = useKeepingStore()
+  const {
+    items,
+    sort,
+    sortBy,
+    sortOrder,
+    filterBy,
+    filter,
+    selectAll,
+    selectInverse,
+    removeChecked,
+  } = useKeepingStore()
   const {
     state: { isShowRightMenu, isShowBottomModal, halfModalType },
     dispatch,
@@ -42,14 +53,26 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options }) => {
     // TODO
     if (item == 'filter' || item == 'sort') {
       dispatch({ type: 'halfModalType', payload: item })
+    } else if (item == 'all') {
+      selectAll()
+    } else if (item === 'delete') {
+      removeChecked()
+    } else if (item === 'invert') {
+      selectInverse()
     }
+    setIsShowRightMenu(false)
   }
   const onSortChange: SortChange = value => {
     sort({ sortBy: value.sortBy, sortOrder: value.sortOrder })
   }
   const onHalfModalClose = () => {
     setIsShowBottomModal(false)
-    onSortChange({ sortBy, sortOrder })
+    if (halfModalType === 'sort') {
+      onSortChange({ sortBy, sortOrder })
+    } else {
+      logging.info('filterBy', filterBy)
+      filter()
+    }
   }
 
   const _showWhatModal = () => {

@@ -8,6 +8,7 @@ interface KeepingItem {
   note: string
   image: string
   isChecked?: boolean
+  isShow?: boolean
   no?: number
 }
 
@@ -18,12 +19,16 @@ interface KeepingStore {
   filterBy: string[]
   add: (item: KeepingItem) => void
   remove: (id: string) => void
+  removeChecked: () => void
   update: (item: KeepingItem) => void
   toggle: (id: string) => void
+  selectAll: () => void
+  selectInverse: () => void
   sort: SortChange
   filter: () => void
   setSortBy: (value: SortBy) => void
   setSortOrder: (value: SortOrder) => void
+  setFilterBy: (value: string[]) => void
 }
 
 interface RequestOptions {
@@ -36,6 +41,7 @@ interface OutType {
   name: string
   icon: string
   isChecked: boolean
+  alias: string
 }
 
 type SortBy = 'date' | 'amount'

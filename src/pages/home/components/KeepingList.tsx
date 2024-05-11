@@ -25,44 +25,48 @@ const Item: React.FC<ItemProps> = ({
   toggle,
 }) => {
   return (
-    <Pressable
-      style={({ pressed }) => ({
-        ...style.item,
-        backgroundColor: pressed ? '#fffbfe' : '#fff',
-        elevation: pressed ? 8 : 2,
-      })}
-      onPress={() => doNavigate(item.id)}
-      onLongPress={e => doMenuShow(item.id, e)}>
-      <View style={style.itemHeader}>
-        {item.note && <Icon source={'note-text-outline'} size={14} />}
-        {item.image && <Icon source={'image-outline'} size={14} />}
-        <Text style={{ color: '#6d57a7', marginLeft: 5 }}>
-          {/* {dayjs(item.date).format('YYYY-MM-DD')} */}
-          {_date(item.date)}
-        </Text>
-      </View>
-      <View style={style.itemBody}>
-        <Checkbox
-          status={item.isChecked ? 'checked' : 'unchecked'}
-          onPress={() => toggle(item.id)}
-        />
-        <Text>支出</Text>
-        <Text style={style.itemCount}>{item.count}</Text>
-        <Text>元</Text>
-      </View>
-      <View style={tag.pane}>
-        {/* 通过循环来做 */}
-        {item.tags.map(tagItem => (
-          <Chip
-            style={tag.item}
-            icon={tagItem.icon}
-            mode="outlined"
-            key={tagItem.id}>
-            {tagItem.name}
-          </Chip>
-        ))}
-      </View>
-    </Pressable>
+    <>
+      {item.isShow !== false && (
+        <Pressable
+          style={({ pressed }) => ({
+            ...style.item,
+            backgroundColor: pressed ? '#fffbfe' : '#fff',
+            elevation: pressed ? 8 : 2,
+          })}
+          onPress={() => doNavigate(item.id)}
+          onLongPress={e => doMenuShow(item.id, e)}>
+          <View style={style.itemHeader}>
+            {item.note && <Icon source={'note-text-outline'} size={14} />}
+            {item.image && <Icon source={'image-outline'} size={14} />}
+            <Text style={{ color: '#6d57a7', marginLeft: 5 }}>
+              {/* {dayjs(item.date).format('YYYY-MM-DD')} */}
+              {_date(item.date)}
+            </Text>
+          </View>
+          <View style={style.itemBody}>
+            <Checkbox
+              status={item.isChecked ? 'checked' : 'unchecked'}
+              onPress={() => toggle(item.id)}
+            />
+            <Text>支出</Text>
+            <Text style={style.itemCount}>{item.count}</Text>
+            <Text>元</Text>
+          </View>
+          <View style={tag.pane}>
+            {/* 通过循环来做 */}
+            {item.tags.map(tagItem => (
+              <Chip
+                style={tag.item}
+                icon={tagItem.icon}
+                mode="outlined"
+                key={tagItem.id}>
+                {tagItem.name}
+              </Chip>
+            ))}
+          </View>
+        </Pressable>
+      )}
+    </>
   )
 }
 
