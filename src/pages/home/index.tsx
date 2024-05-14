@@ -1,8 +1,8 @@
 import React from 'react'
 import { createStackNavigator } from '@react-navigation/stack'
 
-import Adding from '~pages/adding'
 import User from '~pages/user'
+import AddingScreen from './AddingScreen'
 import DetailScreen from './DetailScreen'
 import HomeScreen from './HomeScreen'
 import HalfModal from '~components/HalfModal'
@@ -28,7 +28,11 @@ export default function Home() {
               borderRadius: 10,
             },
           }}>
-          <RootStack.Screen name="Adding" component={Adding} options={{}} />
+          <RootStack.Screen
+            name="Adding"
+            component={AddingScreen}
+            options={{}}
+          />
         </RootStack.Group>
         <RootStack.Group
           screenOptions={{

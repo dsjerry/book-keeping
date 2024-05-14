@@ -101,6 +101,10 @@ const KeepingList: React.FC<Props> = ({ item, toggle }) => {
   const onMenuClick = (id: MenuItem['id']) => {
     const item = menu.find(item => item.id === id)
     if (item?.alias === 'del') {
+      dispatch({
+        type: 'setModal',
+        payload: { title: '删除', body: '确认删除吗?' },
+      })
       dispatch({ type: 'isShowModal', payload: true })
     }
 

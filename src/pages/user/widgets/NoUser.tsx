@@ -12,7 +12,7 @@ export default function NoUser() {
       </Text>
       <Button
         mode="elevated"
-        onPress={() => navigation.navigate('LoginScreen' as never)}>
+        onPress={() => navigation.navigate('LoginScreen', {})}>
         去登陆 / 注册
       </Button>
     </View>

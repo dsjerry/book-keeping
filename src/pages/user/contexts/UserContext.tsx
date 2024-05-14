@@ -1,5 +1,11 @@
 import { createContext, useContext, useReducer, Dispatch } from 'react'
 
+import { useUserStore } from '~store/userStore'
+import {
+  useKeepingStore,
+  CommonSlice as KeepingContext,
+} from '~store/keepingStore'
+
 const initialState: State = {
   id: '',
   username: '',
@@ -53,20 +59,29 @@ const UserContext = createContext<Context | null>(null)
 export const UserProvider: React.FC<{ children: React.ReactElement }> = ({
   children,
 }) => {
+  const userStore = useUserStore()
+  const keepingStore = useKeepingStore()
+
   const [state, dispatch] = useReducer(reducer, initialState)
   return (
-    <UserContext.Provider value={{ state, dispatch }}>
+    <UserContext.Provider value={{ state, userStore, keepingStore, dispatch }}>
       {children}
     </UserContext.Provider>
   )
 }
 
 export const useUserContext = () => {
-  return useContext(UserContext)
+  const context = useContext(UserContext)
+  if (!context) {
+    throw new Error('useUserContext 要在 UserProvider 中使用')
+  }
+  return context
 }
 
 type Context = {
   state: State
+  userStore: UserStore
+  keepingStore: KeepingContext
   dispatch: Dispatch<Action>
 }
 

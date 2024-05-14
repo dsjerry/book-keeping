@@ -1,20 +1,133 @@
-import { useState } from 'react'
-import { View, Text, StyleSheet } from 'react-native'
-import { Avatar } from 'react-native-paper'
+import { useState, useEffect } from 'react'
+import { View, Text, StyleSheet, Image } from 'react-native'
+import { IconButton, List } from 'react-native-paper'
+import LinearGradient from 'react-native-linear-gradient'
+import { useNavigation } from '@react-navigation/native'
+
 import { useUserContext } from './contexts/UserContext'
 import NoUser from './widgets/NoUser'
 
-const UserHome = () => {
-  const [haveUser, setHaveUser] = useState(false)
-  const { state } = useUserContext()
+interface UserHomeProps {
+  route?: ScreenParam.User
+}
+
+interface UserCardProps {
+  user: User
+  data: {
+    record: number
+    output: number
+    income: number
+  }
+}
+
+const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
+  return (
+    <LinearGradient
+      colors={['#6750a4', '#a89ac7', '#e7e0ec']}
+      style={card.container}>
+      <View
+        style={{
+          flexDirection: 'row',
+          paddingVertical: 20,
+        }}>
+        <View style={{ flex: 2 }}>
+          <View
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: 4,
+              backgroundColor: '#e7e0ec',
+            }}>
+            <Image source={{ uri: user.avatar, width: 50, height: 50 }}></Image>
+          </View>
+        </View>
+        <View style={{ flex: 6, justifyContent: 'space-between' }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#e7e0ec' }}>
+            {user.username || '飞翔的企鹅'}
+          </Text>
+          <Text style={{ color: '#e7e0ec' }}>UID: {user.id || '123456'}</Text>
+        </View>
+        <View style={{ flex: 1 }}>
+          <IconButton icon={'share-outline'} iconColor="#a89ac7" />
+        </View>
+      </View>
+      <View style={{ paddingVertical: 20 }}>
+        <Text style={{ color: '#e7e0ec' }}>
+          {user.note || '这家伙很懒，什么也没留下~'}
+        </Text>
+      </View>
+      <View style={card.countPane}>
+        <View style={card.countItem}>
+          <Text style={card.countNum}>{data.record}</Text>
+          <Text style={{ color: '#6750a4' }}>记录</Text>
+        </View>
+        <View style={card.countItem}>
+          <Text style={card.countNum}>{data.output}</Text>
+          <Text style={{ color: '#6750a4' }}>支出</Text>
+        </View>
+        <View style={card.countItem}>
+          <Text style={card.countNum}>{data.income}</Text>
+          <Text style={{ color: '#6750a4' }}>收入</Text>
+        </View>
+      </View>
+    </LinearGradient>
+  )
+}
+
+const UserHome: React.FC<UserHomeProps> = ({ route }) => {
+  const navigation = useNavigation()
+
+  const { state, userStore, keepingStore } = useUserContext()
+
+  const _currentUser = userStore.currentUser
+  const { setCounting, record, output, income } = keepingStore
+
+  useEffect(() => {
+    setCounting()
+  }, [record])
+
   return (
     <View style={style.container}>
-      {!haveUser ? (
+      {!_currentUser ? (
         <NoUser />
       ) : (
         <>
-          <Avatar.Text label={state.username}></Avatar.Text>
-          <Text>{state.username ? state.username : 'testuser'}</Text>
+          <UserCard user={_currentUser} data={{ record, output, income }} />
+          <List.Section
+            style={{
+              marginTop: 20,
+              paddingHorizontal: 10,
+              width: '90%',
+              elevation: 4,
+              borderRadius: 4,
+              backgroundColor: '#e6dfec',
+            }}>
+            <List.Item
+              title="编辑信息"
+              left={props => (
+                <List.Icon {...props} icon="account-edit-outline" />
+              )}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => {
+                navigation.navigate('ProfileEditScreen', {})
+                navigation.setOptions({ headerShown: false })
+              }}
+            />
+            <List.Item
+              title="类型管理"
+              left={props => (
+                <List.Icon {...props} icon="format-list-bulleted-type" />
+              )}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+            />
+            <List.Item
+              title="数据管理"
+              left={props => (
+                <List.Icon {...props} icon="database-search-outline" />
+              )}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+            />
+          </List.Section>
         </>
       )}
     </View>
@@ -26,6 +139,34 @@ const style = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
+  },
+})
+
+const card = StyleSheet.create({
+  container: {
+    width: '90%',
+    height: 350,
+    marginTop: 20,
+    elevation: 10,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 5,
+  },
+  countPane: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 'auto',
+    marginBottom: 10,
+  },
+  countItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  countNum: {
+    marginRight: 5,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#6750a4',
   },
 })
 

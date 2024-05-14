@@ -15,7 +15,10 @@ interface UserStoreAction {
 
 interface UserStore {
   users: User[]
-  add: (user: User) => void
+  currentUser: User | null
+  add: (user: Partial<User, 'username' | 'password'>) => void
   update: (user: User) => void
   remove: (id: string) => void
+  logout: () => void
+  setCurrentUser: (user: User | null) => void
 }

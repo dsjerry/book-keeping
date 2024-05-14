@@ -2,6 +2,8 @@ import { Dispatch, createContext, useContext, useReducer } from 'react'
 
 const initialState: State = {
   isShowModal: false,
+  modalTitle: '',
+  modalBody: '',
   isShowMenu: false,
   activeKeeping: [],
   longPressMenu: [
@@ -10,6 +12,19 @@ const initialState: State = {
     { id: '3', icon: 'select-all', name: '全选', alias: 'sall' },
   ],
   editing: null,
+  form: {
+    id: '',
+    count: '',
+    type: 'out',
+    countType: '人民币',
+    tags: [],
+    isChecked: false,
+    note: '',
+    image: '',
+    no: 0,
+    date: 0,
+  },
+  countTypeIndex: 0,
 }
 
 const reducer = (state: State, action: Action) => {
@@ -18,6 +33,12 @@ const reducer = (state: State, action: Action) => {
       return {
         ...state,
         isShowModal: action.payload,
+      }
+    case 'setModal':
+      return {
+        ...state,
+        modalTitle: action.payload.title,
+        modalBody: action.payload.body,
       }
     case 'isShowMenu':
       return {
@@ -29,11 +50,36 @@ const reducer = (state: State, action: Action) => {
         ...state,
         activeKeeping: action.payload,
       }
-    case 'toEditing':
+    case 'fromEditing':
       return {
         ...state,
-        editing: action.payload,
+        form: {
+          ...action.payload,
+          tags: action.payload.tags,
+        },
       }
+    case 'addForm':
+      return {
+        ...state,
+        form: {
+          ...state.form,
+          ...action.payload,
+        },
+      }
+    case 'emptyForm':
+      return {
+        ...state,
+        form: {
+          ...initialState.form,
+          tags: [],
+        },
+      }
+    case 'countTypeIndex':
+      return {
+        ...state,
+        countTypeIndex: action.payload,
+      }
+
     default:
       return state
   }
@@ -78,10 +124,14 @@ interface Props {
 
 interface State {
   isShowModal: boolean
+  modalTitle: string
+  modalBody: string
   isShowMenu: boolean
   activeKeeping: KeepingItem['id'][]
   longPressMenu: MenuItem[]
   editing: KeepingItem | null
+  form: KeepingItem
+  countTypeIndex: number
 }
 
 type Action =
@@ -92,6 +142,28 @@ type Action =
       payload: KeepingItem['id'][]
     }
   | {
-      type: 'toEditing'
+      type: 'fromEditing'
       payload: KeepingItem
+    }
+  | {
+      type: 'addForm'
+      payload: KeepingItem
+    }
+  | {
+      type: 'editForm'
+      payload: KeepingItem
+    }
+  | {
+      type: 'emptyForm'
+    }
+  | {
+      type: 'countTypeIndex'
+      payload: number
+    }
+  | {
+      type: 'setModal'
+      payload: {
+        title: string
+        body: string
+      }
     }

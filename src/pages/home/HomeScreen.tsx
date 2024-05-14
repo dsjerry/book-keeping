@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { View, Pressable } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 
@@ -11,11 +12,7 @@ const HomeScreen = () => {
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
   const { items, remove, toggle } = useKeepingStore()
-  const { isShowModal, activeKeeping } = useHomeStore()
-
-  // useEffect(() => {
-  //   load()
-  // }, [])
+  const { isShowModal, modalTitle, modalBody, activeKeeping } = useHomeStore()
 
   const doModalCancel = () => dispatch({ type: 'isShowModal', payload: false })
   const doModalAccess = () => {
@@ -32,13 +29,13 @@ const HomeScreen = () => {
         {items.length === 0 && <NothingHere />}
         <View style={homeStyle.btnArea}>
           {/* 不知道为啥它接收 never */}
-          <AddingButton
-            onPress={() => navigation.navigate('Adding' as never)}
-          />
+          <AddingButton onPress={() => navigation.navigate('Adding', {})} />
         </View>
       </Pressable>
       {/* 提示框 */}
       <Modal
+        title={modalTitle}
+        content={modalBody}
         visible={isShowModal}
         onCancel={doModalCancel}
         onAccess={doModalAccess}

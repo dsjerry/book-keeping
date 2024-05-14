@@ -4,36 +4,40 @@ import { View, Text, StyleSheet, Keyboard } from 'react-native'
 import { TextInput, Chip, Button } from 'react-native-paper'
 import { useNavigation, useRoute } from '@react-navigation/native'
 
-import { CountTypeList } from '~consts/Data'
-import { useAdding } from './hooks/useAdding'
-import OutTypePane from './components/OutTypePane'
-import CountTypePicker from './components/CountTypePicker'
+import { OutTypes } from '~consts/Data'
+import CustomChipPane from '~components/CustomChipPane'
+import { CountTypePicker } from './components'
 import ImagePicker from '~components/ImagePicker'
+import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
+import { useKeepingStore } from '~store/keepingStore'
 
 const Adding: React.FC<Props> = ({ route }) => {
   const [tips, setTips] = useState('')
-  const [version, setVersion] = useState(0)
   const [keyboardStatus, setKeyboardStatus] = useState<'showed' | 'hidden'>(
     'hidden',
   )
-  const {
-    action,
-    outTypes,
-    setOutTypes,
-    countTypeIndex,
-    setCountTypeIndex,
-    form,
-    setForm,
-  } = useAdding()
+  const [outTypes, setOutTypes] = useState<OutType[]>(OutTypes)
+
+  const { add, update } = useKeepingStore()
+
+  const { form, countTypeIndex } = useHomeStore()
+  const dispatch = useHomeStoreDispatch()
 
   const navigation = useNavigation()
   const { params }: ScreenParam.Adding = useRoute()
 
   useEffect(() => {
     if (params && params?.isEdit) {
-      action.edit({
-        ...params.item,
+      // TODO
+      const item = params.item!
+      const newOutTypes = outTypes
+      item.tags.forEach(tag => {
+        newOutTypes.forEach(item => {
+          item.alias === tag.alias ? (item.isChecked = true) : ''
+        })
       })
+      setOutTypes(newOutTypes)
+      dispatch({ type: 'fromEditing', payload: item })
     }
     const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
       setKeyboardStatus('showed')
@@ -43,13 +47,14 @@ const Adding: React.FC<Props> = ({ route }) => {
     })
 
     return () => {
+      dispatch({ type: 'emptyForm' })
       showSubscription.remove()
       hideSubscription.remove()
     }
   }, [])
 
-  const handleReset = () => {
-    setVersion(version + 1)
+  const formChanged = (item: Partial<KeepingItem>) => {
+    dispatch({ type: 'addForm', payload: { ...form, ...item } })
   }
 
   const onAddPress = () => {
@@ -58,49 +63,33 @@ const Adding: React.FC<Props> = ({ route }) => {
       return setTips('请输入金额')
     }
     if (params?.isEdit) {
-      action.update({
-        ...form,
-        countType: CountTypeList[countTypeIndex],
-        tags: outTypes.filter(chip => chip.isChecked),
-        isChecked: false,
-      })
+      update(form)
     } else {
-      action.add({
-        id: Date.now().toString(),
-        count: form.count,
-        type: form.type,
-        countType: CountTypeList[countTypeIndex],
-        tags: outTypes.filter(chip => chip.isChecked),
-        isChecked: false,
-        date: Date.now(),
-        note: form.note,
-        image: form.image,
-      })
+      add(form)
     }
-
-    navigation.goBack()
-    handleReset()
+    navigation.navigate('HomeScreen', {})
   }
 
   const onChipPress = (chip: OutType) => {
-    setOutTypes(
-      outTypes.map(item => {
-        if (item.id === chip.id) {
-          return { ...item, isChecked: !item.isChecked }
-        }
-        return item
-      }),
-    )
+    chip.isChecked = !chip.isChecked
+    const newTags = form.tags
+    if (chip.isChecked && !newTags.includes(chip)) {
+      newTags.push(chip)
+    } else {
+      newTags.splice(newTags.indexOf(chip), 1)
+    }
+
+    formChanged({ tags: newTags })
   }
 
   return (
-    <View style={style.container} key={version}>
+    <View style={style.container}>
       <Text>记一笔</Text>
       <View style={style.count}>
         <TextInput
           label="金额"
           value={form.count}
-          onChangeText={text => setForm({ ...form, count: text })}
+          onChangeText={text => formChanged({ count: text })}
           keyboardType="numeric"
           style={{ flex: 3 }}
           right={
@@ -109,23 +98,28 @@ const Adding: React.FC<Props> = ({ route }) => {
             )
           }
         />
-        <CountTypePicker index={countTypeIndex} setIndex={setCountTypeIndex} />
+        <CountTypePicker
+          index={countTypeIndex}
+          setIndex={index =>
+            dispatch({ type: 'countTypeIndex', payload: index })
+          }
+        />
       </View>
       <View style={style.countType}>
         <Chip
           selected={form.type === 'in'}
-          onPress={() => setForm({ ...form, type: 'in' })}>
+          onPress={() => formChanged({ type: 'in' })}>
           收入
         </Chip>
         <Chip
           selected={form.type === 'out'}
           style={{ marginLeft: 5 }}
-          onPress={() => setForm({ ...form, type: 'out' })}>
+          onPress={() => formChanged({ type: 'out' })}>
           支出
         </Chip>
       </View>
       {form.type === 'out' && (
-        <OutTypePane outTypes={outTypes} onChipPress={onChipPress} />
+        <CustomChipPane items={outTypes} onPress={onChipPress} />
       )}
       <TextInput
         label="备注"
@@ -133,10 +127,10 @@ const Adding: React.FC<Props> = ({ route }) => {
         mode="outlined"
         multiline
         value={form.note}
-        onChangeText={text => setForm({ ...form, note: text })}
+        onChangeText={text => formChanged({ note: text })}
       />
       <ImagePicker
-        uploaded={assets => setForm({ ...form, image: assets })}
+        uploaded={assets => formChanged({ image: assets })}
         isShow={keyboardStatus !== 'showed'}
       />
       <Button mode="outlined" style={style.addBtn} onPress={onAddPress}>

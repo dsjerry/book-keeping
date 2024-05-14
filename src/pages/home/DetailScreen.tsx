@@ -22,7 +22,7 @@ const Detail = () => {
   }, [params.id])
 
   const onEdit = () => {
-    navigation.navigate('Adding' as never, { item, isEdit: true } as never)
+    navigation.navigate('Adding', { item, isEdit: true })
   }
   return (
     <View style={layout.container}>
@@ -70,10 +70,12 @@ const Detail = () => {
 
 const defaultItem = {
   id: Date.now().toLocaleString(),
-  count: 10,
+  count: '10',
   type: 'out',
   countType: '人民币',
-  tags: [{ id: '1', name: '餐饮', icon: 'home', isChecked: false }],
+  tags: [
+    { id: '1', name: '餐饮', alias: 'food', icon: 'home', isChecked: false },
+  ],
   isChecked: false,
   note: '这个demo',
 } as KeepingItem

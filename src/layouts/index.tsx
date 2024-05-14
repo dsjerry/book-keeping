@@ -4,6 +4,7 @@ import {
   createDrawerNavigator,
   DrawerItemList,
   DrawerContentScrollView,
+  DrawerContentComponentProps,
 } from '@react-navigation/drawer'
 import { Icon } from 'react-native-paper'
 
@@ -27,7 +28,7 @@ const SettingsIcon = () => (
 )
 
 // 自定义Drawer，使得Drawer.Navigator 里面除了可以使用 Drawer.Screen，还可以添加其他项目
-const CustomDrawerContent = (props: any) => {
+const CustomDrawerContent = (props: DrawerContentComponentProps) => {
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={{ flex: 1 }}>
       <DrawerItemUser />

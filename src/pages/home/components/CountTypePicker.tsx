@@ -3,7 +3,7 @@ import WheelPicker from 'react-native-wheely'
 
 import { CountTypeList } from '~consts/Data'
 
-export default function CountTypePicker({ index, setIndex }: Props) {
+export function CountTypePicker({ index, setIndex }: Props) {
   return (
     <WheelPicker
       selectedIndex={index}

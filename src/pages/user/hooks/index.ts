@@ -1,14 +1,17 @@
 import { logging } from '~utils'
-import { useFetch } from '~hooks/useFetch'
 
 export const useLoginFetch = async (form: LoginForm) => {
   try {
+    return form
   } catch (error) {}
 }
 
-export const useRegisterFetch = async (form: RegisterForm) => {
+export const useRegisterFetch = async (form: LoginForm & RegisterForm) => {
   try {
-  } catch (error) {}
+    return form
+  } catch (error) {
+    logging.error(error)
+  }
 }
 
 interface LoginForm {

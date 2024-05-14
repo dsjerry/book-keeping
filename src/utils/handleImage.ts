@@ -4,9 +4,9 @@ import { logging } from './logger'
 
 export const handleImage: HandleImage = async (options, target) => {
   const launchOptions = {
-    mediaType: options.type || 'photo',
+    mediaType: options?.type || 'photo',
     includeBase64: true,
-    selectionLimit: options.limit,
+    selectionLimit: options?.limit,
   }
   try {
     let result = null
@@ -24,7 +24,7 @@ export const handleImage: HandleImage = async (options, target) => {
 }
 
 type HandleImage = (
-  options: {
+  options?: {
     limit?: number
     type?: MediaType
   },

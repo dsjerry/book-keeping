@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View, StyleSheet, Pressable } from 'react-native'
 import { Button, Avatar } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
+
+import { useUserStore } from '~store/userStore'
 
 const ToLoginWidget: React.FC<LoginWidget> = ({ onLogin }) => {
   return (
@@ -17,10 +19,14 @@ const ToLoginWidget: React.FC<LoginWidget> = ({ onLogin }) => {
   )
 }
 
-const UserWidget: React.FC<UserWidget> = ({ username, onUser }) => {
+const UserWidget: React.FC<UserWidget> = ({ username, avatar, onUser }) => {
   return (
     <Pressable style={userWidget.container} onPress={onUser}>
-      <Avatar.Text label={username.substring(0, 1)} size={32} />
+      {avatar ? (
+        <Avatar.Image size={32} source={{ uri: avatar }} />
+      ) : (
+        <Avatar.Text size={32} label={username.substring(0, 1)} />
+      )}
       <Button
         style={userWidget.username}
         icon={'chevron-right'}
@@ -32,17 +38,27 @@ const UserWidget: React.FC<UserWidget> = ({ username, onUser }) => {
 }
 
 const DrawerItemUser = () => {
-  const [isLogin, setIsLogin] = useState(false)
   const navigation = useNavigation()
+  const { currentUser } = useUserStore()
+
+  useEffect(() => {
+    console.log(currentUser)
+  }, [currentUser])
 
   const onLoginPress = () => {
-    navigation.navigate('User' as never, { screen: 'LoginScreen' } as never)
+    navigation.navigate('User', { screen: 'LoginScreen' })
   }
-  const onUserPress = () => {}
+  const onUserPress = () => {
+    navigation.navigate('User', { screen: 'UserHomeScreen' })
+  }
   return (
     <View style={style.container}>
-      {isLogin ? (
-        <UserWidget username="飞翔的企鹅" onUser={onUserPress} />
+      {currentUser ? (
+        <UserWidget
+          username={currentUser.username}
+          avatar={currentUser.avatar}
+          onUser={onUserPress}
+        />
       ) : (
         <ToLoginWidget onLogin={onLoginPress} />
       )}
