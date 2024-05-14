@@ -31,4 +31,10 @@ interface ScreenParamsList {
     user?: Partial<User>
   }
   ProfileEditScreen: {}
+  DetailScreen: {
+    id: KeepingItem['id']
+    hideHeader?: boolean
+  }
+  SettingsScreen: {}
+  AnalyzeScreen: {}
 }

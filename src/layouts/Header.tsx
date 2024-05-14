@@ -1,7 +1,8 @@
+import { useEffect } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { IconButton, Menu, Divider, Icon } from 'react-native-paper'
+import { IconButton, Menu, Divider } from 'react-native-paper'
 
-import type { DrawerHeaderProps } from '@react-navigation/drawer'
+import type { StackHeaderProps } from '@react-navigation/stack'
 
 import HalfModal from '~components/HalfModal'
 import { useKeepingStore } from '~store/keepingStore'
@@ -14,12 +15,18 @@ import {
 } from './widgets'
 import { useHeaderContext } from '../contexts/HeaderContext'
 
-interface HeaderProps extends DrawerHeaderProps {
+interface HeaderProps extends StackHeaderProps {
   menu?: MenuItem
+  toggleDrawer?: () => void
 }
 export type RightMenuItem = 'sort' | 'filter' | 'all' | 'invert' | 'delete'
 
-const Header: React.FC<HeaderProps> = ({ route, navigation, options }) => {
+const Header: React.FC<HeaderProps> = ({
+  route,
+  navigation,
+  options,
+  toggleDrawer,
+}) => {
   const {
     items,
     sort,
@@ -47,7 +54,7 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options }) => {
     dispatch({ type: 'isShowBottomModal', payload: flag })
   }
 
-  const onLeftMenuPress = () => navigation.openDrawer()
+  const onLeftMenuPress = () => toggleDrawer && toggleDrawer()
   const onRightMenuClose = () => {}
   const onRightMenuItemPress = (item: RightMenuItem) => {
     // TODO
@@ -97,8 +104,6 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options }) => {
       <View style={style.right}>
         {itemSelected > 0 && (
           <View style={style.checked}>
-            {/* <Icon source="checkbox-outline" size={20} /> */}
-            {/* <Text>已选</Text> */}
             <Text style={style.checkedCount}>{itemSelected}</Text>
           </View>
         )}

@@ -83,7 +83,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle }) => {
   const safeArea = screenWidth - menuWidth
 
   const doNavigate = (id: string) => {
-    navigation.navigate('DetailScreen' as never, { id } as never)
+    navigation.navigate('DetailScreen', { hideHeader: true, id })
   }
   // 菜单的显示或隐藏
   const doMenuShow = (id: KeepingItem['id'], e: GestureResponderEvent) => {

@@ -33,16 +33,18 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
         <View style={{ flex: 2 }}>
           <View
             style={{
-              width: 50,
-              height: 50,
+              width: 60,
+              height: 60,
               borderRadius: 4,
               backgroundColor: '#e7e0ec',
             }}>
-            <Image source={{ uri: user.avatar, width: 50, height: 50 }}></Image>
+            <Image
+              source={{ uri: user.avatar, width: 60, height: 60 }}
+              style={{ borderRadius: 4 }}></Image>
           </View>
         </View>
         <View style={{ flex: 6, justifyContent: 'space-between' }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 16, color: '#e7e0ec' }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#e7e0ec' }}>
             {user.username || '飞翔的企鹅'}
           </Text>
           <Text style={{ color: '#e7e0ec' }}>UID: {user.id || '123456'}</Text>

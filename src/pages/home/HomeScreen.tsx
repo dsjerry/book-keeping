@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import { View, Pressable } from 'react-native'
+import { useState } from 'react'
+import { View, Pressable, Button, Text } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 
 import { AddingButton, KeepingList, NothingHere } from './components'
@@ -28,7 +28,6 @@ const HomeScreen = () => {
         <KeepingList item={items} toggle={toggle} />
         {items.length === 0 && <NothingHere />}
         <View style={homeStyle.btnArea}>
-          {/* 不知道为啥它接收 never */}
           <AddingButton onPress={() => navigation.navigate('Adding', {})} />
         </View>
       </Pressable>
