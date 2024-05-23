@@ -1,6 +1,7 @@
-import { useEffect } from 'react'
+import { useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { IconButton, Menu, Divider } from 'react-native-paper'
+import { getFocusedRouteNameFromRoute } from '@react-navigation/native'
 
 import type { StackHeaderProps } from '@react-navigation/stack'
 
@@ -42,6 +43,26 @@ const Header: React.FC<HeaderProps> = ({
     state: { isShowRightMenu, isShowBottomModal, halfModalType },
     dispatch,
   } = useHeaderContext()
+
+  // 子页面（不在 AppLayout 里面的）路由，自定义软件头
+  const _header = useMemo<{
+    title: string | undefined
+    type: 'back' | 'menu'
+  }>(() => {
+    const routeName = () => {
+      const name = getFocusedRouteNameFromRoute(route) ?? 'Home'
+      return name as keyof ScreenParamsList
+    }
+
+    switch (routeName()) {
+      case 'ProfileEditScreen':
+        return { title: '编辑信息', type: 'back' }
+      case 'LoginScreen':
+        return { title: '登录 / 注册', type: 'back' }
+      default:
+        return { title: options.title, type: 'menu' }
+    }
+  }, [route])
 
   const page = route.name
 
@@ -96,10 +117,17 @@ const Header: React.FC<HeaderProps> = ({
   return (
     <Pressable style={style.container}>
       <View>
-        <IconButton icon="menu" onPress={onLeftMenuPress} />
+        {_header.type === 'back' ? (
+          <IconButton
+            icon={'chevron-left'}
+            onPress={() => navigation.goBack()}
+          />
+        ) : (
+          <IconButton icon="menu" onPress={onLeftMenuPress} />
+        )}
       </View>
       <View>
-        <Text style={style.title}>{options.title}</Text>
+        <Text style={style.title}>{_header.title}</Text>
       </View>
       <View style={style.right}>
         {itemSelected > 0 && (
@@ -153,6 +181,7 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
+    // backgroundColor: '#e7e0ec',
   },
   right: {
     flexDirection: 'row',

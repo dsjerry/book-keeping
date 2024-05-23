@@ -1,6 +1,28 @@
 import { RouteProp } from '@react-navigation/native'
 
 declare global {
+  interface ScreenParamsList {
+    Detail: {
+      id: string
+    }
+    HomeScreen: {}
+    Adding: {
+      isEdit?: boolean
+      item?: KeepingItem
+    }
+    User: {}
+    LoginScreen: {}
+    UserHomeScreen: {
+      user?: Partial<User>
+    }
+    ProfileEditScreen: {}
+    DetailScreen: {
+      id: KeepingItem['id']
+      hideHeader?: boolean
+    }
+    SettingsScreen: {}
+    AnalyzeScreen: {}
+  }
   /**
    * 导航参数
    */
@@ -14,27 +36,4 @@ declare global {
   namespace ReactNavigation {
     interface RootParamList extends ScreenParamsList {}
   }
-}
-
-interface ScreenParamsList {
-  Detail: {
-    id: string
-  }
-  HomeScreen: {}
-  Adding: {
-    isEdit?: boolean
-    item?: KeepingItem
-  }
-  User: {}
-  LoginScreen: {}
-  UserHomeScreen: {
-    user?: Partial<User>
-  }
-  ProfileEditScreen: {}
-  DetailScreen: {
-    id: KeepingItem['id']
-    hideHeader?: boolean
-  }
-  SettingsScreen: {}
-  AnalyzeScreen: {}
 }

@@ -13,6 +13,7 @@ module.exports = {
           '~pages': './src/pages',
           '~consts': './src/consts',
           '~store': './src/store',
+          '~layouts': './src/layouts',
         },
       },
     ],

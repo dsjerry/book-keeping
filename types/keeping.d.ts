@@ -10,6 +10,7 @@ interface KeepingItem {
   isChecked?: boolean
   isShow?: boolean
   no?: number
+  useToFilter: string[]
 }
 
 interface KeepingStore {

@@ -126,7 +126,11 @@ export default function AppLayout() {
               component={Analyze}
               options={{ title: '分析' }}
             />
-            <RootStack.Screen name="User" component={UserScreen} />
+            <RootStack.Screen
+              name="User"
+              component={UserScreen}
+              options={{ title: '个人中心' }}
+            />
           </RootStack.Group>
           <RootStack.Group
             screenOptions={{

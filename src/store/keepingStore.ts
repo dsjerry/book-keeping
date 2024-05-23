@@ -2,7 +2,6 @@ import { create, StateCreator } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import _ from 'lodash'
-import { logging } from '~utils'
 
 interface SortSlice {
   sortBy: SortBy
@@ -12,8 +11,8 @@ interface SortSlice {
 }
 
 interface FilterSlice {
-  filterBy: string[]
-  setFilterBy: (value: string[]) => void
+  filterBy: FilterBy[]
+  setFilterBy: (value: FilterBy[]) => void
 }
 
 interface KeepingSlice {
@@ -94,6 +93,7 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
       item.id = Date.now().toString()
       item.date = Date.now()
       item.no = state.items.length + 1
+      item.useToFilter = item.tags.map(item => item.alias)
       return { items: [...state.items, item] }
     })
   },
@@ -153,17 +153,15 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
       })
       return set(state => ({ ...state, items }))
     }
+
     for (let i = 0; i < items.length; i++) {
       for (let j = 0; j < filterBy.length; j++) {
-        let outtype = items[i].tags
-        logging.info(items[i])
-        outtype.forEach(item => {
-          if (item.alias !== filterBy[j]) {
-            items[i].isShow = false
-          } else {
-            items[i].isShow = true
-          }
-        })
+        let useToFilter = items[i].useToFilter
+        if (useToFilter.includes(filterBy[j])) {
+          items[i].isShow = true
+        } else {
+          items[i].isShow = false
+        }
       }
     }
     set(state => ({ ...state, items }))
@@ -185,3 +183,15 @@ export const useKeepingStore = create<CommonSlice>()(
     },
   ),
 )
+
+type FilterBy =
+  | 'food'
+  | 'shop'
+  | 'traffic'
+  | 'communication'
+  | 'entertainment'
+  | 'note'
+  | 'cny'
+  | 'aud'
+  | 'hkd'
+  | 'image'

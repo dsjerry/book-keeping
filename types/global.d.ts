@@ -8,3 +8,7 @@ interface MenuItem {
 interface AppSettings {
   useOnline: boolean
 }
+
+interface AnyObj {
+  [key: string]: any
+}

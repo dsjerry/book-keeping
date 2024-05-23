@@ -65,6 +65,8 @@ const Adding: React.FC<Props> = ({ route }) => {
     if (params?.isEdit) {
       update(form)
     } else {
+      console.log('before:', form)
+
       add(form)
     }
     navigation.navigate('HomeScreen', {})

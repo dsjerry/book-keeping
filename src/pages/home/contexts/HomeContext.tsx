@@ -23,6 +23,7 @@ const initialState: State = {
     image: '',
     no: 0,
     date: 0,
+    useToFilter: [''],
   },
   countTypeIndex: 0,
 }

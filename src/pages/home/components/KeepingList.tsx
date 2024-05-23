@@ -48,7 +48,7 @@ const Item: React.FC<ItemProps> = ({
               status={item.isChecked ? 'checked' : 'unchecked'}
               onPress={() => toggle(item.id)}
             />
-            <Text>支出</Text>
+            <Text>{item.type === 'in' ? '收入' : '支出'}</Text>
             <Text style={style.itemCount}>{item.count}</Text>
             <Text>元</Text>
           </View>

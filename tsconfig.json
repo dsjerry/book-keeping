@@ -10,7 +10,8 @@
       "~components/*": ["./src/components/*"],
       "~pages/*": ["./src/pages/*"],
       "~consts/*": ["./src/consts/*"],
-      "~store/*": ["./src/store/*"]
+      "~store/*": ["./src/store/*"],
+      "~layouts/*": ["./src/layouts/*"]
     }
   },
   "include": ["types", "src"],

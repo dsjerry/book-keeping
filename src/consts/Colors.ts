@@ -1,3 +1,4 @@
-export const MAIN_THEME = '#f8f8f8'
-
-export const SUB_THEME = '#f8f8f8'
+export enum _COLORS {
+  main = '#6750a4', // 激活状态、加粗颜色
+  sub = '#e7e0ec', //  背景色
+}
