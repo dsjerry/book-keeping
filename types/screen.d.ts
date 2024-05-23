@@ -1,7 +1,7 @@
-import { RouteProp } from '@react-navigation/native'
+import { RouteProp, ParamListBase } from '@react-navigation/native'
 
 declare global {
-  interface ScreenParamsList {
+  interface ScreenParamsList extends ParamListBase {
     Detail: {
       id: string
     }
@@ -22,6 +22,7 @@ declare global {
     }
     SettingsScreen: {}
     AnalyzeScreen: {}
+    AboutScreen: {}
   }
   /**
    * 导航参数

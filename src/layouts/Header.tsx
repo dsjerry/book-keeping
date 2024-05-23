@@ -54,11 +54,16 @@ const Header: React.FC<HeaderProps> = ({
       return name as keyof ScreenParamsList
     }
 
-    switch (routeName()) {
+    const _name = routeName()
+    console.log('路由:', _name)
+
+    switch (_name) {
       case 'ProfileEditScreen':
         return { title: '编辑信息', type: 'back' }
       case 'LoginScreen':
         return { title: '登录 / 注册', type: 'back' }
+      case 'AboutScreen':
+        return { title: '关于', type: 'back' }
       default:
         return { title: options.title, type: 'menu' }
     }

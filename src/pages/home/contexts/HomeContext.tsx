@@ -1,9 +1,12 @@
 import { Dispatch, createContext, useContext, useReducer } from 'react'
 
 const initialState: State = {
-  isShowModal: false,
-  modalTitle: '',
-  modalBody: '',
+  modal: {
+    title: '',
+    body: '',
+    status: false,
+    isShow: false,
+  },
   isShowMenu: false,
   activeKeeping: [],
   longPressMenu: [
@@ -30,16 +33,13 @@ const initialState: State = {
 
 const reducer = (state: State, action: Action) => {
   switch (action.type) {
-    case 'isShowModal':
+    case 'modal':
       return {
         ...state,
-        isShowModal: action.payload,
-      }
-    case 'setModal':
-      return {
-        ...state,
-        modalTitle: action.payload.title,
-        modalBody: action.payload.body,
+        modal: {
+          ...state.modal,
+          ...action.payload,
+        },
       }
     case 'isShowMenu':
       return {
@@ -124,9 +124,16 @@ interface Props {
 }
 
 interface State {
-  isShowModal: boolean
-  modalTitle: string
-  modalBody: string
+  modal: {
+    title: string
+    body: string
+    status: boolean // 点了确定还是取消
+    isShow: boolean
+    type?: 'remove' | 'exit'
+    onAccess?: () => void
+    onCancel?: () => void
+  }
+
   isShowMenu: boolean
   activeKeeping: KeepingItem['id'][]
   longPressMenu: MenuItem[]
@@ -166,5 +173,21 @@ type Action =
       payload: {
         title: string
         body: string
+      }
+    }
+  | {
+      type: 'modelStatus'
+      payload: boolean
+    }
+  | {
+      type: 'modal'
+      payload: {
+        title?: string
+        body?: string
+        status?: boolean
+        isShow?: boolean
+        type?: 'remove' | 'exit'
+        onAccess?: () => void
+        onCancel?: () => void
       }
     }

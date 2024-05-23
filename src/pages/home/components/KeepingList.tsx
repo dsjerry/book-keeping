@@ -70,12 +70,17 @@ const Item: React.FC<ItemProps> = ({
   )
 }
 
-const KeepingList: React.FC<Props> = ({ item, toggle }) => {
+const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
   const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
 
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
-  const { isShowMenu, longPressMenu: menu } = useHomeStore()
+  const {
+    isShowMenu,
+    longPressMenu: menu,
+    modal,
+    activeKeeping,
+  } = useHomeStore()
 
   // 长按菜单显示范围
   const screenWidth = Dimensions.get('screen').width
@@ -102,10 +107,31 @@ const KeepingList: React.FC<Props> = ({ item, toggle }) => {
     const item = menu.find(item => item.id === id)
     if (item?.alias === 'del') {
       dispatch({
-        type: 'setModal',
-        payload: { title: '删除', body: '确认删除吗?' },
+        type: 'modal',
+        payload: {
+          ...modal,
+          title: '删除',
+          body: '确认删除吗?',
+          isShow: true,
+          onAccess: () => {
+            activeKeeping.forEach(id => remove(id))
+            dispatch({
+              type: 'modal',
+              payload: {
+                ...modal,
+                isShow: false,
+                status: true,
+              },
+            })
+          },
+          onCancel: () => {
+            dispatch({
+              type: 'modal',
+              payload: { ...modal, isShow: false, status: false },
+            })
+          },
+        },
       })
-      dispatch({ type: 'isShowModal', payload: true })
     }
 
     dispatch({ type: 'isShowMenu', payload: false })
@@ -133,6 +159,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle }) => {
 interface Props {
   item: KeepingItem[]
   toggle: KeepingStore['toggle']
+  remove: KeepingStore['remove']
 }
 
 interface ItemProps {

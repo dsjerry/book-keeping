@@ -4,6 +4,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "allowSyntheticDefaultImports": true,
+    "baseUrl": "./",
     "paths": {
       "~utils": ["./src/utils"],
       "~hooks/*": ["./src/hooks/*"],
@@ -11,7 +12,8 @@
       "~pages/*": ["./src/pages/*"],
       "~consts/*": ["./src/consts/*"],
       "~store/*": ["./src/store/*"],
-      "~layouts/*": ["./src/layouts/*"]
+      "~layouts/*": ["./src/layouts/*"],
+      "~assets/*": ["./src/assets/*"]
     }
   },
   "include": ["types", "src"],

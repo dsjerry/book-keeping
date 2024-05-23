@@ -12,20 +12,14 @@ const HomeScreen = () => {
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
   const { items, remove, toggle } = useKeepingStore()
-  const { isShowModal, modalTitle, modalBody, activeKeeping } = useHomeStore()
-
-  const doModalCancel = () => dispatch({ type: 'isShowModal', payload: false })
-  const doModalAccess = () => {
-    activeKeeping.forEach(id => remove(id))
-    dispatch({ type: 'isShowModal', payload: false })
-  }
+  const { modal } = useHomeStore()
 
   return (
     <>
       <Pressable
         style={homeStyle.container}
         onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
-        <KeepingList item={items} toggle={toggle} />
+        <KeepingList item={items} toggle={toggle} remove={remove} />
         {items.length === 0 && <NothingHere />}
         <View style={homeStyle.btnArea}>
           <AddingButton onPress={() => navigation.navigate('Adding', {})} />
@@ -33,11 +27,11 @@ const HomeScreen = () => {
       </Pressable>
       {/* 提示框 */}
       <Modal
-        title={modalTitle}
-        content={modalBody}
-        visible={isShowModal}
-        onCancel={doModalCancel}
-        onAccess={doModalAccess}
+        title={modal.title}
+        content={modal.body}
+        visible={modal.isShow}
+        onCancel={modal.onCancel}
+        onAccess={modal.onAccess}
       />
     </>
   )

@@ -2,7 +2,7 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, Keyboard } from 'react-native'
 import { TextInput, Chip, Button } from 'react-native-paper'
-import { useNavigation, useRoute } from '@react-navigation/native'
+import { useNavigation, useRoute, EventArg } from '@react-navigation/native'
 
 import { OutTypes } from '~consts/Data'
 import CustomChipPane from '~components/CustomChipPane'
@@ -10,6 +10,7 @@ import { CountTypePicker } from './components'
 import ImagePicker from '~components/ImagePicker'
 import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
 import { useKeepingStore } from '~store/keepingStore'
+import { useAppSettingsStore } from '~store/settingStore'
 
 const Adding: React.FC<Props> = ({ route }) => {
   const [tips, setTips] = useState('')
@@ -19,8 +20,9 @@ const Adding: React.FC<Props> = ({ route }) => {
   const [outTypes, setOutTypes] = useState<OutType[]>(OutTypes)
 
   const { add, update } = useKeepingStore()
+  const { confirmExitEdit } = useAppSettingsStore()
 
-  const { form, countTypeIndex } = useHomeStore()
+  const { form, countTypeIndex, modal } = useHomeStore()
   const dispatch = useHomeStoreDispatch()
 
   const navigation = useNavigation()
@@ -44,6 +46,30 @@ const Adding: React.FC<Props> = ({ route }) => {
     })
     const hideSubscription = Keyboard.addListener('keyboardDidHide', () => {
       setKeyboardStatus('hidden')
+    })
+
+    navigation.addListener('beforeRemove', e => {
+      if (confirmExitEdit) {
+        e.preventDefault()
+
+        dispatch({
+          type: 'modal',
+          payload: {
+            title: '确定要退出吗？',
+            body: '内容将不会被保存',
+            isShow: true,
+            type: 'exit',
+            onAccess: () => {
+              dispatch({
+                type: 'modal',
+                payload: { ...modal, isShow: false, status: false },
+              })
+              navigation.dispatch(e.data.action)
+            },
+            onCancel: () => {},
+          },
+        })
+      }
     })
 
     return () => {

@@ -14,6 +14,7 @@ module.exports = {
           '~consts': './src/consts',
           '~store': './src/store',
           '~layouts': './src/layouts',
+          '~assets': './src/assets',
         },
       },
     ],

@@ -7,6 +7,8 @@ interface MenuItem {
 
 interface AppSettings {
   useOnline: boolean
+  confirmExitEdit: boolean
+  confirmRemove: boolean
 }
 
 interface AnyObj {
