@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useRef, useEffect } from 'react'
 import { View, Text, StyleSheet, Image } from 'react-native'
 import { IconButton, List } from 'react-native-paper'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
+import { captureRef } from 'react-native-view-shot'
+import Share from 'react-native-share'
 
 import { useUserContext } from './contexts/UserContext'
 import NoUser from './widgets/NoUser'
@@ -21,8 +23,28 @@ interface UserCardProps {
 }
 
 const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
+  const shareRef = useRef<any>(null)
+  const onShare = async () => {
+    try {
+      const uri = await captureRef(shareRef.current, {
+        format: 'png',
+        quality: 0.8,
+      })
+
+      const shareOptions = {
+        title: '分享到',
+        url: uri,
+        failOnCancel: false,
+      }
+
+      await Share.open(shareOptions)
+    } catch (error) {
+      console.error('捕获失败:', error)
+    }
+  }
   return (
     <LinearGradient
+      ref={shareRef}
       colors={['#6750a4', '#a89ac7', '#e7e0ec']}
       style={card.container}>
       <View
@@ -50,7 +72,11 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
           <Text style={{ color: '#e7e0ec' }}>UID: {user.id || '123456'}</Text>
         </View>
         <View style={{ flex: 1 }}>
-          <IconButton icon={'share-outline'} iconColor="#a89ac7" />
+          <IconButton
+            icon={'share-outline'}
+            iconColor="#a89ac7"
+            onPress={onShare}
+          />
         </View>
       </View>
       <View style={{ paddingVertical: 20 }}>

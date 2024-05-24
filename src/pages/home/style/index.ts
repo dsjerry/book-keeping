@@ -1,14 +1,22 @@
 import { StyleSheet } from 'react-native'
+import { _COLORS } from '~consts/Colors'
 
 export const layout = StyleSheet.create({
   container: {
     flex: 1,
+    width: '100%',
     justifyContent: 'flex-start',
+    alignItems: 'center',
+    // backgroundColor: _COLORS.sub,
+  },
+  // 这里的样式影响分享的样式
+  sharepane: {
+    width: '100%',
+    justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 20,
   },
   card: {
-    flex: 1,
     width: '90%',
     height: 300,
     elevation: 5,
@@ -17,8 +25,9 @@ export const layout = StyleSheet.create({
     borderRadius: 5,
   },
   detail: {
-    flex: 2,
+    // flex: 2,
     width: '90%',
+    marginTop: 20,
   },
   cardHeader: {
     flex: 1,
@@ -37,11 +46,12 @@ export const layout = StyleSheet.create({
   },
   iconBar: {
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
-    height: 50,
+    width: '88%',
     paddingHorizontal: 20,
+    marginTop: 'auto',
+    marginBottom: 10,
   },
   count: {
     flexDirection: 'row',
