@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack'
 import UserScreen from './UserScreen'
 import LoginScreen from './LoginScreen'
 import ProfileEditScreen from './ProfileEdit'
+import AddTagsScreen from './AddTagsScreen'
 import { UserProvider } from './contexts/UserContext'
 
 const Stack = createStackNavigator()
@@ -26,6 +27,10 @@ const User = () => {
           name="ProfileEditScreen"
           component={ProfileEditScreen}
           options={{ title: '编辑信息' }}></Stack.Screen>
+        <Stack.Screen
+          name="AddTagsScreen"
+          component={AddTagsScreen}
+          options={{ title: '添加标签' }}></Stack.Screen>
       </Stack.Navigator>
     </UserProvider>
   )

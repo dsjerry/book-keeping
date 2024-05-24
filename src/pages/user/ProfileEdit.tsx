@@ -59,6 +59,13 @@ const ProfileEdit = () => {
     })
   }
 
+  const generateUid = () => {
+    userStore.update({
+      ..._currentUser,
+      id: Date.now().toString(),
+    })
+  }
+
   return (
     <>
       <List.Section
@@ -67,6 +74,19 @@ const ProfileEdit = () => {
           paddingLeft: 10,
           width: '100%',
         }}>
+        <List.Item
+          title="UID"
+          right={props => (
+            <Button
+              icon={'chevron-right'}
+              textColor="grey"
+              contentStyle={{ flexDirection: 'row-reverse' }}
+              disabled={!!_currentUser.id}
+              onPress={generateUid}>
+              {_currentUser.id || '缺失, 点击分配'}
+            </Button>
+          )}
+        />
         <List.Item
           title="个人头像"
           right={props => (

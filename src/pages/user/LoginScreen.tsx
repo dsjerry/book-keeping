@@ -6,7 +6,6 @@ import { useNavigation } from '@react-navigation/native'
 
 import { useUserContext } from './contexts/UserContext'
 import { checkUsername, checkPassword } from '~utils'
-import { logging } from '~utils'
 import { loginStyle } from './styles'
 import { useUserStore } from '~store/userStore'
 import { useAppSettingsStore } from '~store/settingStore'
@@ -93,10 +92,10 @@ const LoginPane = () => {
   const onRegister = async () => {
     const result = checkForm()
     if (!result) return clearTips()
-    const res = await useRegisterFetch({
+    const res = (await useRegisterFetch({
       ...result,
       passwordTwo: state.passwordTwo,
-    })
+    })) as any
 
     add(res)
   }

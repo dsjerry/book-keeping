@@ -121,6 +121,7 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
                 <List.Icon {...props} icon="format-list-bulleted-type" />
               )}
               right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('AddTagsScreen', {})}
             />
             <List.Item
               title="数据管理"

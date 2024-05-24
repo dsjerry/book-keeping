@@ -4,7 +4,7 @@ import { Chip } from 'react-native-paper'
 
 import { OutTypes, CountTypeWithIconList } from '~consts/Data'
 import CustomDivider from '~components/CustomDivider'
-import { useKeepingStore } from '~store/keepingStore'
+import { useKeepingStore, FilterBy } from '~store/keepingStore'
 
 interface FilterPaneProps {
   onFilterChange?: (value: string) => void
@@ -14,7 +14,7 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
   const [countType, setCountType] = useState([...CountTypeWithIconList])
   const { filterBy, setFilterBy } = useKeepingStore()
 
-  const onChipPress = (item: string) => {
+  const onChipPress = (item: FilterBy) => {
     const array = [...filterBy]
     if (array.includes(item)) {
       array.splice(array.indexOf(item), 1)

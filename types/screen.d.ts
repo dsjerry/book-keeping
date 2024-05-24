@@ -23,6 +23,7 @@ declare global {
     SettingsScreen: {}
     AnalyzeScreen: {}
     AboutScreen: {}
+    AddTagsScreen: {}
   }
   /**
    * 导航参数

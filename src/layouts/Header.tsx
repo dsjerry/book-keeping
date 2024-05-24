@@ -64,6 +64,8 @@ const Header: React.FC<HeaderProps> = ({
         return { title: '登录 / 注册', type: 'back' }
       case 'AboutScreen':
         return { title: '关于', type: 'back' }
+      case 'AddTagsScreen':
+        return { title: '编辑标签', type: 'back' }
       default:
         return { title: options.title, type: 'menu' }
     }

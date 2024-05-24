@@ -184,14 +184,16 @@ export const useKeepingStore = create<CommonSlice>()(
   ),
 )
 
-type FilterBy =
-  | 'food'
-  | 'shop'
-  | 'traffic'
-  | 'communication'
-  | 'entertainment'
-  | 'note'
-  | 'cny'
-  | 'aud'
-  | 'hkd'
-  | 'image'
+export type FilterBy = string
+
+// export type FilterBy =
+//   | 'food'
+//   | 'shop'
+//   | 'traffic'
+//   | 'communication'
+//   | 'entertainment'
+//   | 'note'
+//   | 'cny'
+//   | 'aud'
+//   | 'hkd'
+//   | 'image'

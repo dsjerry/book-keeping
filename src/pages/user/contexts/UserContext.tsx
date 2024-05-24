@@ -1,6 +1,6 @@
 import { createContext, useContext, useReducer, Dispatch } from 'react'
 
-import { useUserStore } from '~store/userStore'
+import { useUserStore, UserStore } from '~store/userStore'
 import {
   useKeepingStore,
   CommonSlice as KeepingContext,

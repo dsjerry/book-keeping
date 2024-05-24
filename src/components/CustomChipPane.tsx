@@ -16,6 +16,7 @@ interface Props {
 
 const CustomChipPane: React.FC<Props> = ({ items, onPress }) => {
   const chips = items
+  const paneWidth = items.length > 1 ? '100%' : 'auto'
 
   useEffect(() => {
     return () => {
@@ -26,7 +27,7 @@ const CustomChipPane: React.FC<Props> = ({ items, onPress }) => {
   }, [])
 
   return (
-    <View style={style.pane}>
+    <View style={[style.pane, { width: paneWidth }]}>
       {chips.map(item => (
         <Chip
           selected={item.isChecked}
@@ -45,7 +46,6 @@ const CustomChipPane: React.FC<Props> = ({ items, onPress }) => {
 
 const style = StyleSheet.create({
   pane: {
-    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',

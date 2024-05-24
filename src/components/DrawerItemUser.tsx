@@ -25,7 +25,7 @@ const UserWidget: React.FC<UserWidget> = ({ username, avatar, onUser }) => {
       {avatar ? (
         <Avatar.Image size={40} source={{ uri: avatar }} />
       ) : (
-        <Avatar.Text size={40} label={username.substring(0, 1)} />
+        <Avatar.Text size={40} label={username?.substring(0, 1)} />
       )}
       <Button
         style={userWidget.username}

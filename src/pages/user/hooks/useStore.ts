@@ -1,4 +1,5 @@
 import { CommonSlice } from '~store/keepingStore'
+import { UserStore } from '~store/userStore'
 
 interface Store {
   keeping: CommonSlice

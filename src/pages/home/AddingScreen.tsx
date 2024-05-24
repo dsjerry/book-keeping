@@ -2,7 +2,7 @@ import React from 'react'
 import { useState, useEffect } from 'react'
 import { View, Text, StyleSheet, Keyboard } from 'react-native'
 import { TextInput, Chip, Button } from 'react-native-paper'
-import { useNavigation, useRoute, EventArg } from '@react-navigation/native'
+import { useNavigation, useRoute } from '@react-navigation/native'
 
 import { OutTypes } from '~consts/Data'
 import CustomChipPane from '~components/CustomChipPane'
@@ -11,16 +11,18 @@ import ImagePicker from '~components/ImagePicker'
 import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
 import { useKeepingStore } from '~store/keepingStore'
 import { useAppSettingsStore } from '~store/settingStore'
+import { useUserStore } from '~store/userStore'
 
 const Adding: React.FC<Props> = ({ route }) => {
   const [tips, setTips] = useState('')
   const [keyboardStatus, setKeyboardStatus] = useState<'showed' | 'hidden'>(
     'hidden',
   )
-  const [outTypes, setOutTypes] = useState<OutType[]>(OutTypes)
+  const [outTypes, setOutTypes] = useState<OutType[]>([])
 
   const { add, update } = useKeepingStore()
   const { confirmExitEdit } = useAppSettingsStore()
+  const { currentUser } = useUserStore()
 
   const { form, countTypeIndex, modal } = useHomeStore()
   const dispatch = useHomeStoreDispatch()
@@ -29,6 +31,9 @@ const Adding: React.FC<Props> = ({ route }) => {
   const { params }: ScreenParam.Adding = useRoute()
 
   useEffect(() => {
+    const _tags = currentUser?.tags || []
+    setOutTypes([..._tags, ...OutTypes])
+
     if (params && params?.isEdit) {
       // TODO
       const item = params.item!
@@ -66,7 +71,12 @@ const Adding: React.FC<Props> = ({ route }) => {
               })
               navigation.dispatch(e.data.action)
             },
-            onCancel: () => {},
+            onCancel: () => {
+              dispatch({
+                type: 'modal',
+                payload: { ...modal, isShow: false, status: false },
+              })
+            },
           },
         })
       }

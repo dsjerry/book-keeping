@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { View, Pressable, Button, Text } from 'react-native'
+import { useEffect } from 'react'
+import { View, Pressable } from 'react-native'
 import { useNavigation } from '@react-navigation/native'
 
 import { AddingButton, KeepingList, NothingHere } from './components'
