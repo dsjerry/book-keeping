@@ -9,11 +9,27 @@ import {
 } from 'react-native'
 import { Checkbox, Chip, Icon } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
-import { useState } from 'react'
+import type { MenuAction } from '@react-native-menu/menu'
 
-import LongPressMenu from '~components/LongPressMenu'
+// import LongPressMenu from '~components/LongPressMenu'
+import CustomMenuView from '~components/CustomMenuView'
 import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
 import { _date } from '~utils'
+import { _COLORS } from '~consts/Colors'
+
+interface Props {
+  item: KeepingItem[]
+  toggle: KeepingStore['toggle']
+  remove: KeepingStore['remove']
+}
+
+interface ItemProps {
+  item: KeepingItem
+  doNavigate: (id: string) => void
+  onLongPress: (itemId: KeepingItem['id']) => void
+  onMenuPress: (actionId: MenuAction['id'], itemId: KeepingItem['id']) => void
+  toggle: (id: string) => void
+}
 
 /**
  * Checkbox 长按的时候再显示
@@ -21,58 +37,61 @@ import { _date } from '~utils'
 const Item: React.FC<ItemProps> = ({
   item,
   doNavigate,
-  doMenuShow,
+  onLongPress,
+  onMenuPress,
   toggle,
 }) => {
   return (
     <>
       {item.isShow !== false && (
-        <Pressable
-          style={({ pressed }) => ({
-            ...style.item,
-            backgroundColor: pressed ? '#fffbfe' : '#fff',
-            elevation: pressed ? 8 : 2,
-          })}
-          onPress={() => doNavigate(item.id)}
-          onLongPress={e => doMenuShow(item.id, e)}>
-          <View style={style.itemHeader}>
-            {item.note && <Icon source={'note-text-outline'} size={14} />}
-            {item.image && <Icon source={'image-outline'} size={14} />}
-            <Text style={{ color: '#6d57a7', marginLeft: 5 }}>
-              {/* {dayjs(item.date).format('YYYY-MM-DD')} */}
-              {_date(item.date)}
-            </Text>
-          </View>
-          <View style={style.itemBody}>
-            <Checkbox
-              status={item.isChecked ? 'checked' : 'unchecked'}
-              onPress={() => toggle(item.id)}
-            />
-            <Text>{item.type === 'in' ? '收入' : '支出'}</Text>
-            <Text style={style.itemCount}>{item.count}</Text>
-            <Text>元</Text>
-          </View>
-          <View style={tag.pane}>
-            {/* 通过循环来做 */}
-            {item.tags.map(tagItem => (
-              <Chip
-                style={tag.item}
-                icon={tagItem.icon}
-                mode="outlined"
-                key={tagItem.id}>
-                {tagItem.name}
-              </Chip>
-            ))}
-          </View>
-        </Pressable>
+        <CustomMenuView
+          actions={menuAction}
+          onPress={id => onMenuPress(id, item.id)}>
+          <Pressable
+            style={({ pressed }) => ({
+              ...style.item,
+              backgroundColor: pressed ? '#fffbfe' : '#fff',
+              elevation: pressed ? 8 : 2,
+            })}
+            onPress={() => doNavigate(item.id)}
+            onLongPress={e => onLongPress(item.id)}>
+            <View style={style.itemHeader}>
+              {item.note && <Icon source={'note-text-outline'} size={14} />}
+              {item.image && <Icon source={'image-outline'} size={14} />}
+              <Text style={{ color: '#6d57a7', marginLeft: 5 }}>
+                {/* {dayjs(item.date).format('YYYY-MM-DD')} */}
+                {_date(item.date)}
+              </Text>
+            </View>
+            <View style={style.itemBody}>
+              <Checkbox
+                status={item.isChecked ? 'checked' : 'unchecked'}
+                onPress={() => toggle(item.id)}
+              />
+              <Text>{item.type === 'in' ? '收入' : '支出'}</Text>
+              <Text style={style.itemCount}>{item.count}</Text>
+              <Text>元</Text>
+            </View>
+            <View style={tag.pane}>
+              {/* 通过循环来做 */}
+              {item.tags.map(tagItem => (
+                <Chip
+                  style={tag.item}
+                  icon={tagItem.icon}
+                  mode="outlined"
+                  key={tagItem.id}>
+                  {tagItem.name}
+                </Chip>
+              ))}
+            </View>
+          </Pressable>
+        </CustomMenuView>
       )}
     </>
   )
 }
 
 const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
-  const [menuPosition, setMenuPosition] = useState({ x: 0, y: 0 })
-
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
   const {
@@ -90,22 +109,16 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
   const doNavigate = (id: string) => {
     navigation.navigate('DetailScreen', { hideHeader: true, id })
   }
-  // 菜单的显示或隐藏
-  const doMenuShow = (id: KeepingItem['id'], e: GestureResponderEvent) => {
-    const { locationX, locationY } = e.nativeEvent
-
-    if (locationX > safeArea) {
-      setMenuPosition({ x: locationX - menuWidth, y: locationY })
-    } else {
-      setMenuPosition({ x: locationX, y: locationY })
-    }
-
-    dispatch({ type: 'isShowMenu', payload: !isShowMenu })
-    dispatch({ type: 'activeKeeping', payload: [id] })
+  const onItemLongPress = (itemId: KeepingItem['id']) => {
+    console.log('长按了:', itemId)
   }
-  const onMenuClick = (id: MenuItem['id']) => {
-    const item = menu.find(item => item.id === id)
-    if (item?.alias === 'del') {
+
+  const onItemMenuPress = (
+    actionId: MenuAction['id'],
+    itemId: KeepingItem['id'],
+  ) => {
+    dispatch({ type: 'activeKeeping', payload: [itemId] })
+    if (actionId === 'del') {
       dispatch({
         type: 'modal',
         payload: {
@@ -133,41 +146,48 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
         },
       })
     }
-
-    dispatch({ type: 'isShowMenu', payload: false })
+    // 选中/取消选中
+    else if (actionId === 'toggle') {
+      toggle(itemId)
+    } else {
+      navigation.navigate('DetailScreen', { hideHeader: true, id: itemId })
+    }
   }
-
   return (
     <View style={style.container}>
-      {isShowMenu && (
-        <LongPressMenu
-          onPress={onMenuClick}
-          items={menu}
-          position={menuPosition}
-        />
-      )}
       <FlatList
         data={item}
         renderItem={({ item }) =>
-          Item({ item, doNavigate, doMenuShow, toggle })
+          Item({
+            item,
+            doNavigate,
+            onLongPress: onItemLongPress,
+            onMenuPress: onItemMenuPress,
+            toggle,
+          })
         }
       />
     </View>
   )
 }
 
-interface Props {
-  item: KeepingItem[]
-  toggle: KeepingStore['toggle']
-  remove: KeepingStore['remove']
-}
-
-interface ItemProps {
-  item: KeepingItem
-  doNavigate: (id: string) => void
-  doMenuShow: (id: string, e: GestureResponderEvent) => void
-  toggle: (id: string) => void
-}
+const menuAction: MenuAction[] = [
+  {
+    id: 'info',
+    title: '详情',
+    image: 'ic_menu_info_details',
+  },
+  {
+    id: 'toggle',
+    title: '选中',
+    image: 'ic_menu_compass',
+  },
+  {
+    id: 'del',
+    title: '删除',
+    image: 'ic_menu_delete',
+  },
+]
 
 const style = StyleSheet.create({
   container: {
