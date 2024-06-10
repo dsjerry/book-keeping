@@ -8,8 +8,11 @@ interface UserInfoSlice {
   add: (user: User) => void
   update: (user: User) => void
   remove: (id: string) => void
+  login: (id: string) => void
   logout: () => void
   setCurrentUser: (user: User) => void
+  addToUsers: (user: User) => void
+  getFromUsers: (id: string) => User | null
 }
 
 interface UserSettingsSlice {
@@ -70,7 +73,11 @@ const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (
         }
       })
     },
+    login: id => {
+      set({ currentUser: get().getFromUsers(id) })
+    },
     logout: () => {
+      get().addToUsers(get().currentUser!)
       set({ currentUser: null })
     },
     setCurrentUser: user => {
@@ -78,6 +85,12 @@ const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (
       if (userInStore) {
         set({ currentUser: { ...userInStore, ...user } })
       }
+    },
+    addToUsers: user => {
+      set({ users: [...get().users, user] })
+    },
+    getFromUsers: id => {
+      return get().users.find(user => user.id === id) || null
     },
   }
 }

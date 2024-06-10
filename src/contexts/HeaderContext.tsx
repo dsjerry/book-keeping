@@ -4,6 +4,7 @@ const initialState: State = {
   isShowRightMenu: false,
   isShowBottomModal: false,
   halfModalType: 'sort',
+  loading: false,
 }
 
 const reducer = (state: State, action: Action): State => {
@@ -24,6 +25,11 @@ const reducer = (state: State, action: Action): State => {
         halfModalType: action.payload,
         isShowBottomModal: true,
         isShowRightMenu: false,
+      }
+    case 'loading':
+      return {
+        ...state,
+        loading: action.payload,
       }
     default:
       return state
@@ -57,6 +63,7 @@ interface Props {
 interface State {
   isShowRightMenu: boolean
   isShowBottomModal: boolean
+  loading: boolean
   halfModalType: 'sort' | 'filter'
 }
 
@@ -72,6 +79,10 @@ type Action =
   | {
       type: 'halfModalType'
       payload: 'sort' | 'filter'
+    }
+  | {
+      type: 'loading'
+      payload: boolean
     }
 
 type Context = {

@@ -4,7 +4,6 @@ import {
   FlatList,
   StyleSheet,
   Pressable,
-  GestureResponderEvent,
   Dimensions,
 } from 'react-native'
 import { Checkbox, Chip, Icon } from 'react-native-paper'
@@ -175,17 +174,17 @@ const menuAction: MenuAction[] = [
   {
     id: 'info',
     title: '详情',
-    image: 'ic_menu_info_details',
+    titleColor: _COLORS.main,
   },
   {
     id: 'toggle',
     title: '选中',
-    image: 'ic_menu_compass',
+    titleColor: _COLORS.main,
   },
   {
     id: 'del',
     title: '删除',
-    image: 'ic_menu_delete',
+    titleColor: _COLORS.main,
   },
 ]
 

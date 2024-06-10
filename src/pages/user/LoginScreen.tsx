@@ -9,6 +9,7 @@ import { checkUsername, checkPassword } from '~utils'
 import { loginStyle } from './styles'
 import { useUserStore } from '~store/userStore'
 import { useAppSettingsStore } from '~store/settingStore'
+import { useKeepingStore, userUsersKeepingStore } from '~store/keepingStore'
 import { useRegisterFetch, useLoginFetch } from './hooks'
 
 const InputPane: React.FC<InputPane> = ({
@@ -44,6 +45,8 @@ const LoginPane = () => {
 
   const { useOnline, toggleUseOnline } = useAppSettingsStore()
   const { add, setCurrentUser, users } = useUserStore()
+  const { addItems } = useKeepingStore()
+  const { get } = userUsersKeepingStore()
 
   const checkForm = () => {
     const username = checkUsername(state.username)
@@ -83,6 +86,10 @@ const LoginPane = () => {
           user: { username: res?.username },
         })
         setCurrentUser(user)
+        const userKeeping = get(user.id)
+        if (userKeeping) {
+          addItems(userKeeping.keeping)
+        }
       } else {
         setBadNameTips('用户名或密码不正确！')
       }
