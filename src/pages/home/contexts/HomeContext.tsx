@@ -1,5 +1,9 @@
 import { Dispatch, createContext, useContext, useReducer } from 'react'
 
+/**
+ * TODO 表单应该独立绑定，而不是直接与 state 直接绑定
+ */
+
 const initialState: State = {
   modal: {
     title: '',
@@ -80,7 +84,6 @@ const reducer = (state: State, action: Action) => {
         ...state,
         countTypeIndex: action.payload,
       }
-
     default:
       return state
   }
@@ -138,7 +141,7 @@ interface State {
   activeKeeping: KeepingItem['id'][]
   longPressMenu: MenuItem[]
   editing: KeepingItem | null
-  form: KeepingItem
+  form: Partial<KeepingItem>
   countTypeIndex: number
 }
 
@@ -155,7 +158,7 @@ type Action =
     }
   | {
       type: 'addForm'
-      payload: KeepingItem
+      payload: Partial<KeepingItem>
     }
   | {
       type: 'editForm'

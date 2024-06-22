@@ -57,14 +57,26 @@ const Detail = () => {
         {/* 展示卡片 */}
         <LinearCard item={item} />
         {/* 展示详细信息 */}
-        {/* <View style={[layout.detail, { opacity: isShowNote ? 1 : 0 }]}> */}
         {isShowNote && (
           <View style={[layout.detail]}>
-            <Card>
+            {item.address && (
+              <Card style={{ marginBottom: 20 }}>
+                <Card.Title title="位置" />
+                <Card.Content style={{ marginBottom: 10 }}>
+                  <PaperTetx variant="bodyMedium">
+                    {item.address.name}
+                  </PaperTetx>
+                </Card.Content>
+              </Card>
+            )}
+            <Card style={{ marginBottom: 20 }}>
               <Card.Title title="备注" />
               <Card.Content style={{ marginBottom: 10 }}>
                 <PaperTetx variant="bodyMedium">{item.note}</PaperTetx>
               </Card.Content>
+            </Card>
+            <Card style={{ marginBottom: 20 }}>
+              <Card.Title title="图片" />
               <Card.Cover
                 style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
                 source={{

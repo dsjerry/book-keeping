@@ -9,6 +9,7 @@ declare global {
     Adding: {
       isEdit?: boolean
       item?: KeepingItem
+      address?: NearByItem
     }
     User: {}
     LoginScreen: {}

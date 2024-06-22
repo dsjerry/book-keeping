@@ -20,7 +20,11 @@ const ImagePicker: React.FC<Props> = ({ isShow = true, uploaded }) => {
   }
   // 记得指定 Image 的宽高
   return (
-    <Pressable style={{ ...style.container, opacity: isShow ? 1 : 0 }}>
+    <Pressable
+      style={{
+        ...style.container,
+        opacity: isShow ? 1 : 0,
+      }}>
       {image ? (
         <View style={style.imageArea}>
           <Image source={{ uri: image, width: 350, height: 200 }} />
@@ -51,14 +55,14 @@ const ImagePicker: React.FC<Props> = ({ isShow = true, uploaded }) => {
 
 const style = StyleSheet.create({
   container: {
-    flex: 1,
+    width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
   },
   uploadArea: {
     alignItems: 'center',
     justifyContent: 'center',
-    width: 320,
+    width: '100%',
     height: 200,
     borderWidth: 2,
     borderColor: '#e7e0ec',
@@ -69,7 +73,11 @@ const style = StyleSheet.create({
     fontWeight: 'bold',
   },
   imageArea: {
+    width: '100%',
+    alignItems: 'center',
+    paddingTop: 20,
     backgroundColor: '#fffbfe',
+    borderRadius: 4,
     elevation: 2,
   },
   imageFunc: {

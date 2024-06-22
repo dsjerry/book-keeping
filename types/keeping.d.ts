@@ -11,6 +11,7 @@ interface KeepingItem {
   isShow?: boolean
   no?: number
   useToFilter: string[]
+  address?: NearByItem
 }
 
 interface KeepingStore {
@@ -43,6 +44,19 @@ interface OutType {
   icon: string
   isChecked: boolean
   alias: string
+}
+
+interface NearByItem {
+  address: string
+  businessarea: string
+  direction: string
+  distance: string
+  id: string
+  location: string
+  name: string
+  poiweight: string
+  tel: string[]
+  type: string
 }
 
 type SortBy = 'date' | 'amount'

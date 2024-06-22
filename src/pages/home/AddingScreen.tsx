@@ -1,5 +1,6 @@
 import React from 'react'
 import { useState, useEffect } from 'react'
+
 import { View, Text, StyleSheet, Keyboard } from 'react-native'
 import { TextInput, Chip, Button } from 'react-native-paper'
 import { useNavigation, useRoute } from '@react-navigation/native'
@@ -32,7 +33,12 @@ const Adding: React.FC<Props> = ({ route }) => {
 
   useEffect(() => {
     const _tags = currentUser?.tags || []
-    setOutTypes([..._tags, ...OutTypes])
+    OutTypes.forEach(item => {
+      if (!_tags.find(tag => tag.alias === item.alias)) {
+        _tags.push(item)
+      }
+    })
+    setOutTypes([..._tags])
 
     if (params && params?.isEdit) {
       // TODO
@@ -46,6 +52,7 @@ const Adding: React.FC<Props> = ({ route }) => {
       setOutTypes(newOutTypes)
       dispatch({ type: 'fromEditing', payload: item })
     }
+
     const showSubscription = Keyboard.addListener('keyboardDidShow', () => {
       setKeyboardStatus('showed')
     })
@@ -83,6 +90,7 @@ const Adding: React.FC<Props> = ({ route }) => {
     })
 
     return () => {
+      // TODO 页面跳转不清楚表单，提交了内容才清除表单
       dispatch({ type: 'emptyForm' })
       showSubscription.remove()
       hideSubscription.remove()
@@ -99,11 +107,9 @@ const Adding: React.FC<Props> = ({ route }) => {
       return setTips('请输入金额')
     }
     if (params?.isEdit) {
-      update(form)
+      update(form as KeepingItem)
     } else {
-      console.log('before:', form)
-
-      add(form)
+      add(form as KeepingItem)
     }
     navigation.navigate('HomeScreen', {})
   }
@@ -111,10 +117,10 @@ const Adding: React.FC<Props> = ({ route }) => {
   const onChipPress = (chip: OutType) => {
     chip.isChecked = !chip.isChecked
     const newTags = form.tags
-    if (chip.isChecked && !newTags.includes(chip)) {
-      newTags.push(chip)
+    if (chip.isChecked && !newTags?.includes(chip)) {
+      newTags?.push(chip)
     } else {
-      newTags.splice(newTags.indexOf(chip), 1)
+      newTags?.splice(newTags.indexOf(chip), 1)
     }
 
     formChanged({ tags: newTags })
@@ -159,6 +165,18 @@ const Adding: React.FC<Props> = ({ route }) => {
       {form.type === 'out' && (
         <CustomChipPane items={outTypes} onPress={onChipPress} />
       )}
+      <View style={addressStyle.pane}>
+        <Button
+          icon={'map-marker'}
+          style={addressStyle.btn}
+          onPress={() => navigation.navigate('AddressDetailScreen')}>
+          {form?.address?.name || '获取地址'}
+        </Button>
+      </View>
+      <ImagePicker
+        uploaded={assets => formChanged({ image: assets })}
+        isShow={keyboardStatus !== 'showed'}
+      />
       <TextInput
         label="备注"
         style={{ width: '100%', height: 100, marginTop: 20 }}
@@ -166,10 +184,6 @@ const Adding: React.FC<Props> = ({ route }) => {
         multiline
         value={form.note}
         onChangeText={text => formChanged({ note: text })}
-      />
-      <ImagePicker
-        uploaded={assets => formChanged({ image: assets })}
-        isShow={keyboardStatus !== 'showed'}
       />
       <Button mode="outlined" style={style.addBtn} onPress={onAddPress}>
         提交
@@ -199,10 +213,21 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
+    marginBottom: 20,
   },
   addBtn: {
     width: '100%',
-    marginTop: 20,
+    marginTop: 'auto',
+  },
+})
+
+const addressStyle = StyleSheet.create({
+  pane: {
+    width: '100%',
+    marginVertical: 20,
+  },
+  btn: {
+    alignSelf: 'flex-start',
   },
 })
 
