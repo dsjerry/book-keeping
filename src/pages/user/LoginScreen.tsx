@@ -44,7 +44,7 @@ const LoginPane = () => {
   const [badPassTwoTips, setBadPassTwoTips] = useState('')
 
   const { useOnline, toggleUseOnline } = useAppSettingsStore()
-  const { add, setCurrentUser, users } = useUserStore()
+  const { add, setCurrentUser, getUserByName } = useUserStore()
   const { addItems } = useKeepingStore()
   const { get } = userUsersKeepingStore()
 
@@ -80,7 +80,7 @@ const LoginPane = () => {
       if (!result) return clearTips()
 
       const res = await useLoginFetch(result)
-      const user = users.find(user => user.username === res?.username)
+      const user = getUserByName(res?.username!)
       if (user && user.password === state.password) {
         navigation.navigate('UserHomeScreen', {
           user: { username: res?.username },
@@ -105,6 +105,9 @@ const LoginPane = () => {
     })) as any
 
     add(res)
+    navigation.navigate('UserHomeScreen', {
+      user: { username: res?.username },
+    })
   }
 
   return (

@@ -6,7 +6,7 @@
 
 2. [x] 首页过滤
 
-3. [ ] 让基本功能稳定可用
+3. [x] 让基本功能稳定可用
 
 4. [ ] 添加后端同步
 
@@ -22,11 +22,11 @@
 
 1. [ ] 路由导航添加 TS 类型注释
 
-2. [ ] 添加一条新的记录之后应该执行一次排序
+2. [x] 添加一条新的记录之后应该执行一次排序
 
-3. [ ] 标签应该从当前用户中读取，创建用户的时候赋予默认标签
+3. [x] 标签应该从当前用户中读取，创建用户的时候赋予默认标签
 
-4. [ ] 添加图片的时候，需要有个图片裁剪的功能
+4. [x] 添加图片的时候，需要有个图片裁剪的功能
 
 # 依赖
 
@@ -62,6 +62,8 @@ yarn add babel-plugin-module-resolver
 
 ## 本地图片
 
+### 获取
+
 安卓开启权限，修改`android/app/src/main/AndroidManifest.xml`，在`<manifest>`标签内添加：
 
 ```xml
@@ -85,3 +87,33 @@ const handleImage = async () => {
   const result = await launchImageLibrary()
 }
 ```
+
+### 裁剪
+
+> 这个裁剪的依赖也有选择图片的功能
+
+```shell
+yarn add react-native-image-crop-picker
+```
+
+## 本地存储
+
+> 相当于 react native 的 localStorage，使用 zustand 等作为状态管理的时候，数据持久化可以指定为这个依赖
+
+```shell
+yarn add @react-native-async-storage/async-storage
+```
+
+## 地理位置
+
+> 获取到经纬度等信息，项目使用它和高德地图 api 来获取位置详细信息
+
+```shell
+yarn add @react-native-community/geolocation
+```
+
+# 其他
+
+1. 相比于 Cordova 少了很多系统层面的 API，Cordova 更像是 Electron
+
+2. 界面和动画层面像原生应用

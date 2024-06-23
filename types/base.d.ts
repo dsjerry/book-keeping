@@ -31,4 +31,5 @@ interface OutType {
   icon: string
   isChecked: boolean
   alias: string
+  isCustom?: boolean
 }

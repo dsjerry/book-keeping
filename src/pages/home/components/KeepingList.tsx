@@ -15,6 +15,7 @@ import CustomMenuView from '~components/CustomMenuView'
 import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
 import { _date } from '~utils'
 import { _COLORS } from '~consts/Colors'
+import { useAppSettingsStore } from '~store/settingStore'
 
 interface Props {
   item: KeepingItem[]
@@ -72,7 +73,6 @@ const Item: React.FC<ItemProps> = ({
               <Text>元</Text>
             </View>
             <View style={tag.pane}>
-              {/* 通过循环来做 */}
               {item.tags.map(tagItem => (
                 <Chip
                   style={tag.item}
@@ -82,6 +82,14 @@ const Item: React.FC<ItemProps> = ({
                   {tagItem.name}
                 </Chip>
               ))}
+              {item.tags.length === 0 && (
+                <Chip
+                  style={[tag.item, { opacity: 0.5 }]}
+                  mode="outlined"
+                  icon="tag-multiple-outline">
+                  分类
+                </Chip>
+              )}
             </View>
           </Pressable>
         </CustomMenuView>
@@ -100,6 +108,8 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
     activeKeeping,
   } = useHomeStore()
 
+  const { confirmRemove } = useAppSettingsStore()
+
   // 长按菜单显示范围
   const screenWidth = Dimensions.get('screen').width
   const menuWidth = screenWidth * 0.25
@@ -109,7 +119,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
     navigation.navigate('DetailScreen', { hideHeader: true, id })
   }
   const onItemLongPress = (itemId: KeepingItem['id']) => {
-    console.log('长按了:', itemId)
+    dispatch({ type: 'activeKeeping', payload: [itemId] })
   }
 
   const onItemMenuPress = (
@@ -118,6 +128,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
   ) => {
     dispatch({ type: 'activeKeeping', payload: [itemId] })
     if (actionId === 'del') {
+      if (!confirmRemove) return activeKeeping.forEach(id => remove(id))
       dispatch({
         type: 'modal',
         payload: {

@@ -3,6 +3,8 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import _ from 'lodash'
 
+import { CountType } from '~consts/Data'
+
 export type FilterBy = string
 
 interface SortSlice {
@@ -97,9 +99,14 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
       item.id = Date.now().toString()
       item.date = Date.now()
       item.no = state.items.length + 1
-      item.useToFilter = item.tags.map(item => item.alias)
+      item.useToFilter = [
+        ...item.tags.map(item => item.alias),
+        CountType[item.countType],
+      ]
       return { items: [...state.items, item] }
     })
+
+    get().sort({ sortBy: get().sortBy, sortOrder: get().sortOrder })
   },
   addItems: items => {
     set(state => ({ items: [...items] }))
@@ -211,7 +218,15 @@ export const userUsersKeepingStore = create<UsersKeepingSlice>()(
     (set, get) => ({
       items: [],
       add: item => {
-        set(state => ({ items: [...state.items, item] }))
+        const arr = get().items.map(user => {
+          if (user.userid === item.userid) {
+            return item
+          } else {
+            return user
+          }
+        })
+
+        set({ items: arr })
       },
       get(userid) {
         return get().items.find(item => item.userid === userid)
@@ -225,6 +240,7 @@ export const userUsersKeepingStore = create<UsersKeepingSlice>()(
     {
       name: `users-keeping`,
       storage: createJSONStorage(() => AsyncStorage),
+      partialize: state => ({ items: state.items }),
     },
   ),
 )

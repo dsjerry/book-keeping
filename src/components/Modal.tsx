@@ -23,8 +23,8 @@ const MyComponent: React.FC<Props> = ({
             </Text>
           </Dialog.Content>
           <Dialog.Actions>
-            {onCancel && <Button onPress={onCancel}>Cancel</Button>}
-            <Button onPress={onAccess}>OK</Button>
+            {onCancel && <Button onPress={onCancel}>取消</Button>}
+            <Button onPress={onAccess}>确认</Button>
           </Dialog.Actions>
         </Dialog>
       </Portal>

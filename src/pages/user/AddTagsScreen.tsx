@@ -40,6 +40,7 @@ const AddTagsScreen = () => {
       alias: item,
       icon: 'tag-plus-outline',
       isChecked: false,
+      isCustom: true,
     }))
     userStore.setTags(tagsBeAdded)
 
@@ -78,7 +79,7 @@ const AddTagsScreen = () => {
       <CustomChipPane items={OutTypes} onPress={item => onTagPress(item)} />
       <CustomDivider text="自定义标签" textPosi="left" />
       <CustomChipPane
-        items={currentUser?.tags || []}
+        items={currentUser?.tags?.filter(item => item.isCustom) || []}
         onPress={item => onCustomTagPress(item)}
       />
       {currentUser?.tags?.length == 0 && (

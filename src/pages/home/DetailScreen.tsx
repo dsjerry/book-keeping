@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, Fragment } from 'react'
 import { View } from 'react-native'
-import { Card, Button, Text as PaperTetx } from 'react-native-paper'
+import { Card, Button, Text as PaperTetx, Avatar } from 'react-native-paper'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { captureRef } from 'react-native-view-shot'
 import Share from 'react-native-share'
@@ -8,6 +8,7 @@ import Share from 'react-native-share'
 import LinearCard from './components/LinearCard'
 import { layout } from './style'
 import { useKeepingStore } from '~store/keepingStore'
+import { _COLORS } from '~consts/Colors'
 
 const Detail = () => {
   const [isShowNote, setIsShowNote] = useState(true)
@@ -61,29 +62,44 @@ const Detail = () => {
           <View style={[layout.detail]}>
             {item.address && (
               <Card style={{ marginBottom: 20 }}>
-                <Card.Title title="位置" />
-                <Card.Content style={{ marginBottom: 10 }}>
-                  <PaperTetx variant="bodyMedium">
+                <Card.Title
+                  title={item.address.name}
+                  subtitle={item.address.businessarea}
+                  left={props => (
+                    <Avatar.Icon {...props} icon="map-marker" size={24} />
+                  )}
+                />
+                {/* <Card.Content style={{ marginBottom: 10 }}>
+                  <PaperTetx
+                    variant="titleMedium"
+                    style={{ color: _COLORS.main }}>
                     {item.address.name}
                   </PaperTetx>
+                  <PaperTetx variant="titleSmall" style={{ marginTop: 10 }}>
+                    {'区域：' + item.address.businessarea}
+                  </PaperTetx>
+                </Card.Content> */}
+              </Card>
+            )}
+            {item.note && (
+              <Card style={{ marginBottom: 20 }}>
+                <Card.Title title="备注" />
+                <Card.Content style={{ marginBottom: 10 }}>
+                  <PaperTetx variant="bodyMedium">{item.note}</PaperTetx>
                 </Card.Content>
               </Card>
             )}
-            <Card style={{ marginBottom: 20 }}>
-              <Card.Title title="备注" />
-              <Card.Content style={{ marginBottom: 10 }}>
-                <PaperTetx variant="bodyMedium">{item.note}</PaperTetx>
-              </Card.Content>
-            </Card>
-            <Card style={{ marginBottom: 20 }}>
-              <Card.Title title="图片" />
-              <Card.Cover
-                style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
-                source={{
-                  uri: item.image ? item.image : 'https://picsum.photos/700',
-                }}
-              />
-            </Card>
+            {item.image && (
+              <Card style={{ marginBottom: 20 }}>
+                <Card.Title title="图片" />
+                <Card.Cover
+                  style={{ borderTopLeftRadius: 0, borderTopRightRadius: 0 }}
+                  source={{
+                    uri: item.image ? item.image : 'https://picsum.photos/700',
+                  }}
+                />
+              </Card>
+            )}
           </View>
         )}
       </View>

@@ -7,6 +7,7 @@ import Geolocation from '@react-native-community/geolocation'
 import { _COLORS } from '~consts/Colors'
 import { Amap } from '~utils'
 import { useHomeStoreDispatch } from './contexts/HomeContext'
+import LoadingIndicator from '~components/LoadingIndicator'
 
 /**
  * 根据经纬度获取详细地址
@@ -15,6 +16,8 @@ import { useHomeStoreDispatch } from './contexts/HomeContext'
 
 const AddressList = () => {
   const [nearBy, setNearBy] = useState<NearByItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadMsg, setLoadMsg] = useState('')
 
   const dispatch = useHomeStoreDispatch()
   const navigation = useNavigation()
@@ -32,7 +35,12 @@ const AddressList = () => {
           setNearBy(_addr)
         })
         .catch((err: any) => {
-          console.error('获取详细地址失败!', err)
+          console.error('/n获取详细地址失败!', err)
+          setLoadMsg('加载失败!')
+        })
+        .finally(() => {
+          if (nearBy.length > 0) return setLoading(false)
+          setTimeout(() => setLoading(false), 1500)
         })
     })
   }, [])
@@ -63,6 +71,17 @@ const AddressList = () => {
           不使用位置
         </Text>
       </Pressable>
+      <LoadingIndicator animating={loading} text={loadMsg} />
+      {nearBy.length === 0 && (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}>
+          <Text style={{ color: _COLORS.main }}>地址获取失败</Text>
+        </View>
+      )}
       <FlatList
         data={nearBy}
         renderItem={({ item }) => (

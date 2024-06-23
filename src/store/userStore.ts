@@ -1,6 +1,7 @@
 import { create, StateCreator } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { OutTypes } from '~consts/Data'
 
 interface UserInfoSlice {
   users: User[]
@@ -8,11 +9,10 @@ interface UserInfoSlice {
   add: (user: User) => void
   update: (user: User) => void
   remove: (id: string) => void
-  login: (id: string) => void
-  logout: () => void
-  setCurrentUser: (user: User) => void
-  addToUsers: (user: User) => void
-  getFromUsers: (id: string) => User | null
+  getUserByName: (name: string) => User | void
+  setCurrentUser: (user: User | null) => void
+  updateCurrentUser: (user: Partial<User>) => void
+  EMPTYUSERS: () => void
 }
 
 interface UserSettingsSlice {
@@ -33,7 +33,7 @@ const createUserSettingsSlice: StateCreator<
   useOnline: true,
   tags: [],
   setTags: tags => {
-    console.info('添加:', tags)
+    console.info('添加标签:', tags)
     const currentTags = get().currentUser?.tags || []
     const _tags = new Set([...currentTags, ...tags])
     set({ currentUser: { ...get().currentUser!, tags: [..._tags] } })
@@ -54,8 +54,10 @@ const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (
     users: [],
     currentUser: null,
     add: user => {
-      console.log(user)
       set(state => {
+        // 初始化用户数据
+        user.id = Date.now().toString()
+        user.tags = OutTypes
         user.note = user.note || '这个人很懒，什么也没留下'
         return { users: [...state.users, user], currentUser: user }
       })
@@ -69,28 +71,29 @@ const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (
       set(state => {
         return {
           users: state.users.map(u => (u.id === user.id ? user : u)),
-          currentUser: user,
         }
       })
     },
-    login: id => {
-      set({ currentUser: get().getFromUsers(id) })
+    getUserByName: name => {
+      return get().users.find(user => user.username === name)
     },
-    logout: () => {
-      get().addToUsers(get().currentUser!)
-      set({ currentUser: null })
-    },
+    // 登录后设置
     setCurrentUser: user => {
+      if (!user) return set({ currentUser: null })
+
       const userInStore = get().users.find(u => u.id === user?.id)
       if (userInStore) {
         set({ currentUser: { ...userInStore, ...user } })
       }
     },
-    addToUsers: user => {
-      set({ users: [...get().users, user] })
+    // 修改个人信息
+    updateCurrentUser: user => {
+      const _currentUser = { ...get().currentUser!, ...user }
+      set({ currentUser: _currentUser })
+      get().update(_currentUser)
     },
-    getFromUsers: id => {
-      return get().users.find(user => user.id === id) || null
+    EMPTYUSERS: () => {
+      set({ users: [] })
     },
   }
 }

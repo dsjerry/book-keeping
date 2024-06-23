@@ -32,7 +32,6 @@ const initialState: State = {
     date: 0,
     useToFilter: [''],
   },
-  countTypeIndex: 0,
 }
 
 const reducer = (state: State, action: Action) => {
@@ -78,11 +77,6 @@ const reducer = (state: State, action: Action) => {
           ...initialState.form,
           tags: [],
         },
-      }
-    case 'countTypeIndex':
-      return {
-        ...state,
-        countTypeIndex: action.payload,
       }
     default:
       return state
@@ -142,7 +136,6 @@ interface State {
   longPressMenu: MenuItem[]
   editing: KeepingItem | null
   form: Partial<KeepingItem>
-  countTypeIndex: number
 }
 
 type Action =

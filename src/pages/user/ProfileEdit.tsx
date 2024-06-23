@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Image } from 'react-native'
 import { List, Button, TextInput, HelperText } from 'react-native-paper'
+import ImagePicker from 'react-native-image-crop-picker'
 
 import { useUserContext } from './contexts/UserContext'
 import { handleImage } from '~utils'
@@ -32,9 +33,19 @@ const ProfileEdit = () => {
     try {
       const image = await handleImage({ limit: 1 })
       const uri = image ? image[0].uri : ''
-      if (uri) {
-        userStore.update({ ..._currentUser, avatar: uri })
-      }
+      if (!uri) return
+
+      const cropResult = await ImagePicker.openCropper({
+        path: uri,
+        width: 300,
+        height: 300,
+        mediaType: 'photo',
+        cropperToolbarTitle: '图片裁剪',
+      })
+
+      if (!cropResult) return
+
+      userStore.updateCurrentUser({ avatar: cropResult.path })
     } catch (error) {
       console.log(error)
     }
@@ -52,16 +63,14 @@ const ProfileEdit = () => {
 
   const onHalfModalClose = () => {
     setIsShowModal(false)
-    userStore.update({
-      ..._currentUser,
+    userStore.updateCurrentUser({
       username: editObj.nickname,
       note: editObj.note,
     })
   }
 
   const generateUid = () => {
-    userStore.update({
-      ..._currentUser,
+    userStore.updateCurrentUser({
       id: Date.now().toString(),
     })
   }
@@ -89,19 +98,21 @@ const ProfileEdit = () => {
         />
         <List.Item
           title="个人头像"
-          right={props => (
-            <Image
-              source={{
-                uri: _currentUser?.avatar,
-                width: 50,
-                height: 50,
-              }}
-              style={{
-                marginRight: 15,
-                borderRadius: 4,
-              }}
-            />
-          )}
+          right={props =>
+            _currentUser.avatar ? (
+              <Image
+                source={{
+                  uri: _currentUser?.avatar,
+                  width: 50,
+                  height: 50,
+                }}
+                style={{
+                  marginRight: 15,
+                  borderRadius: 4,
+                }}
+              />
+            ) : null
+          }
           onPress={onAvatarPress}
         />
         <List.Item

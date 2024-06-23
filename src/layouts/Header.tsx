@@ -188,7 +188,8 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    // backgroundColor: '#e7e0ec',
+    backgroundColor: '#e7e0ec',
+    elevation: 10,
   },
   right: {
     flexDirection: 'row',

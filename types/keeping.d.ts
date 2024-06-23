@@ -2,7 +2,7 @@ interface KeepingItem {
   id: string
   count: string
   type: 'in' | 'out'
-  countType: string
+  countType: '人民币' | '港币' | '澳元'
   tags: OutType[]
   date: number
   note: string

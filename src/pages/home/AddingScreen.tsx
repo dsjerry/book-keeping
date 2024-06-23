@@ -1,11 +1,9 @@
-import React from 'react'
 import { useState, useEffect } from 'react'
 
 import { View, Text, StyleSheet, Keyboard } from 'react-native'
 import { TextInput, Chip, Button } from 'react-native-paper'
 import { useNavigation, useRoute } from '@react-navigation/native'
 
-import { OutTypes } from '~consts/Data'
 import CustomChipPane from '~components/CustomChipPane'
 import { CountTypePicker } from './components'
 import ImagePicker from '~components/ImagePicker'
@@ -13,6 +11,7 @@ import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
 import { useKeepingStore } from '~store/keepingStore'
 import { useAppSettingsStore } from '~store/settingStore'
 import { useUserStore } from '~store/userStore'
+import { CountTypeList } from '~consts/Data'
 
 const Adding: React.FC<Props> = ({ route }) => {
   const [tips, setTips] = useState('')
@@ -20,36 +19,65 @@ const Adding: React.FC<Props> = ({ route }) => {
     'hidden',
   )
   const [outTypes, setOutTypes] = useState<OutType[]>([])
+  const [isSubmit, setIsSubmit] = useState(false)
+  const [countTypeIndex, setCountTypeIndex] = useState(0)
 
   const { add, update } = useKeepingStore()
   const { confirmExitEdit } = useAppSettingsStore()
   const { currentUser } = useUserStore()
 
-  const { form, countTypeIndex, modal } = useHomeStore()
+  const { form, modal } = useHomeStore()
   const dispatch = useHomeStoreDispatch()
 
   const navigation = useNavigation()
   const { params }: ScreenParam.Adding = useRoute()
 
+  function handleBeforeRemove(e: any) {
+    if (confirmExitEdit) {
+      e.preventDefault()
+      dispatch({
+        type: 'modal',
+        payload: {
+          title: '确定要退出吗？',
+          body: '内容将不会被保存',
+          isShow: true,
+          type: 'exit',
+          onAccess: () => {
+            dispatch({
+              type: 'modal',
+              payload: { ...modal, isShow: false, status: false },
+            })
+            navigation.dispatch(e.data.action)
+          },
+          onCancel: () => {
+            dispatch({
+              type: 'modal',
+              payload: { ...modal, isShow: false, status: false },
+            })
+          },
+        },
+      })
+    }
+  }
+
   useEffect(() => {
     const _tags = currentUser?.tags || []
-    OutTypes.forEach(item => {
-      if (!_tags.find(tag => tag.alias === item.alias)) {
-        _tags.push(item)
-      }
-    })
     setOutTypes([..._tags])
 
     if (params && params?.isEdit) {
-      // TODO
       const item = params.item!
-      const newOutTypes = outTypes
-      item.tags.forEach(tag => {
-        newOutTypes.forEach(item => {
-          item.alias === tag.alias ? (item.isChecked = true) : ''
-        })
-      })
-      setOutTypes(newOutTypes)
+      const newTag = _tags
+      for (let i = 0; i < item.tags.length; i++) {
+        const tag = item.tags[i]
+        const index = _tags.findIndex(t => t.id === tag.id)
+        if (index > -1) {
+          newTag[index] = tag
+        } else {
+          newTag.push(tag)
+        }
+      }
+
+      setOutTypes([...newTag])
       dispatch({ type: 'fromEditing', payload: item })
     }
 
@@ -60,49 +88,34 @@ const Adding: React.FC<Props> = ({ route }) => {
       setKeyboardStatus('hidden')
     })
 
-    navigation.addListener('beforeRemove', e => {
-      if (confirmExitEdit) {
-        e.preventDefault()
-
-        dispatch({
-          type: 'modal',
-          payload: {
-            title: '确定要退出吗？',
-            body: '内容将不会被保存',
-            isShow: true,
-            type: 'exit',
-            onAccess: () => {
-              dispatch({
-                type: 'modal',
-                payload: { ...modal, isShow: false, status: false },
-              })
-              navigation.dispatch(e.data.action)
-            },
-            onCancel: () => {
-              dispatch({
-                type: 'modal',
-                payload: { ...modal, isShow: false, status: false },
-              })
-            },
-          },
-        })
-      }
-    })
-
     return () => {
-      // TODO 页面跳转不清楚表单，提交了内容才清除表单
       dispatch({ type: 'emptyForm' })
       showSubscription.remove()
       hideSubscription.remove()
     }
   }, [])
 
+  useEffect(() => {
+    let unsubscribe: any
+    if (!isSubmit) {
+      navigation.addListener('beforeRemove', handleBeforeRemove)
+    } else {
+      unsubscribe = navigation.removeListener(
+        'beforeRemove',
+        handleBeforeRemove,
+      )
+    }
+
+    return unsubscribe
+  }, [navigation, isSubmit])
+
   const formChanged = (item: Partial<KeepingItem>) => {
     dispatch({ type: 'addForm', payload: { ...form, ...item } })
   }
 
   const onAddPress = () => {
-    if (form.count === `0`) {
+    setIsSubmit(true)
+    if (form.count === `0` || !form.count) {
       setTimeout(() => setTips(''), 1500)
       return setTips('请输入金额')
     }
@@ -144,9 +157,10 @@ const Adding: React.FC<Props> = ({ route }) => {
         />
         <CountTypePicker
           index={countTypeIndex}
-          setIndex={index =>
-            dispatch({ type: 'countTypeIndex', payload: index })
-          }
+          setIndex={index => {
+            setCountTypeIndex(index)
+            formChanged({ countType: CountTypeList[index] as any })
+          }}
         />
       </View>
       <View style={style.countType}>

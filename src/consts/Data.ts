@@ -65,3 +65,9 @@ export const CountTypeWithIconList = [
     isChecked: false,
   },
 ]
+
+export enum CountType {
+  人民币 = 'cny',
+  港币 = 'hkd',
+  澳元 = 'aud',
+}

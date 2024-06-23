@@ -5,7 +5,7 @@ import { useUserStore } from '~store/userStore'
 import { useKeepingStore, userUsersKeepingStore } from '~store/keepingStore'
 
 const CloseLogout = () => {
-  const { logout, currentUser } = useUserStore()
+  const { currentUser, setCurrentUser, users } = useUserStore()
   const { items, clearItems } = useKeepingStore()
   const { add } = userUsersKeepingStore()
   const onBtnPress = () => {
@@ -13,7 +13,7 @@ const CloseLogout = () => {
       userid: currentUser!.id,
       keeping: items,
     })
-    logout()
+    setCurrentUser(null)
     clearItems()
   }
   return (
