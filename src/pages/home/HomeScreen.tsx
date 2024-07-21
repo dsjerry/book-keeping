@@ -33,9 +33,7 @@ const HomeScreen = () => {
 
   return (
     <>
-      <Pressable
-        style={homeStyle.container}
-        onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
+      <Pressable style={homeStyle.container} onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
         <KeepingList item={items} toggle={toggle} remove={remove} />
         {items.length === 0 && <NothingHere />}
         <View style={homeStyle.btnArea}>

@@ -11,18 +11,16 @@ import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
 import { useKeepingStore } from '~store/keepingStore'
 import { useAppSettingsStore } from '~store/settingStore'
 import { useUserStore } from '~store/userStore'
-import { CountTypeList } from '~consts/Data'
+import { CountTypeList, OutTypes } from '~consts/Data'
 
 const Adding: React.FC<Props> = ({ route }) => {
   const [tips, setTips] = useState('')
-  const [keyboardStatus, setKeyboardStatus] = useState<'showed' | 'hidden'>(
-    'hidden',
-  )
+  const [keyboardStatus, setKeyboardStatus] = useState<'showed' | 'hidden'>('hidden')
   const [outTypes, setOutTypes] = useState<OutType[]>([])
   const [isSubmit, setIsSubmit] = useState(false)
   const [countTypeIndex, setCountTypeIndex] = useState(0)
 
-  const { add, update } = useKeepingStore()
+  const { add, update, items } = useKeepingStore()
   const { confirmExitEdit } = useAppSettingsStore()
   const { currentUser } = useUserStore()
 
@@ -61,8 +59,38 @@ const Adding: React.FC<Props> = ({ route }) => {
   }
 
   useEffect(() => {
-    const _tags = currentUser?.tags || []
+    let _tags = [] as OutType[]
+    if (currentUser?.tags) {
+      _tags = currentUser.tags
+    } else {
+      _tags = [...OutTypes]
+    }
+
     setOutTypes([..._tags])
+
+    if (!currentUser && items.length === 0) {
+      dispatch({
+        type: 'modal',
+        payload: {
+          ...modal,
+          isShow: true,
+          body: '未登录账号可能会导致数据丢失，是否立即注册？',
+          onAccess: () => {
+            navigation.navigate('User', { screen: 'LoginScreen' })
+            dispatch({
+              type: 'modal',
+              payload: { ...modal, isShow: false, status: true },
+            })
+          },
+          onCancel: () => {
+            dispatch({
+              type: 'modal',
+              payload: { ...modal, isShow: false, status: false },
+            })
+          },
+        },
+      })
+    }
 
     if (params && params?.isEdit) {
       const item = params.item!
@@ -100,10 +128,7 @@ const Adding: React.FC<Props> = ({ route }) => {
     if (!isSubmit) {
       navigation.addListener('beforeRemove', handleBeforeRemove)
     } else {
-      unsubscribe = navigation.removeListener(
-        'beforeRemove',
-        handleBeforeRemove,
-      )
+      unsubscribe = navigation.removeListener('beforeRemove', handleBeforeRemove)
     }
 
     return unsubscribe
@@ -149,11 +174,7 @@ const Adding: React.FC<Props> = ({ route }) => {
           onChangeText={text => formChanged({ count: text })}
           keyboardType="numeric"
           style={{ flex: 3 }}
-          right={
-            tips && (
-              <TextInput.Icon icon="alert-circle-outline" color="#6750a4" />
-            )
-          }
+          right={tips && <TextInput.Icon icon="alert-circle-outline" color="#6750a4" />}
         />
         <CountTypePicker
           index={countTypeIndex}
@@ -164,33 +185,20 @@ const Adding: React.FC<Props> = ({ route }) => {
         />
       </View>
       <View style={style.countType}>
-        <Chip
-          selected={form.type === 'in'}
-          onPress={() => formChanged({ type: 'in' })}>
+        <Chip selected={form.type === 'in'} onPress={() => formChanged({ type: 'in' })}>
           收入
         </Chip>
-        <Chip
-          selected={form.type === 'out'}
-          style={{ marginLeft: 5 }}
-          onPress={() => formChanged({ type: 'out' })}>
+        <Chip selected={form.type === 'out'} style={{ marginLeft: 5 }} onPress={() => formChanged({ type: 'out' })}>
           支出
         </Chip>
       </View>
-      {form.type === 'out' && (
-        <CustomChipPane items={outTypes} onPress={onChipPress} />
-      )}
+      {form.type === 'out' && <CustomChipPane items={outTypes} onPress={onChipPress} />}
       <View style={addressStyle.pane}>
-        <Button
-          icon={'map-marker'}
-          style={addressStyle.btn}
-          onPress={() => navigation.navigate('AddressDetailScreen')}>
+        <Button icon={'map-marker'} style={addressStyle.btn} onPress={() => navigation.navigate('AddressDetailScreen')}>
           {form?.address?.name || '获取地址'}
         </Button>
       </View>
-      <ImagePicker
-        uploaded={assets => formChanged({ image: assets })}
-        isShow={keyboardStatus !== 'showed'}
-      />
+      <ImagePicker uploaded={assets => formChanged({ image: assets })} isShow={keyboardStatus !== 'showed'} />
       <TextInput
         label="备注"
         style={{ width: '100%', height: 100, marginTop: 20 }}

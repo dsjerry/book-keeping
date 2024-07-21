@@ -13,7 +13,7 @@ import { PiePane, CountBarChart, LoadingIndicator } from './components'
 const Home = () => {
   const [btnIndex, setBtnIndex] = useState(0)
   const [display, setDisplay] = useState({ count: 0 })
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
 
   const { items, output, income, setCounting } = useKeepingStore()
 
