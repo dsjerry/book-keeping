@@ -1,9 +1,9 @@
-name: Android CI
+name: Build App
 
 on:
   push:
     branches:
-      - main
+      - dev-actions
 
 jobs:
   build:
@@ -20,9 +20,11 @@ jobs:
 
     - name: Grant execute permission for gradlew
       run: chmod +x ./gradlew
+      working-directory: android
 
     - name: Build with Gradle
       run: ./gradlew assembleRelease
+      working-directory: android
 
     - name: Upload APK
       uses: actions/upload-artifact@v2
