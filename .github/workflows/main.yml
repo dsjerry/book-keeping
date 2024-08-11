@@ -18,6 +18,8 @@ jobs:
           node-version: '20'
       - run: yarn install
 
-      - run: react-native run-android --variant=release
+      - run: |
+             cd android
+             ./gradlew assembleRelease
       
 
