@@ -18,9 +18,9 @@ jobs:
           node-version: '20'
       - run: yarn install
 
-      - run: |
-              cd android
-              chmod +x ./gradlew
+      #- run: |
+      #        cd android
+      #        chmod +x ./gradlew
       - run: ./gradlew assembleRelease
       
 
