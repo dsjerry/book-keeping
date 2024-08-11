@@ -20,6 +20,6 @@ jobs:
       - run: npm install
 
       - name: building...
-        run: react-native run-android --variant=release
+      - run: react-native run-android --variant=release
       
 
