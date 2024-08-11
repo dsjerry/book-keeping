@@ -1,20 +1,25 @@
 # 可选，会出现在仓库中"Actions"的tab栏中
-name: learn-github-actions
-# 可选，
-run-name: ${{ github.actor }} is learning GitHub Actions
+name: build on push
+# 可选
+run-name: ${{ github.actor }} is building the app
 # 当前工作流的触发器
 on: [push]
 ## 工作流中需要运行的具体任务组
 jobs:
   # 一项工作任务的名称
-  check-bats-version:
+  build-android:
     # 运行环境
     runs-on: ubuntu-latest
     # 当前工作任务的具体步骤
     steps:
+      - name: init environment
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install -g bats
-      - run: bats -v
+      - run: npm install
+
+      - name: building...
+        run: react-native run-android --variant=release
+      
+
