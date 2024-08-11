@@ -1,29 +1,31 @@
-# 可选，会出现在仓库中"Actions"的tab栏中
-name: build on push
-# 可选
-run-name: ${{ github.actor }} is building the app
-# 当前工作流的触发器
-on: [push]
-## 工作流中需要运行的具体任务组
-jobs:
-  # 一项工作任务的名称
-  build-android:
-    # 运行环境
-    runs-on: ubuntu-latest
-    # 当前工作任务的具体步骤
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: yarn install
-      - run: pwd
-      - run: |
-              cd ./android
-              ls -l
-              chmod +x ./gradlew
-      - name: build
-        run: ./gradlew assembleRelease
-        working-directory: android
-      
+name: Android CI
 
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v2
+      with:
+        java-version: 17
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x ./gradlew
+
+    - name: Build with Gradle
+      run: ./gradlew assembleRelease
+
+    - name: Upload APK
+      uses: actions/upload-artifact@v2
+      with:
+        name: app-release.apk
+        path: app/build/outputs/apk/release/app-release.apk
