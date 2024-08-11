@@ -22,6 +22,8 @@ jobs:
               cd ./android
               ls -l
               chmod +x ./gradlew
-      - run: ./gradlew assembleRelease
+      - name: build
+        run: ./gradlew assembleRelease
+        working-directory: android
       
 
