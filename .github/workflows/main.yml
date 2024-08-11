@@ -17,10 +17,10 @@ jobs:
         with:
           node-version: '20'
       - run: yarn install
-
-      #- run: |
-      #        cd android
-      #        chmod +x ./gradlew
+      - run: pwd
+      - run: |
+              cd ./android
+              chmod +x ./gradlew
       - run: ./gradlew assembleRelease
       
 
