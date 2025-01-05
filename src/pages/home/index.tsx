@@ -3,6 +3,8 @@ import { createStackNavigator } from '@react-navigation/stack'
 
 import AddingScreen from './AddingScreen'
 import HomeScreen from './HomeScreen'
+import AddressList from './AddressList'
+
 import { HomeProvider } from './contexts/HomeContext'
 
 const RootStack = createStackNavigator()
@@ -13,6 +15,7 @@ export default function Home() {
       <RootStack.Navigator initialRouteName="HomeScreen">
         <RootStack.Group screenOptions={{ headerShown: false }}>
           <RootStack.Screen name="HomeScreen" component={HomeScreen} />
+          <RootStack.Screen name="AddressDetailScreen" component={AddressList} />
         </RootStack.Group>
         <RootStack.Group
           screenOptions={{

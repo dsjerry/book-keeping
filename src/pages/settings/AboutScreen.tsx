@@ -39,7 +39,7 @@ export default function () {
   return (
     <View style={styles.container}>
       <View style={{ alignItems: 'center' }}>
-        <Image source={require('~assets/icon/logo.png')} style={styles.logo} />
+        <Image source={{ uri: 'https://imgse.com/i/hxupjg' }} style={styles.logo} />
         <Text style={styles.appName}>{Config.APP_NAME}</Text>
         <Text style={{ textAlign: 'center' }}>版本: {version}</Text>
       </View>

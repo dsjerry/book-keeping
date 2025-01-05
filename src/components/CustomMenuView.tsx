@@ -2,6 +2,8 @@ import { Platform, View, Text } from 'react-native'
 import { MenuView } from '@react-native-menu/menu'
 import type { MenuAction, NativeActionEvent } from '@react-native-menu/menu'
 
+// 安卓内置图标 https://developer.android.com/reference/kotlin/android/R.drawable#summary
+
 interface Props {
   // 长按子组件时自动根据子组件位置弹出菜单。但是没有办法拿到子组件
   children: React.ReactNode

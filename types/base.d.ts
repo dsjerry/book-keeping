@@ -22,6 +22,7 @@ interface User {
   avatar?: string
   note?: string
   useOnline?: boolean
+  email?: string
   tags?: OutType[]
 }
 
@@ -31,4 +32,5 @@ interface OutType {
   icon: string
   isChecked: boolean
   alias: string
+  isCustom?: boolean
 }

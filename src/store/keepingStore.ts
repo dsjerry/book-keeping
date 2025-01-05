@@ -3,6 +3,10 @@ import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import _ from 'lodash'
 
+import { CountType } from '~consts/Data'
+
+export type FilterBy = string
+
 interface SortSlice {
   sortBy: SortBy
   sortOrder: 'asc' | 'desc'
@@ -18,6 +22,8 @@ interface FilterSlice {
 interface KeepingSlice {
   items: KeepingItem[]
   add: (item: KeepingItem) => void
+  addItems: (items: KeepingItem[]) => void
+  clearItems: () => void
   remove: (id: string) => void
   removeChecked: () => void
   update: (item: KeepingItem) => void
@@ -93,9 +99,20 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
       item.id = Date.now().toString()
       item.date = Date.now()
       item.no = state.items.length + 1
-      item.useToFilter = item.tags.map(item => item.alias)
+      item.useToFilter = [
+        ...item.tags.map(item => item.alias),
+        CountType[item.countType],
+      ]
       return { items: [...state.items, item] }
     })
+
+    get().sort({ sortBy: get().sortBy, sortOrder: get().sortOrder })
+  },
+  addItems: items => {
+    set(state => ({ items: [...items] }))
+  },
+  clearItems: () => {
+    set({ items: [] })
   },
   remove: id => {
     set(state => ({ items: state.items.filter(item => item.id !== id) }))
@@ -184,16 +201,46 @@ export const useKeepingStore = create<CommonSlice>()(
   ),
 )
 
-export type FilterBy = string
+interface UsersKeeping {
+  userid: string
+  keeping: KeepingItem[]
+}
 
-// export type FilterBy =
-//   | 'food'
-//   | 'shop'
-//   | 'traffic'
-//   | 'communication'
-//   | 'entertainment'
-//   | 'note'
-//   | 'cny'
-//   | 'aud'
-//   | 'hkd'
-//   | 'image'
+interface UsersKeepingSlice {
+  items: UsersKeeping[]
+  add: (item: UsersKeeping) => void
+  get: (userid: string) => UsersKeeping | void
+  remove: (userid: string) => void
+}
+
+export const userUsersKeepingStore = create<UsersKeepingSlice>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      add: item => {
+        const arr = get().items.map(user => {
+          if (user.userid === item.userid) {
+            return item
+          } else {
+            return user
+          }
+        })
+
+        set({ items: arr })
+      },
+      get(userid) {
+        return get().items.find(item => item.userid === userid)
+      },
+      remove: userid => {
+        set(state => ({
+          items: state.items.filter(item => item.userid !== userid),
+        }))
+      },
+    }),
+    {
+      name: `users-keeping`,
+      storage: createJSONStorage(() => AsyncStorage),
+      partialize: state => ({ items: state.items }),
+    },
+  ),
+)

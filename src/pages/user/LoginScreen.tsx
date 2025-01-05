@@ -9,6 +9,7 @@ import { checkUsername, checkPassword } from '~utils'
 import { loginStyle } from './styles'
 import { useUserStore } from '~store/userStore'
 import { useAppSettingsStore } from '~store/settingStore'
+import { useKeepingStore, userUsersKeepingStore } from '~store/keepingStore'
 import { useRegisterFetch, useLoginFetch } from './hooks'
 
 const InputPane: React.FC<InputPane> = ({
@@ -43,7 +44,9 @@ const LoginPane = () => {
   const [badPassTwoTips, setBadPassTwoTips] = useState('')
 
   const { useOnline, toggleUseOnline } = useAppSettingsStore()
-  const { add, setCurrentUser, users } = useUserStore()
+  const { add, setCurrentUser, getUserByName } = useUserStore()
+  const { addItems } = useKeepingStore()
+  const { get } = userUsersKeepingStore()
 
   const checkForm = () => {
     const username = checkUsername(state.username)
@@ -77,12 +80,16 @@ const LoginPane = () => {
       if (!result) return clearTips()
 
       const res = await useLoginFetch(result)
-      const user = users.find(user => user.username === res?.username)
+      const user = getUserByName(res?.username!)
       if (user && user.password === state.password) {
         navigation.navigate('UserHomeScreen', {
           user: { username: res?.username },
         })
         setCurrentUser(user)
+        const userKeeping = get(user.id)
+        if (userKeeping) {
+          addItems(userKeeping.keeping)
+        }
       } else {
         setBadNameTips('用户名或密码不正确！')
       }
@@ -98,6 +105,9 @@ const LoginPane = () => {
     })) as any
 
     add(res)
+    navigation.navigate('UserHomeScreen', {
+      user: { username: res?.username },
+    })
   }
 
   return (

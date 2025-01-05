@@ -39,8 +39,15 @@ class GetData {
     return { tagCounts, aliasCountArray }
   }
 
-  getDate() {
-    const processedData = this.list.map(item => {
+  getDate(isIncome = false) {
+    let _list = null
+    if (isIncome) {
+      _list = this.list.filter(item => item.type === 'in')
+    } else {
+      _list = this.list.filter(item => item.type === 'out')
+    }
+
+    const processedData = _list.map(item => {
       const date = dayjs(item.date).format('YYYY-MM-DD')
       return {
         date: date, // 日期 x轴

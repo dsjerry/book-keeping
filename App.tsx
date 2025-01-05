@@ -1,11 +1,15 @@
 import React from 'react'
-import { PaperProvider } from 'react-native-paper'
+import { PaperProvider, MD3LightTheme } from 'react-native-paper'
 
 import AppLayout from './src/layouts'
 
+/**
+ * TODO 暂时只启用浅色皮肤
+ */
+
 function App(): React.JSX.Element {
   return (
-    <PaperProvider>
+    <PaperProvider theme={MD3LightTheme}>
       <AppLayout />
     </PaperProvider>
   )

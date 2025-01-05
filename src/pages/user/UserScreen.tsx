@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { View, Text, StyleSheet, Image } from 'react-native'
 import { IconButton, List } from 'react-native-paper'
 import LinearGradient from 'react-native-linear-gradient'
@@ -7,6 +7,7 @@ import { captureRef } from 'react-native-view-shot'
 import Share from 'react-native-share'
 
 import { useUserContext } from './contexts/UserContext'
+import { useUserStore } from '~store/userStore'
 import NoUser from './widgets/NoUser'
 
 interface UserHomeProps {
@@ -24,6 +25,7 @@ interface UserCardProps {
 
 const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
   const shareRef = useRef<any>(null)
+
   const onShare = async () => {
     try {
       const uri = await captureRef(shareRef.current, {
@@ -42,6 +44,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
       console.error('捕获失败:', error)
     }
   }
+
   return (
     <LinearGradient
       ref={shareRef}
@@ -60,9 +63,14 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
               borderRadius: 4,
               backgroundColor: '#e7e0ec',
             }}>
-            <Image
-              source={{ uri: user.avatar, width: 60, height: 60 }}
-              style={{ borderRadius: 4 }}></Image>
+            {user.avatar ? (
+              <Image
+                source={{ uri: user.avatar }}
+                style={{ width: 60, height: 60, borderRadius: 4 }}
+              />
+            ) : (
+              ''
+            )}
           </View>
         </View>
         <View style={{ flex: 6, justifyContent: 'space-between' }}>
@@ -105,22 +113,22 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
 const UserHome: React.FC<UserHomeProps> = ({ route }) => {
   const navigation = useNavigation()
 
-  const { state, userStore, keepingStore } = useUserContext()
+  const { keepingStore } = useUserContext()
+  const { currentUser } = useUserStore()
 
-  const _currentUser = userStore.currentUser
   const { setCounting, record, output, income } = keepingStore
 
   useEffect(() => {
     setCounting()
-  }, [record])
+  }, [navigation])
 
   return (
     <View style={style.container}>
-      {!_currentUser ? (
+      {!currentUser ? (
         <NoUser />
       ) : (
         <>
-          <UserCard user={_currentUser} data={{ record, output, income }} />
+          <UserCard user={currentUser} data={{ record, output, income }} />
           <List.Section
             style={{
               marginTop: 20,

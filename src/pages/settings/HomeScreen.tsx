@@ -5,8 +5,11 @@ import { useNavigation } from '@react-navigation/native'
 import { Snackbar } from 'react-native-paper'
 
 import { useAppSettingsStore } from '~store/settingStore'
+import { useUserStore } from '~store/userStore'
+import { useKeepingStore } from '~store/keepingStore'
 import CustomDialog from '~components/CustomDialog'
 import { _COLORS } from '~consts/Colors'
+import { OutTypes } from '~consts/Data'
 
 const Settings = () => {
   const [isShowDialog, setIsShowDialog] = useState(false)
@@ -25,6 +28,9 @@ const Settings = () => {
     toggleConfirmExitEdit,
     toggleConfirmRemove,
   } = useAppSettingsStore()
+
+  const { currentUser, updateCurrentUser } = useUserStore()
+  const { items } = useKeepingStore()
 
   const navigation = useNavigation()
 
@@ -70,6 +76,36 @@ const Settings = () => {
       setIsShowDialog(false)
       setTips('暂无更新！')
     }, 2000)
+  }
+
+  const fixData = () => {
+    console.info('数据完善...')
+    console.log(currentUser)
+    if (!currentUser) return console.info('用户不存在')
+
+    if (!currentUser.tags || currentUser.tags.length === 0) {
+      console.info('添加标签')
+      updateCurrentUser({ tags: OutTypes })
+    }
+
+    const noInclude = (arr: string[]) => {
+      return !arr.some(
+        item => item === 'cny' || item === 'hkd' || item === 'aud',
+      )
+    }
+    items.forEach(item => {
+      if (noInclude(item.useToFilter)) {
+        if (item.countType === '人民币') {
+          item.useToFilter.push('cny')
+        } else if (item.countType === '港币') {
+          item.useToFilter.push('hkd')
+        } else if (item.countType === '澳元') {
+          item.useToFilter.push('aud')
+        }
+      }
+    })
+
+    console.info('完善完成...')
   }
 
   return (
@@ -157,6 +193,13 @@ const Settings = () => {
           title="软件信息"
           left={props => <List.Icon {...props} icon="information-outline" />}
           onPress={() => navigation.navigate('AboutScreen', {})}
+        />
+      </List.Section>
+      <List.Section title="开发">
+        <List.Item
+          title="数据修复"
+          left={props => <List.Icon {...props} icon="auto-fix" />}
+          onPress={fixData}
         />
       </List.Section>
     </View>

@@ -1,5 +1,9 @@
 import { Dispatch, createContext, useContext, useReducer } from 'react'
 
+/**
+ * TODO 表单应该独立绑定，而不是直接与 state 直接绑定
+ */
+
 const initialState: State = {
   modal: {
     title: '',
@@ -28,7 +32,13 @@ const initialState: State = {
     date: 0,
     useToFilter: [''],
   },
-  countTypeIndex: 0,
+}
+
+function updateState<T>(state: T, payload: Partial<T>): T {
+  return {
+    ...state,
+    ...payload,
+  }
 }
 
 const reducer = (state: State, action: Action) => {
@@ -36,21 +46,12 @@ const reducer = (state: State, action: Action) => {
     case 'modal':
       return {
         ...state,
-        modal: {
-          ...state.modal,
-          ...action.payload,
-        },
+        modal: updateState(state.modal, action.payload),
       }
     case 'isShowMenu':
-      return {
-        ...state,
-        isShowMenu: action.payload,
-      }
+      return updateState(state, { isShowMenu: action.payload })
     case 'activeKeeping':
-      return {
-        ...state,
-        activeKeeping: action.payload,
-      }
+      return updateState(state, { activeKeeping: action.payload })
     case 'fromEditing':
       return {
         ...state,
@@ -62,10 +63,7 @@ const reducer = (state: State, action: Action) => {
     case 'addForm':
       return {
         ...state,
-        form: {
-          ...state.form,
-          ...action.payload,
-        },
+        form: updateState(state.form, action.payload),
       }
     case 'emptyForm':
       return {
@@ -75,12 +73,6 @@ const reducer = (state: State, action: Action) => {
           tags: [],
         },
       }
-    case 'countTypeIndex':
-      return {
-        ...state,
-        countTypeIndex: action.payload,
-      }
-
     default:
       return state
   }
@@ -96,9 +88,7 @@ export const HomeProvider: React.FC<Props> = ({ children }) => {
 
   return (
     <HomeContext.Provider value={state}>
-      <HomeDispatchContext.Provider value={dispatch}>
-        {children}
-      </HomeDispatchContext.Provider>
+      <HomeDispatchContext.Provider value={dispatch}>{children}</HomeDispatchContext.Provider>
     </HomeContext.Provider>
   )
 }
@@ -138,8 +128,7 @@ interface State {
   activeKeeping: KeepingItem['id'][]
   longPressMenu: MenuItem[]
   editing: KeepingItem | null
-  form: KeepingItem
-  countTypeIndex: number
+  form: Partial<KeepingItem>
 }
 
 type Action =
@@ -155,7 +144,7 @@ type Action =
     }
   | {
       type: 'addForm'
-      payload: KeepingItem
+      payload: Partial<KeepingItem>
     }
   | {
       type: 'editForm'
