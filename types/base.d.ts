@@ -22,6 +22,7 @@ interface User {
   avatar?: string
   note?: string
   useOnline?: boolean
+  email?: string
   tags?: OutType[]
 }
 

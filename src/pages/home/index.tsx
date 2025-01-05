@@ -15,10 +15,7 @@ export default function Home() {
       <RootStack.Navigator initialRouteName="HomeScreen">
         <RootStack.Group screenOptions={{ headerShown: false }}>
           <RootStack.Screen name="HomeScreen" component={HomeScreen} />
-          <RootStack.Screen
-            name="AddressDetailScreen"
-            component={AddressList}
-          />
+          <RootStack.Screen name="AddressDetailScreen" component={AddressList} />
         </RootStack.Group>
         <RootStack.Group
           screenOptions={{

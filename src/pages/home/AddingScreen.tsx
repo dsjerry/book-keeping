@@ -207,8 +207,8 @@ const Adding: React.FC<Props> = ({ route }) => {
         value={form.note}
         onChangeText={text => formChanged({ note: text })}
       />
-      <Button mode="outlined" style={style.addBtn} onPress={onAddPress}>
-        提交
+      <Button mode="contained-tonal" style={style.addBtn} onPress={onAddPress}>
+        保存
       </Button>
     </View>
   )
@@ -240,6 +240,7 @@ const style = StyleSheet.create({
   addBtn: {
     width: '100%',
     marginTop: 'auto',
+    borderRadius: 5,
   },
 })
 
