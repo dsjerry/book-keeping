@@ -2,11 +2,7 @@ import { useEffect, useRef } from 'react'
 import { View, StyleSheet } from 'react-native'
 import * as echarts from 'echarts/core'
 import { LineChart, PieChart, BarChart } from 'echarts/charts'
-import {
-  GridComponent,
-  LegendComponent,
-  TitleComponent,
-} from 'echarts/components'
+import { GridComponent, LegendComponent, TitleComponent } from 'echarts/components'
 import { SVGRenderer, SkiaChart, SvgChart } from '@wuba/react-native-echarts'
 import type { EChartsOption, EChartsInitOpts } from 'echarts'
 import { Card } from 'react-native-paper'
@@ -21,15 +17,7 @@ interface ChartsProps {
   units?: string
 }
 
-echarts.use([
-  SVGRenderer,
-  LineChart,
-  GridComponent,
-  PieChart,
-  LegendComponent,
-  BarChart,
-  TitleComponent,
-])
+echarts.use([SVGRenderer, LineChart, GridComponent, PieChart, LegendComponent, BarChart, TitleComponent])
 
 const DEFAULT_INIT: EChartsInitOpts = {
   width: DEVICE_WIDTH * 0.9,
@@ -105,6 +93,9 @@ export const CountBarChart: React.FC<ChartsProps> = ({ data, title }) => {
       xAxis: {
         type: 'category',
         data: data.dates,
+        axisLabel: {
+          rotate: -45,
+        },
       },
       yAxis: {
         type: 'value',

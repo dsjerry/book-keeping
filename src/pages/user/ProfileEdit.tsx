@@ -12,7 +12,7 @@ type HalfModalType = 'nickname' | 'note'
 const ProfileEdit = () => {
   const [isShowModal, setIsShowModal] = useState(false)
   const [halfModalType, setHalfModalType] = useState<HalfModalType>('nickname')
-  const [editObj, setEditObj] = useState({ nickname: '', note: '' })
+  const [editObj, setEditObj] = useState({ nickname: '', note: '', email: '' })
   const { userStore } = useUserContext()
 
   const _currentUser = userStore.currentUser!
@@ -21,6 +21,7 @@ const ProfileEdit = () => {
     setEditObj({
       nickname: _currentUser.username,
       note: _currentUser.note || '这个人很懒，什么也没留下',
+      email: _currentUser.email || '',
     })
   }, [_currentUser])
 
@@ -118,10 +119,7 @@ const ProfileEdit = () => {
         <List.Item
           title="个性昵称"
           right={props => (
-            <Button
-              icon={'chevron-right'}
-              textColor="grey"
-              contentStyle={{ flexDirection: 'row-reverse' }}>
+            <Button icon={'chevron-right'} textColor="grey" contentStyle={{ flexDirection: 'row-reverse' }}>
               {editObj.nickname}
             </Button>
           )}
@@ -130,14 +128,19 @@ const ProfileEdit = () => {
         <List.Item
           title="个性签名"
           right={props => (
-            <Button
-              icon={'chevron-right'}
-              textColor="grey"
-              contentStyle={{ flexDirection: 'row-reverse' }}>
+            <Button icon={'chevron-right'} textColor="grey" contentStyle={{ flexDirection: 'row-reverse' }}>
               {editObj.note}
             </Button>
           )}
           onPress={onNotePress}
+        />
+        <List.Item
+          title="邮箱"
+          right={props => (
+            <Button icon={'chevron-right'} textColor="grey" contentStyle={{ flexDirection: 'row-reverse' }}>
+              {editObj.email}
+            </Button>
+          )}
         />
       </List.Section>
       <HalfModal
@@ -156,9 +159,7 @@ const ProfileEdit = () => {
               }}
               onChangeText={text => setEditObj({ ...editObj, nickname: text })}
             />
-            <HelperText
-              style={{ marginBottom: 10, marginHorizontal: 5 }}
-              type="info">
+            <HelperText style={{ marginBottom: 10, marginHorizontal: 5 }} type="info">
               设置一个你喜欢的昵称，用于账单分享显示
             </HelperText>
           </>
@@ -173,9 +174,7 @@ const ProfileEdit = () => {
               }}
               onChangeText={text => setEditObj({ ...editObj, note: text })}
             />
-            <HelperText
-              style={{ marginBottom: 10, marginHorizontal: 5 }}
-              type="info">
+            <HelperText style={{ marginBottom: 10, marginHorizontal: 5 }} type="info">
               个性签名在分享的时候会显示出来
             </HelperText>
           </>
