@@ -68,9 +68,9 @@ const Item: React.FC<ItemProps> = ({
                 status={item.isChecked ? 'checked' : 'unchecked'}
                 onPress={() => toggle(item.id)}
               />
-              <Text>{item.type === 'in' ? '收入' : '支出'}</Text>
+              <Text style={{ color: '#6d57a7' }}>{item.type === 'in' ? '收入' : '支出'}</Text>
               <Text style={style.itemCount}>{item.count}</Text>
-              <Text>元</Text>
+              <Text style={{ color: '#6d57a7' }}>元</Text>
             </View>
             <View style={tag.pane}>
               {item.tags.map(tagItem => (

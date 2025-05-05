@@ -23,6 +23,11 @@ const AddressList = () => {
   const navigation = useNavigation()
 
   useEffect(() => {
+    Geolocation.setRNConfiguration({
+      skipPermissionRequests: false,
+      authorizationLevel: 'whenInUse',
+      locationProvider: 'auto',
+    })
     Geolocation.getCurrentPosition(position => {
       const amap = new Amap({
         latitude: position.coords.latitude,

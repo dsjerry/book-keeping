@@ -220,6 +220,7 @@ const style = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 20,
+    overflow: "scroll"
   },
   count: {
     width: '100%',
