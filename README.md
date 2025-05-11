@@ -4,15 +4,16 @@
 
 使用脚手架搭建，主要用到的库：
 
-- 组件库：react-native-paper
+- 界面
+    - 组件库：react-native-paper
+    - 图表：@wuba/react-native-echarts
+    - 图标：react-native-vector-icons
 
-- 状态管理：zustand
+- 存储
+    - 状态管理：zustand
+    - 持久化：async-storage
 
-- 持久化：async-storage
-
-- 图表：@wuba/react-native-echarts
-
-- 图标：react-native-vector-icons
+- LLM 调用：ai、@ai-sdk/deepseek
 
 # 开发和打包
 
@@ -46,4 +47,6 @@ cd android
 <img src="https://s21.ax1x.com/2025/01/05/pE9EPnx.jpg" alt="编辑" width="200" />
 <img src="https://s21.ax1x.com/2025/01/05/pE9EFHK.jpg" alt="详情" width="200" />
 <img src="https://s21.ax1x.com/2025/01/05/pE9EiB6.jpg" alt="分析" width="200" />
+<img src="https://s21.ax1x.com/2025/05/12/pEXkxzj.jpg" alt="首页-暗色" width="200" />
+<img src="https://s21.ax1x.com/2025/05/12/pEXASQs.jpg" alt="AI分析-暗色" width="200" />
 </div>
