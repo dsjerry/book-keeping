@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
-import { Chip } from 'react-native-paper'
+import { Chip, useTheme } from 'react-native-paper'
 
 import { OutTypes, CountTypeWithIconList } from '~consts/Data'
 import CustomDivider from '~components/CustomDivider'
@@ -13,6 +13,7 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
   const [outTypes, setOutTypes] = useState([...OutTypes])
   const [countType, setCountType] = useState([...CountTypeWithIconList])
   const { filterBy, setFilterBy } = useKeepingStore()
+  const theme = useTheme() // 获取当前主题
 
   const onChipPress = (item: FilterBy) => {
     const array = [...filterBy]
@@ -25,7 +26,11 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
   }
 
   return (
-    <View style={{ paddingHorizontal: 10, paddingVertical: 10 }}>
+    <View style={{ 
+      paddingHorizontal: 10, 
+      paddingVertical: 10,
+      backgroundColor: theme.colors.background // 使用主题背景色
+    }}>
       <CustomDivider text="内容" textPosi="left" />
 
       <View style={{ flexDirection: 'row' }}>

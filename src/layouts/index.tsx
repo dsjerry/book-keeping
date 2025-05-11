@@ -1,9 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { View } from 'react-native'
-import { NavigationContainer, useNavigation } from '@react-navigation/native'
+import { NavigationContainer, useNavigation, DefaultTheme } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { Drawer } from 'react-native-drawer-layout'
-import { List } from 'react-native-paper'
+import { List, useTheme } from 'react-native-paper'
 
 import Home from '~pages/home'
 import Settings from '~pages/settings'
@@ -26,6 +26,7 @@ interface DrawerContent {
 
 const CustomDrawerContent: React.FC<DrawerContent> = ({ toggleDrawer }) => {
   const navigation = useNavigation()
+  const theme = useTheme() // 获取当前主题
 
   const list = [
     {
@@ -61,7 +62,12 @@ const CustomDrawerContent: React.FC<DrawerContent> = ({ toggleDrawer }) => {
   }
 
   return (
-    <View style={{ flex: 1, height: '100%', paddingHorizontal: 10 }}>
+    <View style={{ 
+      flex: 1, 
+      height: '100%', 
+      paddingHorizontal: 10,
+      backgroundColor: theme.colors.background // 使用主题背景色
+    }}>
       <DrawerItemUser toggleDrawer={toggleDrawer} />
       <List.Section
         style={{
@@ -71,9 +77,9 @@ const CustomDrawerContent: React.FC<DrawerContent> = ({ toggleDrawer }) => {
           <List.Item
             key={item.title}
             title={item.title}
-            titleStyle={{ color: '#6b4faa' }}
-            left={props => <List.Icon color="#6b4faa" icon={item.icon} />}
-            right={props => <List.Icon color="#6b4faa" icon="chevron-right" />}
+            titleStyle={{ color: theme.colors.primary }}
+            left={props => <List.Icon color={theme.colors.primary} icon={item.icon} />}
+            right={props => <List.Icon color={theme.colors.primary} icon="chevron-right" />}
             onPress={() => onListItemPress(item.target)}
           />
         ))}
@@ -86,9 +92,27 @@ const CustomDrawerContent: React.FC<DrawerContent> = ({ toggleDrawer }) => {
 
 export default function AppLayout() {
   const [isShowDrawer, setIsShowDrawer] = useState(false)
+  const [navigationTheme, setNavigationTheme] = useState(global.navigationTheme || DefaultTheme)
+
+  // 监听全局主题变化
+  useEffect(() => {
+    const checkTheme = () => {
+      if (global.navigationTheme && global.navigationTheme !== navigationTheme) {
+        setNavigationTheme(global.navigationTheme)
+      }
+    }
+
+    // 初始检查
+    checkTheme()
+
+    // 设置定时器定期检查主题变化
+    const intervalId = setInterval(checkTheme, 300)
+
+    return () => clearInterval(intervalId)
+  }, [navigationTheme])
 
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Drawer
         open={isShowDrawer}
         onOpen={() => setIsShowDrawer(true)}

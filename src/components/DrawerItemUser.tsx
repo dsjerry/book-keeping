@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react'
 import { View, StyleSheet, Pressable, Text } from 'react-native'
-import { Button, Avatar } from 'react-native-paper'
+import { Button, Avatar, useTheme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 
 import { useUserStore } from '~store/userStore'
 
 const ToLoginWidget: React.FC<LoginWidget> = ({ onLogin }) => {
+  const theme = useTheme() // 获取当前主题
   return (
     <View>
       <Button
         style={{ paddingLeft: 0 }}
         mode="text"
         icon={'login'}
+        textColor={theme.colors.primary}
         onPress={onLogin}>
         登录 / 注册
       </Button>
@@ -20,6 +22,7 @@ const ToLoginWidget: React.FC<LoginWidget> = ({ onLogin }) => {
 }
 
 const UserWidget: React.FC<UserWidget> = ({ username, avatar, onUser }) => {
+  const theme = useTheme() // 获取当前主题
   return (
     <Pressable style={userWidget.container} onPress={onUser}>
       {avatar ? (
@@ -30,6 +33,7 @@ const UserWidget: React.FC<UserWidget> = ({ username, avatar, onUser }) => {
       <Button
         style={userWidget.username}
         icon={'chevron-right'}
+        textColor={theme.colors.primary}
         contentStyle={{ flexDirection: 'row-reverse', alignItems: 'center' }}>
         <Text style={{ fontSize: 16 }}>{username}</Text>
       </Button>
@@ -44,6 +48,7 @@ interface DrawerItemUserProps {
 const DrawerItemUser: React.FC<DrawerItemUserProps> = ({ toggleDrawer }) => {
   const navigation = useNavigation()
   const { currentUser } = useUserStore()
+  const theme = useTheme() // 获取当前主题
 
   useEffect(() => {
     console.log(currentUser)
@@ -58,7 +63,7 @@ const DrawerItemUser: React.FC<DrawerItemUserProps> = ({ toggleDrawer }) => {
     toggleDrawer()
   }
   return (
-    <View style={style.container}>
+    <View style={[style.container, { borderBottomColor: theme.colors.outlineVariant }]}>
       {currentUser ? (
         <UserWidget
           username={currentUser.username}
@@ -81,7 +86,7 @@ const style = StyleSheet.create({
     paddingHorizontal: 10,
     marginBottom: 10,
     borderBottomWidth: 0.6,
-    borderBottomColor: '#e7e0ec',
+    // 边框颜色将通过主题动态设置
   },
 })
 

@@ -1,5 +1,5 @@
 import { Modal, StyleSheet, Text, View } from 'react-native'
-import { Button } from 'react-native-paper'
+import { Button, useTheme } from 'react-native-paper'
 
 interface Props {
   isShow?: boolean
@@ -15,6 +15,7 @@ const HalfModal: React.FC<Props> = ({
   title,
   onClosePress,
 }) => {
+  const theme = useTheme() // 获取当前主题
   return (
     <Modal
       animationType="slide"
@@ -25,13 +26,13 @@ const HalfModal: React.FC<Props> = ({
         onClosePress?.()
       }}>
       <View style={styles.centeredView}>
-        <View style={modal.container}>
+        <View style={[modal.container, { backgroundColor: theme.colors.surface }]}>
           <View style={header.container}>
-            <Text style={header.title}>{title}</Text>
+            <Text style={[header.title, { color: theme.colors.primary }]}>{title}</Text>
           </View>
           <View>{children}</View>
-          <View style={footer.container}>
-            <Button onPress={onClosePress}>关闭</Button>
+          <View style={[footer.container, { borderTopColor: theme.colors.primary }]}>
+            <Button onPress={onClosePress} textColor={theme.colors.primary}>关闭</Button>
           </View>
         </View>
       </View>
@@ -53,7 +54,7 @@ const modal = StyleSheet.create({
     // height: '30%',
     height: 'auto',
     width: '100%',
-    backgroundColor: 'white',
+    // 背景色将通过主题动态设置
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
   },
@@ -70,7 +71,7 @@ const header = StyleSheet.create({
   },
   title: {
     fontWeight: 'bold',
-    color: '#6d57a7',
+    // 文本颜色将通过主题动态设置
   },
 })
 
@@ -83,7 +84,7 @@ const footer = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderTopWidth: 0.5,
-    borderTopColor: '#6d57a7',
+    // 边框颜色将通过主题动态设置
   },
 })
 

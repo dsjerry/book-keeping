@@ -5,8 +5,10 @@ import {
   StyleSheet,
   Pressable,
   Dimensions,
+  useColorScheme,
 } from 'react-native'
-import { Checkbox, Chip, Icon } from 'react-native-paper'
+import { Checkbox, Chip, Icon, useTheme } from 'react-native-paper'
+import type { MD3Theme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import type { MenuAction } from '@react-native-menu/menu'
 
@@ -29,6 +31,7 @@ interface ItemProps {
   onLongPress: (itemId: KeepingItem['id']) => void
   onMenuPress: (actionId: MenuAction['id'], itemId: KeepingItem['id']) => void
   toggle: (id: string) => void
+  theme: MD3Theme // 添加主题属性
 }
 
 /**
@@ -40,25 +43,30 @@ const Item: React.FC<ItemProps> = ({
   onLongPress,
   onMenuPress,
   toggle,
+  theme, // 从外部接收主题对象
 }) => {
+  const isDarkMode = theme.dark;
   return (
     <>
       {item.isShow !== false && (
         <CustomMenuView
-          actions={menuAction}
+          actions={getMenuActions(theme)}
           onPress={id => onMenuPress(id, item.id)}>
           <Pressable
             style={({ pressed }) => ({
               ...style.item,
-              backgroundColor: pressed ? '#fffbfe' : '#fff',
+              backgroundColor: pressed
+                ? theme.colors.surfaceVariant
+                : theme.colors.surface,
               elevation: pressed ? 8 : 2,
+              borderColor: theme.colors.outline,
             })}
             onPress={() => doNavigate(item.id)}
             onLongPress={e => onLongPress(item.id)}>
             <View style={style.itemHeader}>
-              {item.note && <Icon source={'note-text-outline'} size={14} />}
-              {item.image && <Icon source={'image-outline'} size={14} />}
-              <Text style={{ color: '#6d57a7', marginLeft: 5 }}>
+              {item.note && <Icon source={'note-text-outline'} size={14} color={theme.colors.primary} />}
+              {item.image && <Icon source={'image-outline'} size={14} color={theme.colors.primary} />}
+              <Text style={{ color: theme.colors.primary, marginLeft: 5 }}>
                 {/* {dayjs(item.date).format('YYYY-MM-DD')} */}
                 {_date(item.date)}
               </Text>
@@ -68,9 +76,9 @@ const Item: React.FC<ItemProps> = ({
                 status={item.isChecked ? 'checked' : 'unchecked'}
                 onPress={() => toggle(item.id)}
               />
-              <Text style={{ color: '#6d57a7' }}>{item.type === 'in' ? '收入' : '支出'}</Text>
-              <Text style={style.itemCount}>{item.count}</Text>
-              <Text style={{ color: '#6d57a7' }}>元</Text>
+              <Text style={{ color: theme.colors.primary }}>{item.type === 'in' ? '收入' : '支出'}</Text>
+              <Text style={[style.itemCount, { color: theme.colors.primary }]}>{item.count}</Text>
+              <Text style={{ color: theme.colors.primary }}>元</Text>
             </View>
             <View style={tag.pane}>
               {item.tags.map(tagItem => (
@@ -101,6 +109,7 @@ const Item: React.FC<ItemProps> = ({
 const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
+  const theme = useTheme()
   const {
     isShowMenu,
     longPressMenu: menu,
@@ -174,6 +183,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
             onLongPress: onItemLongPress,
             onMenuPress: onItemMenuPress,
             toggle,
+            theme, // 传递主题对象
           })
         }
       />
@@ -181,21 +191,22 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
   )
 }
 
-const menuAction: MenuAction[] = [
+// 菜单动作配置
+const getMenuActions = (theme: MD3Theme): MenuAction[] => [
   {
     id: 'info',
     title: '详情',
-    titleColor: _COLORS.main,
+    titleColor: theme.colors.primary,
   },
   {
     id: 'toggle',
     title: '选中',
-    titleColor: _COLORS.main,
+    titleColor: theme.colors.primary,
   },
   {
     id: 'del',
     title: '删除',
-    titleColor: _COLORS.main,
+    titleColor: theme.colors.primary,
   },
 ]
 
@@ -214,6 +225,7 @@ const style = StyleSheet.create({
     paddingRight: 10,
     borderRadius: 5,
     elevation: 2,
+    // borderWidth: 0.5,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -229,7 +241,6 @@ const style = StyleSheet.create({
   itemCount: {
     fontSize: 20,
     marginHorizontal: 5,
-    color: '#6d57a7',
   },
 })
 

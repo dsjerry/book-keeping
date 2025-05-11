@@ -103,7 +103,7 @@ export const homeStyle = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#e7e0ec',
+    // backgroundColor: '#e7e0ec',
   },
   btnArea: {
     position: 'absolute',

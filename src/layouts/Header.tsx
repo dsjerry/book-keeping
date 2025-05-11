@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
-import { IconButton, Menu, Divider } from 'react-native-paper'
+import { IconButton, Menu, Divider, useTheme } from 'react-native-paper'
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native'
 
 import type { StackHeaderProps } from '@react-navigation/stack'
@@ -28,6 +28,8 @@ const Header: React.FC<HeaderProps> = ({
   options,
   toggleDrawer,
 }) => {
+  // 获取当前主题
+  const theme = useTheme();
   const {
     items,
     sort,
@@ -83,7 +85,7 @@ const Header: React.FC<HeaderProps> = ({
   }
 
   const onLeftMenuPress = () => toggleDrawer && toggleDrawer()
-  const onRightMenuClose = () => {}
+  const onRightMenuClose = () => { }
   const onRightMenuItemPress = (item: RightMenuItem) => {
     // TODO
     if (item == 'filter' || item == 'sort') {
@@ -122,7 +124,7 @@ const Header: React.FC<HeaderProps> = ({
   }
 
   return (
-    <Pressable style={style.container}>
+    <Pressable style={[style.container, { backgroundColor: theme.colors.elevation.level5 }]}>
       <View>
         {_header.type === 'back' ? (
           <IconButton
@@ -134,12 +136,12 @@ const Header: React.FC<HeaderProps> = ({
         )}
       </View>
       <View>
-        <Text style={style.title}>{_header.title}</Text>
+        <Text style={[style.title, { color: theme.colors.primary }]}>{_header.title}</Text>
       </View>
       <View style={style.right}>
         {itemSelected > 0 && (
           <View style={style.checked}>
-            <Text style={style.checkedCount}>{itemSelected}</Text>
+            <Text style={[style.checkedCount, { color: theme.colors.primary }]}>{itemSelected}</Text>
           </View>
         )}
         {page === 'Home' && (
@@ -188,7 +190,7 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    backgroundColor: '#e7e0ec',
+    // 背景色将通过主题动态设置
     elevation: 10,
   },
   right: {
@@ -199,14 +201,14 @@ const style = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#6d57a7',
+    // 颜色将通过主题动态设置
   },
   checked: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   checkedCount: {
-    color: '#6d57a7',
+    // 颜色将通过主题动态设置
     fontSize: 18,
     fontWeight: 'bold',
     marginLeft: 5,
