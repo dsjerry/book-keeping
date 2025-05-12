@@ -11,6 +11,7 @@ import { useUserStore } from '~store/userStore'
 import { useAppSettingsStore } from '~store/settingStore'
 import { useKeepingStore, userUsersKeepingStore } from '~store/keepingStore'
 import { useRegisterFetch, useLoginFetch } from './hooks'
+import { userApi, LoginParams } from 'src/api'
 
 const InputPane: React.FC<InputPane> = ({
   value,
@@ -74,6 +75,8 @@ const LoginPane = () => {
     }, timer)
   }
 
+  const onError = (error: any) => console.log('[登录注册]', error?.message)
+
   const onLogin = async () => {
     try {
       const result = checkForm()
@@ -93,7 +96,7 @@ const LoginPane = () => {
       } else {
         setBadNameTips('用户名或密码不正确！')
       }
-    } catch (error) {}
+    } catch (error) { }
   }
 
   const onRegister = async () => {
@@ -108,6 +111,30 @@ const LoginPane = () => {
     navigation.navigate('UserHomeScreen', {
       user: { username: res?.username },
     })
+  }
+
+  // 启用同步 勾选得时候，将数据保存到远程数据库
+  const connectRemote = async (params: LoginParams) => {
+    try {
+      const { data, code } = await userApi.login(params)
+      if (code !== 200) throw new Error('出错了')
+
+      const user = getUserByName(data.user.username!)
+      if (user && user.password === state.password) {
+        navigation.navigate('UserHomeScreen', {
+          user: { username: data.user.username },
+        })
+        setCurrentUser(user)
+        const userKeeping = get(user.id)
+        if (userKeeping) {
+          addItems(userKeeping.keeping)
+        }
+      } else {
+        setBadNameTips('用户名或密码不正确！')
+      }
+    } catch (error) {
+      onError(error)
+    }
   }
 
   return (
@@ -147,7 +174,7 @@ const LoginPane = () => {
               if (state.isRegister) return onRegister()
               onLogin()
             }}>
-            {state.isRegister ? 'register' : 'login'}
+            {state.isRegister ? '注册' : '登录'}
           </Button>
         </View>
         <View style={loginStyle.formBtn}>
@@ -157,19 +184,21 @@ const LoginPane = () => {
             onPress={() => {
               dispatch({ type: 'isRegister', payload: !state.isRegister })
             }}>
-            {state.isRegister ? 'login' : 'register'}
+            {state.isRegister ? '登录' : '注册'}
           </Button>
-          <CheckBox
-            checked={useOnline}
-            title="启用同步"
-            size={16}
-            textStyle={{ fontSize: 12 }}
-            containerStyle={{
-              backgroundColor: 'transparent',
-            }}
-            checkedColor="#6b4faa"
-            onPress={toggleUseOnline}
-          />
+          {state.isRegister && (
+            <CheckBox
+              checked={useOnline}
+              title="启用同步"
+              size={16}
+              textStyle={{ fontSize: 12 }}
+              containerStyle={{
+                backgroundColor: 'transparent',
+              }}
+              checkedColor="#6b4faa"
+              onPress={toggleUseOnline}
+            />
+          )}
         </View>
       </View>
     </View>

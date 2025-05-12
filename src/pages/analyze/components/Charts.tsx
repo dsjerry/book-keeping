@@ -94,7 +94,7 @@ export const CountBarChart: React.FC<ChartsProps> = ({ data, title }) => {
         type: 'category',
         data: data.dates,
         axisLabel: {
-          rotate: -45,
+          rotate: 0,
         },
       },
       yAxis: {
@@ -104,6 +104,7 @@ export const CountBarChart: React.FC<ChartsProps> = ({ data, title }) => {
         {
           data: data.counts,
           type: 'bar',
+          barWidth: 30, // 设置柱子的固定宽度为30px
         },
       ],
     }

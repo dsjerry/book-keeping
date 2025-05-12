@@ -5,6 +5,10 @@ declare module 'react-native-config' {
     AUTHOR_AKA?: string
     EMAIL?: string
     SITE?: string
+    API_URL?: string
+    APP_VERSION?: string
+    DEEPSEEK_API_KEY?: string
+    AMAP_API_KEY?: string
   }
 
   export const Config: NativeConfig

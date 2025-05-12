@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { FlatList, View, Pressable } from 'react-native'
-import { Text, RadioButton } from 'react-native-paper'
+import { Text, RadioButton, useTheme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import Geolocation from '@react-native-community/geolocation'
 
@@ -15,6 +15,7 @@ import LoadingIndicator from '~components/LoadingIndicator'
  */
 
 const AddressList = () => {
+  const theme = useTheme() // 获取当前主题
   const [nearBy, setNearBy] = useState<NearByItem[]>([])
   const [loading, setLoading] = useState(true)
   const [loadMsg, setLoadMsg] = useState('')
@@ -23,6 +24,11 @@ const AddressList = () => {
   const navigation = useNavigation()
 
   useEffect(() => {
+    Geolocation.setRNConfiguration({
+      skipPermissionRequests: false,
+      authorizationLevel: 'whenInUse',
+      locationProvider: 'auto',
+    })
     Geolocation.getCurrentPosition(position => {
       const amap = new Amap({
         latitude: position.coords.latitude,
@@ -71,7 +77,7 @@ const AddressList = () => {
           不使用位置
         </Text>
       </Pressable>
-      <LoadingIndicator animating={loading} text={loadMsg} />
+      <LoadingIndicator animating={loading} text={loadMsg} indicatorBoxStyle={{ backgroundColor: theme.colors.background }} />
       {nearBy.length === 0 && (
         <View
           style={{

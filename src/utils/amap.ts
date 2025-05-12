@@ -1,9 +1,10 @@
 import axios from 'axios'
+import Config from 'react-native-config'
 
 type Coords = { latitude: number; longitude: number }
 class Amap {
   private baseUrl = 'https://restapi.amap.com/v3'
-  private key = '71f4c84274ea1cba2c8b35ccfdfd7bdd'
+  private key = Config.AMAP_API_KEY
   private coords: Coords
   constructor(coords: Coords) {
     this.coords = coords

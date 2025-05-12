@@ -66,6 +66,40 @@ class GetData {
 
     return { dates, counts }
   }
+
+  // 获取消费地点分布数据
+  getLocation(isIncome = false) {
+    // 根据收入/支出类型筛选数据
+    let _list = null
+    if (isIncome) {
+      _list = this.list.filter(item => item.type === 'in')
+    } else {
+      _list = this.list.filter(item => item.type === 'out')
+    }
+
+    // 按地点分组并统计金额
+    const locationMap = {} as AnyObj
+    
+    _list.forEach(item => {
+      // 如果没有地点信息，归类为"未知地点"
+      const location = item.address?.name || '未知地点'
+      const count = parseInt(item.count)
+      
+      if (locationMap[location]) {
+        locationMap[location] += count
+      } else {
+        locationMap[location] = count
+      }
+    })
+
+    // 转换为图表所需的数据格式
+    const locationData = Object.keys(locationMap).map(location => {
+      return { name: location, value: locationMap[location] }
+    })
+
+    // 按金额从大到小排序
+    return locationData.sort((a, b) => b.value - a.value)
+  }
 }
 
 export { GetData }

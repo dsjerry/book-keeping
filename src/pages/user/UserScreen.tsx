@@ -129,6 +129,33 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
       ) : (
         <>
           <UserCard user={currentUser} data={{ record, output, income }} />
+          <List.Section style={{
+            marginTop: 20,
+            paddingHorizontal: 10,
+            width: '90%',
+            elevation: 4,
+            borderRadius: 4,
+            backgroundColor: '#e6dfec',
+          }} >
+            <List.Item
+              title="额度设置"
+              left={props => (
+                <List.Icon {...props} icon="counter" />
+              )}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => {
+                navigation.navigate('ProfileEditScreen', {})
+                navigation.setOptions({ headerShown: false })
+              }}
+            />
+            <List.Item
+              title="API KEY"
+              left={props => (
+                <List.Icon {...props} icon="file-key-outline" />
+              )}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+            />
+          </List.Section>
           <List.Section
             style={{
               marginTop: 20,

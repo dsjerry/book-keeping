@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { View } from 'react-native'
-import { List, Switch } from 'react-native-paper'
+import { List, Switch, RadioButton, useTheme, Text } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import { Snackbar } from 'react-native-paper'
 
@@ -24,13 +24,16 @@ const Settings = () => {
     useOnline,
     confirmExitEdit,
     confirmRemove,
+    themeMode,
     toggleUseOnline,
     toggleConfirmExitEdit,
     toggleConfirmRemove,
+    setThemeMode,
   } = useAppSettingsStore()
 
   const { currentUser, updateCurrentUser } = useUserStore()
   const { items } = useKeepingStore()
+  const theme = useTheme()
 
   const navigation = useNavigation()
 
@@ -126,10 +129,38 @@ const Settings = () => {
       </Snackbar>
       <List.Section title="基本设置">
         <List.Accordion
+          title="主题设置"
+          description="设置应用的显示主题"
+          descriptionStyle={{ fontSize: 12 }}
+          style={{ backgroundColor: theme.colors.surfaceVariant }}
+          left={props => (
+            <List.Icon {...props} icon="theme-light-dark" />
+          )}>
+          <RadioButton.Group
+            onValueChange={value => setThemeMode(value as 'system' | 'light' | 'dark')}
+            value={themeMode}>
+            <RadioButton.Item
+              label="跟随系统"
+              value="system"
+              labelStyle={{ color: theme.colors.onSurface }}
+            />
+            <RadioButton.Item
+              label="浅色模式"
+              value="light"
+              labelStyle={{ color: theme.colors.onSurface }}
+            />
+            <RadioButton.Item
+              label="深色模式"
+              value="dark"
+              labelStyle={{ color: theme.colors.onSurface }}
+            />
+          </RadioButton.Group>
+        </List.Accordion>
+        <List.Accordion
           title="再次确认"
           description="执行操作时再次询问"
           descriptionStyle={{ fontSize: 12 }}
-          style={{ backgroundColor: '#f2f2f2' }}
+          style={{ backgroundColor: theme.colors.surfaceVariant }}
           left={props => (
             <List.Icon {...props} icon="alert-circle-check-outline" />
           )}>
