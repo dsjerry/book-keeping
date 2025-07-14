@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { View, Text, StyleSheet, Image } from 'react-native'
-import { IconButton, List } from 'react-native-paper'
+import { IconButton, List, Snackbar } from 'react-native-paper'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
 import { captureRef } from 'react-native-view-shot'
@@ -8,7 +8,15 @@ import Share from 'react-native-share'
 
 import { useUserContext } from './contexts/UserContext'
 import { useUserStore } from '~store/userStore'
+import { useAppSettingsStore } from '~store/settingStore'
 import NoUser from './widgets/NoUser'
+import Modal from '~components/Modal'
+import LoadingIndicator from '~components/LoadingIndicator'
+import { AuthService } from '~api/auth'
+import { UserService } from '~api/user'
+import { KeepingService } from '~api/keeping'
+
+import { logging } from '~utils'
 
 interface UserHomeProps {
   route?: ScreenParam.User
@@ -114,9 +122,70 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
   const navigation = useNavigation()
 
   const { keepingStore } = useUserContext()
-  const { currentUser } = useUserStore()
+  const { toggleUseOnline } = useAppSettingsStore()
+  const { currentUser, updateCurrentUser } = useUserStore()
 
   const { setCounting, record, output, income } = keepingStore
+
+  const [modal, setModal] = useState({
+    title: '',
+    body: '',
+    isShow: false,
+    onCancel: () => { },
+    onAccess: () => { },
+  })
+
+  const [tips, setTips] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const isRegOnline = currentUser?.serverId
+
+  const startSync = (serverId?: number) => {
+    setModal({ ...modal, isShow: false })
+    serverId && updateCurrentUser({ serverId })
+    toggleUseOnline()
+    setTips('同步功能已启用')
+
+    setLoading(true)
+    KeepingService.sync().then((res) => {
+      if (res.success) {
+        setTips('同步成功')
+      } else {
+        setTips('同步失败')
+      }
+    }).finally(() => setLoading(false))
+  }
+
+  const onSyncPress = () => {
+    if (!isRegOnline) {
+      setModal({
+        title: '用户未启用同步功能',
+        body: '此操作将会使用你的用户名和密码登录服务器，是否继续？',
+        isShow: true,
+        onCancel: () => setModal({ ...modal, isShow: false }),
+        onAccess: async () => {
+          if (!currentUser) return logging.info('用户不存在')
+          const { username, password } = currentUser
+
+          const { data, success } = await UserService.getUserByName(username)
+          if (!success) {
+            setTips('同步失败')
+            return
+          }
+          const userId = data.id
+          if (userId) return startSync(userId)
+          AuthService.signup({ username, password, password2: password }).then(res => {
+            if (res.success) {
+              startSync(res.data.id)
+            }
+          })
+        },
+      })
+    }
+    else {
+      startSync()
+    }
+  }
 
   useEffect(() => {
     setCounting()
@@ -191,9 +260,36 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
               )}
               right={props => <List.Icon {...props} icon="chevron-right" />}
             />
+            <List.Item
+              title="立即同步"
+              left={props => (
+                <List.Icon {...props} icon="cloud-upload-outline" />
+              )}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={onSyncPress}
+            />
           </List.Section>
         </>
       )}
+      <Snackbar
+        visible={tips !== ''}
+        onDismiss={() => setTips('')}
+        action={{
+          label: '确定',
+          onPress: () => {
+            setTips('')
+          },
+        }}>
+        {tips}
+      </Snackbar>
+      <Modal
+        visible={modal.isShow}
+        onCancel={modal.onCancel}
+        onAccess={modal.onAccess}
+        title={modal.title}
+        content={modal.body}
+      />
+      <LoadingIndicator text='同步中...' animating={loading} />
     </View>
   )
 }

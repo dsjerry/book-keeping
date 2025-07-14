@@ -18,6 +18,7 @@ import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
 import { _date } from '~utils'
 import { _COLORS } from '~consts/Colors'
 import { useAppSettingsStore } from '~store/settingStore'
+import { KeepingService } from '~api/keeping'
 
 interface Props {
   item: KeepingItem[]
@@ -117,7 +118,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
     activeKeeping,
   } = useHomeStore()
 
-  const { confirmRemove } = useAppSettingsStore()
+  const { confirmRemove, useOnline } = useAppSettingsStore()
 
   // 长按菜单显示范围
   const screenWidth = Dimensions.get('screen').width

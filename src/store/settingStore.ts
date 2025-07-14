@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import { logging } from '~utils'
 
 export const useAppSettingsStore = create<AppSettingStore>()(
   persist(
@@ -9,7 +10,11 @@ export const useAppSettingsStore = create<AppSettingStore>()(
       confirmExitEdit: false,
       confirmRemove: true,
       themeMode: 'system', // 'system', 'light', 'dark'
-      toggleUseOnline: () => set({ useOnline: !get().useOnline }),
+      toggleUseOnline: () => {
+        const useOnline = !get().useOnline
+        logging.info('[同步状态]', useOnline ? '启用' : '禁用')
+        set({ useOnline })
+      },
       toggleConfirmExitEdit: () => {
         return set({ confirmExitEdit: !get().confirmExitEdit })
       },

@@ -24,6 +24,7 @@ interface User {
   useOnline?: boolean
   email?: string
   tags?: OutType[]
+  serverId?: number // 启用线上之后的ID
 }
 
 interface OutType {

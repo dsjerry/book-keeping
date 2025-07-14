@@ -1,0 +1,1 @@
+export const LastSyncAtKey = 'last_sync_at'

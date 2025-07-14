@@ -8,6 +8,7 @@ import { useUserStore } from '~store/userStore'
 import { homeStyle } from './style'
 import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
 import Modal from '~components/Modal'
+import { TestService } from '~api/test'
 
 const HomeScreen = () => {
   const navigation = useNavigation()
@@ -27,6 +28,9 @@ const HomeScreen = () => {
   }
 
   useEffect(() => {
+    TestService.test().then(res => {
+      console.log(res)
+    })
     console.log('user', users)
     initData()
   }, [])

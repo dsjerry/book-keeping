@@ -1,17 +1,16 @@
 import { useState } from 'react'
 import { Text, View } from 'react-native'
-import { HelperText, TextInput, Button } from 'react-native-paper'
+import { HelperText, TextInput, Button, Snackbar } from 'react-native-paper'
 import { CheckBox } from '@rneui/themed'
 import { useNavigation } from '@react-navigation/native'
 
 import { useUserContext } from './contexts/UserContext'
-import { checkUsername, checkPassword } from '~utils'
+import { checkUsername, checkPassword, logging } from '~utils'
 import { loginStyle } from './styles'
 import { useUserStore } from '~store/userStore'
 import { useAppSettingsStore } from '~store/settingStore'
 import { useKeepingStore, userUsersKeepingStore } from '~store/keepingStore'
-import { useRegisterFetch, useLoginFetch } from './hooks'
-import { userApi, LoginParams } from 'src/api'
+import { SigninParams, AuthService } from '~api/auth'
 
 const InputPane: React.FC<InputPane> = ({
   value,
@@ -40,6 +39,7 @@ const InputPane: React.FC<InputPane> = ({
 const LoginPane = () => {
   const navigation = useNavigation()
   const { state, dispatch } = useUserContext()
+  const [tips, setTips] = useState('')
   const [badNameTips, setBadNameTips] = useState('')
   const [badPassTips, setBadPassTips] = useState('')
   const [badPassTwoTips, setBadPassTwoTips] = useState('')
@@ -82,16 +82,21 @@ const LoginPane = () => {
       const result = checkForm()
       if (!result) return clearTips()
 
-      const res = await useLoginFetch(result)
-      const user = getUserByName(res?.username!)
+      const user = getUserByName(result?.username!)
       if (user && user.password === state.password) {
         navigation.navigate('UserHomeScreen', {
-          user: { username: res?.username },
+          user: { username: result?.username },
         })
         setCurrentUser(user)
         const userKeeping = get(user.id)
         if (userKeeping) {
           addItems(userKeeping.keeping)
+        }
+        if (useOnline) {
+          const { success } = await AuthService.signin({ username: result.username, password: result.password })
+          if (success) {
+            setTips('登录成功')
+          }
         }
       } else {
         setBadNameTips('用户名或密码不正确！')
@@ -102,22 +107,23 @@ const LoginPane = () => {
   const onRegister = async () => {
     const result = checkForm()
     if (!result) return clearTips()
-    const res = (await useRegisterFetch({
-      ...result,
-      passwordTwo: state.passwordTwo,
-    })) as any
+    // 如果开启接口同步，那么注册成功后，需要将用户信息保存到远程数据库
+    if (useOnline) {
+      const res = await connectRemote(result)
+      if (res === false) logging.info('[同步]连接线上失败')
+    }
 
-    add(res)
+    add({ ...result, id: Date.now() + '' })
     navigation.navigate('UserHomeScreen', {
-      user: { username: res?.username },
+      user: { username: result.username },
     })
   }
 
   // 启用同步 勾选得时候，将数据保存到远程数据库
-  const connectRemote = async (params: LoginParams) => {
+  const connectRemote = async (params: SigninParams) => {
     try {
-      const { data, code } = await userApi.login(params)
-      if (code !== 200) throw new Error('出错了')
+      const { data, code, success } = await AuthService.signin(params)
+      if (!success) return false
 
       const user = getUserByName(data.user.username!)
       if (user && user.password === state.password) {
@@ -134,11 +140,23 @@ const LoginPane = () => {
       }
     } catch (error) {
       onError(error)
+      return false
     }
   }
 
   return (
     <View style={loginStyle.container}>
+      <Snackbar
+        visible={tips !== ''}
+        onDismiss={() => setTips('')}
+        action={{
+          label: '确定',
+          onPress: () => {
+            setTips('')
+          },
+        }}>
+        {tips}
+      </Snackbar>
       <View style={loginStyle.formPane}>
         <InputPane
           label="用户名"
