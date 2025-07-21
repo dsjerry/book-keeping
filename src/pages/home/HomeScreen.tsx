@@ -35,11 +35,13 @@ const HomeScreen = () => {
     initData()
   }, [])
 
+  const renderItems = items.filter(item => item.syncStatus !== 'deleted')
+
   return (
     <>
       <Pressable style={homeStyle.container} onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
-        <KeepingList item={items} toggle={toggle} remove={remove} />
-        {items.length === 0 && <NothingHere />}
+        <KeepingList item={renderItems} toggle={toggle} remove={remove} />
+        {renderItems.length === 0 && <NothingHere />}
         <View style={homeStyle.btnArea}>
           <AddingButton onPress={() => navigation.navigate('Adding', {})} />
         </View>

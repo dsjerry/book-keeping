@@ -27,7 +27,7 @@ const MyComponent: React.FC<Props> = ({ title, content, onAccess, onCancel, visi
 interface Props {
   visible: boolean
   title?: string
-  content?: string
+  content?: string | React.JSX.Element
   accessText?: string
   cancelText?: string
   onAccess?: () => void

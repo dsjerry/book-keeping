@@ -110,11 +110,11 @@ const Settings = () => {
     items.forEach(item => {
       if (noInclude(item.useToFilter)) {
         if (item.countType === '人民币') {
-          item.useToFilter.push('cny')
+          item.useToFilter?.push('cny')
         } else if (item.countType === '港币') {
-          item.useToFilter.push('hkd')
+          item.useToFilter?.push('hkd')
         } else if (item.countType === '澳元') {
-          item.useToFilter.push('aud')
+          item.useToFilter?.push('aud')
         }
       }
     })

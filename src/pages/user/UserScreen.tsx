@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { View, Text, StyleSheet, Image } from 'react-native'
-import { IconButton, List, Snackbar } from 'react-native-paper'
+import { IconButton, List, Snackbar, RadioButton } from 'react-native-paper'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
 import { captureRef } from 'react-native-view-shot'
@@ -129,7 +129,7 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
 
   const [modal, setModal] = useState({
     title: '',
-    body: '',
+    body: '' as string | React.JSX.Element,
     isShow: false,
     onCancel: () => { },
     onAccess: () => { },
@@ -137,6 +137,7 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
 
   const [tips, setTips] = useState('')
   const [loading, setLoading] = useState(false)
+  const [strategy, setStrategy] = useState('')
 
   const isRegOnline = currentUser?.serverId
 
@@ -147,9 +148,49 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
     setTips('同步功能已启用')
 
     setLoading(true)
+    
+    const StrategyRadio = () => {
+      return (
+        <View>
+          {['client', 'server', 'merge'].map(item => {
+            return <RadioButton value={item}  onPress={() => setStrategy(item)}/>
+          })}
+        </View>
+      )
+    }
+
     KeepingService.sync().then((res) => {
       if (res.success) {
-        setTips('同步成功')
+        const conflicts = res.data?.conflicts
+        if (conflicts && conflicts?.length !== 0) {
+          setModal({
+            title: '冲突',
+            body: (
+              <View>
+                <StrategyRadio/>
+              </View>
+            ),
+            isShow: true,
+            onCancel: () => setModal({ ...modal, isShow: false }),
+            onAccess: () => {
+              if (!strategy) {
+                return setTips('请选择解决方式！')
+              }
+              const resolutions = KeepingService.resolveConflicts(conflicts, strategy as 'client' | 'server' | 'merge')
+              KeepingService.sync(resolutions).then((res) => {
+                if (res.success) {
+                  setTips('冲突解决成功')
+                  setModal({ ...modal, isShow: false })
+                } else {
+                  setTips('冲突解决失败')
+                }
+                setLoading(false)
+              })
+            },
+          })
+        } else {
+          setTips('同步成功')
+        }
       } else {
         setTips('同步失败')
       }

@@ -115,13 +115,18 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
     set({ items: [] })
   },
   remove: id => {
-    set(state => ({ items: state.items.filter(item => item.id !== id) }))
+    // set(state => ({ items: state.items.filter(item => item.id !== id) }))
+    set(state => ({ items: state.items.map(item => item.id === id ? { ...item, syncStatus: 'deleted' } : item) }))
+
   },
   removeChecked: () => {
     const items = get().items
-    set(state => ({
-      items: items.filter(item => !item.isChecked),
-    }))
+    const beDeletedItems = items.filter(item => item.isChecked)
+    beDeletedItems.forEach(item => {
+      item.isChecked = false
+      item.syncStatus = 'deleted'
+    })
+    set({ items })
   },
   update: item => {
     set(state => ({
@@ -174,7 +179,7 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
     for (let i = 0; i < items.length; i++) {
       for (let j = 0; j < filterBy.length; j++) {
         let useToFilter = items[i].useToFilter
-        if (useToFilter.includes(filterBy[j])) {
+        if (useToFilter?.includes(filterBy[j])) {
           items[i].isShow = true
         } else {
           items[i].isShow = false

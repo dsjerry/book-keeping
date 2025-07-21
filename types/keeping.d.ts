@@ -1,3 +1,5 @@
+type SyncStatus = 'synced' | 'new' | 'modified' | 'deleted';
+
 interface KeepingItem {
   id: string
   count: string
@@ -10,8 +12,10 @@ interface KeepingItem {
   isChecked?: boolean
   isShow?: boolean
   no?: number
-  useToFilter: string[]
+  useToFilter?: string[]
   address?: NearByItem
+  serverId?: number
+  syncStatus?: SyncStatus  // 同步状态: synced(已同步), new(新增), modified(已修改), deleted(已删除)
 }
 
 interface KeepingStore {
