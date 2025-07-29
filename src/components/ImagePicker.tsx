@@ -27,7 +27,7 @@ const ImagePicker: React.FC<Props> = ({ isShow = true, uploaded }) => {
       }}>
       {image ? (
         <View style={style.imageArea}>
-          <Image source={{ uri: image, width: 350, height: 200 }} />
+          <Image source={{ uri: image, width: 350, height: 160 }} />
           <View style={style.imageFunc}>
             <IconButton
               icon={'reload'}
@@ -76,7 +76,6 @@ const style = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     paddingTop: 20,
-    backgroundColor: '#fffbfe',
     borderRadius: 4,
     elevation: 2,
   },

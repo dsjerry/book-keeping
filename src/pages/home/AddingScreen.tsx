@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-import { View, Text, StyleSheet, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity } from 'react-native'
+import { View, Text, StyleSheet, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native'
 import { TextInput, Chip, Button, Modal, Portal, IconButton, useTheme } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { format } from 'date-fns'
@@ -193,6 +193,7 @@ const Adding: React.FC<Props> = ({ route }) => {
   }
 
   return (
+    
     <View style={[style.container, { backgroundColor: theme.colors.background }]}>
       <Text>记一笔</Text>
       <View style={style.count}>
