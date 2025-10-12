@@ -12,12 +12,12 @@ const RootStack = createStackNavigator()
 export default function Home() {
   return (
     <HomeProvider>
-      <RootStack.Navigator initialRouteName="HomeScreen">
-        <RootStack.Group screenOptions={{ headerShown: false }}>
-          <RootStack.Screen name="HomeScreen" component={HomeScreen} />
-          <RootStack.Screen name="AddressDetailScreen" component={AddressList} />
-        </RootStack.Group>
-        <RootStack.Group
+        <RootStack.Navigator initialRouteName="HomeScreen">
+          <RootStack.Group screenOptions={{ headerShown: false }}>
+            <RootStack.Screen name="HomeScreen" component={HomeScreen} />
+            <RootStack.Screen name="AddressDetailScreen" component={AddressList} />
+          </RootStack.Group>
+          <RootStack.Group
           screenOptions={{
             headerShown: false,
             presentation: 'modal',

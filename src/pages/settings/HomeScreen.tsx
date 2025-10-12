@@ -33,10 +33,12 @@ const Settings = () => {
   const [clearConfirm, setClearConfirm] = useState(0)
   const {
     useOnline,
+    useBiometrics,
     confirmExitEdit,
     confirmRemove,
     themeMode,
     toggleUseOnline,
+    toggleUseBiometrics,
     toggleConfirmExitEdit,
     toggleConfirmRemove,
     setThemeMode,
@@ -147,6 +149,10 @@ const Settings = () => {
     }
   }
 
+  const onUseBiometricsPress = (flag: boolean) => {
+    toggleUseBiometrics()
+  }
+
   return (
     <>
       <View style={{ flex: 1 }}>
@@ -233,6 +239,18 @@ const Settings = () => {
             left={props => <List.Icon {...props} icon="cloud-upload-outline" />}
             right={() => (
               <Switch value={useOnline} onValueChange={onUseOnlinePress} />
+            )}
+          />
+          <List.Item
+            title="启用生物识别"
+            description="使用指纹或面容ID解锁应用"
+            descriptionStyle={{ fontSize: 12 }}
+            left={props => <List.Icon {...props} icon="fingerprint" />}
+            right={() => (
+              <Switch 
+                value={useBiometrics} 
+                onValueChange={onUseBiometricsPress} 
+              />
             )}
           />
           <List.Item

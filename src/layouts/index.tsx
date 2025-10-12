@@ -4,6 +4,7 @@ import { NavigationContainer, useNavigation, DefaultTheme } from '@react-navigat
 import { createStackNavigator } from '@react-navigation/stack'
 import { Drawer } from 'react-native-drawer-layout'
 import { List, useTheme } from 'react-native-paper'
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import Home from '~pages/home'
 import Settings from '~pages/settings'
@@ -14,6 +15,7 @@ import AddingScreen from '~pages/home/AddingScreen'
 import UserScreen from '~pages/user'
 import DrawerItemUser from '~components/DrawerItemUser'
 import DrawerItemBottom from '~components/DrawerItemBottom'
+import AuthGuard from '~components/AuthGuard'
 import { CustomHeaderWithTitle } from './widgets'
 
 import { HeaderProvider } from '../contexts/HeaderContext'
@@ -112,68 +114,73 @@ export default function AppLayout() {
   }, [navigationTheme])
 
   return (
-    <NavigationContainer theme={navigationTheme}>
-      <Drawer
-        open={isShowDrawer}
-        onOpen={() => setIsShowDrawer(true)}
-        onClose={() => setIsShowDrawer(false)}
-        renderDrawerContent={() => (
-          <CustomDrawerContent
-            toggleDrawer={() => setIsShowDrawer(prev => !prev)}
-          />
-        )}>
-        <RootStack.Navigator
-          initialRouteName="HomeScreen"
-          screenOptions={{
-            header: props => (
-              <HeaderProvider>
-                <Header
-                  {...props}
-                  toggleDrawer={() => setIsShowDrawer(prev => !prev)}
+    <SafeAreaProvider>
+      <SafeAreaView />
+      <NavigationContainer  theme={navigationTheme}>
+        <AuthGuard>
+          <Drawer
+            open={isShowDrawer}
+            onOpen={() => setIsShowDrawer(true)}
+            onClose={() => setIsShowDrawer(false)}
+            renderDrawerContent={() => (
+              <CustomDrawerContent
+                toggleDrawer={() => setIsShowDrawer(prev => !prev)}
+              />
+            )}>
+            <RootStack.Navigator
+              initialRouteName="HomeScreen"
+              screenOptions={{
+                header: props => (
+                  <HeaderProvider>
+                    <Header
+                      {...props}
+                      toggleDrawer={() => setIsShowDrawer(prev => !prev)}
+                    />
+                  </HeaderProvider>
+                ),
+              }}>
+              <RootStack.Group screenOptions={{ headerShown: true }}>
+                <RootStack.Screen
+                  name="Home"
+                  component={Home}
+                  options={{ title: '首页' }}
                 />
-              </HeaderProvider>
-            ),
-          }}>
-          <RootStack.Group screenOptions={{ headerShown: true }}>
-            <RootStack.Screen
-              name="Home"
-              component={Home}
-              options={{ title: '首页' }}
-            />
-            <RootStack.Screen
-              name="SettingsScreen"
-              component={Settings}
-              options={{ title: '设置' }}
-            />
-            <RootStack.Screen
-              name="AnalyzeScreen"
-              component={Analyze}
-              options={{ title: '分析' }}
-            />
-            <RootStack.Screen
-              name="User"
-              component={UserScreen}
-              options={{ title: '个人中心' }}
-            />
-          </RootStack.Group>
-          <RootStack.Group
-            screenOptions={{
-              headerShown: true,
-              header: props => <CustomHeaderWithTitle {...props} />,
-            }}>
-            <RootStack.Screen
-              name="DetailScreen"
-              component={DetailScreen}
-              options={{
-                title: '详情',
-              }}
-            />
-          </RootStack.Group>
-          <RootStack.Group screenOptions={{ presentation: 'modal' }}>
-            {/* <RootStack.Screen name="Adding" component={AddingScreen} /> */}
-          </RootStack.Group>
-        </RootStack.Navigator>
-      </Drawer>
-    </NavigationContainer>
+                <RootStack.Screen
+                  name="SettingsScreen"
+                  component={Settings}
+                  options={{ title: '设置' }}
+                />
+                <RootStack.Screen
+                  name="AnalyzeScreen"
+                  component={Analyze}
+                  options={{ title: '分析' }}
+                />
+                <RootStack.Screen
+                  name="User"
+                  component={UserScreen}
+                  options={{ title: '个人中心' }}
+                />
+              </RootStack.Group>
+              <RootStack.Group
+                screenOptions={{
+                  headerShown: true,
+                  header: props => <CustomHeaderWithTitle {...props} />,
+                }}>
+                <RootStack.Screen
+                  name="DetailScreen"
+                  component={DetailScreen}
+                  options={{
+                    title: '详情',
+                  }}
+                />
+              </RootStack.Group>
+              {/* <RootStack.Group screenOptions={{ presentation: 'modal' }}> */}
+                {/* <RootStack.Screen name="Adding" component={AddingScreen} /> */}
+              {/* </RootStack.Group> */}
+            </RootStack.Navigator>
+          </Drawer>
+        </AuthGuard>
+      </NavigationContainer>
+    </SafeAreaProvider>
   )
 }

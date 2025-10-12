@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { IconButton, Menu, Divider, useTheme } from 'react-native-paper'
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import type { StackHeaderProps } from '@react-navigation/stack'
 
@@ -28,6 +29,7 @@ const Header: React.FC<HeaderProps> = ({
   options,
   toggleDrawer,
 }) => {
+  const insets = useSafeAreaInsets()
   // 获取当前主题
   const theme = useTheme();
   const {
@@ -146,6 +148,7 @@ const Header: React.FC<HeaderProps> = ({
         )}
         {page === 'Home' && (
           <Menu
+            style={{ marginTop: insets.top }}
             visible={isShowRightMenu}
             onDismiss={onRightMenuClose}
             anchor={
