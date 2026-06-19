@@ -9,10 +9,18 @@ on:
     branches: [main]
   workflow_dispatch:
     inputs:
+      version_name:
+        description: '版本号 (如 1.0.3)'
+        required: false
+        type: string
+      release_notes:
+        description: '更新说明'
+        required: false
+        type: string
       build_type:
         description: 'Build Type'
         required: true
-        default: 'debug'
+        default: 'release'
         type: choice
         options:
           - debug
@@ -20,7 +28,7 @@ on:
 
 jobs:
   android-build:
-    name: Android ${{ github.event.inputs.build_type || 'debug' }} Build
+    name: Android ${{ github.event.inputs.build_type || 'release' }} Build
     runs-on: ubuntu-latest
 
     steps:
@@ -65,6 +73,13 @@ jobs:
       - name: Make Gradlew Executable
         run: chmod +x ./android/gradlew
 
+      # 如果指定了版本号，更新 build.gradle 中的 versionName
+      - name: Update Version Name
+        if: ${{ github.event.inputs.version_name != '' }}
+        run: |
+          sed -i 's/versionName "[0-9.]*"/versionName "${{ github.event.inputs.version_name }}"/' android/app/build.gradle
+          echo "Updated versionName to ${{ github.event.inputs.version_name }}"
+
       # 仅在需要构建发布版本时执行
       - name: Decode Keystore
         if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
@@ -80,13 +95,13 @@ jobs:
           echo "MYAPP_RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> android/gradle.properties
           echo "MYAPP_RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> android/gradle.properties
 
-      # 构建 Debug APK
+      # 构建 Debug APK (包含全量包和各架构分包)
       - name: Build Debug APK
         if: ${{ github.event.inputs.build_type == 'debug' && !startsWith(github.ref, 'refs/tags/v') }}
         run: |
           cd android && ./gradlew assembleDebug --no-daemon
 
-      # 构建 Release APK
+      # 构建 Release APK (包含全量包和各架构分包)
       - name: Build Release APK
         if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
         run: |
@@ -98,21 +113,43 @@ jobs:
         run: |
           cd android && ./gradlew bundleRelease --no-daemon
 
+      # 重命名 APK 文件，添加架构标识
+      - name: Rename APKs
+        if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd android/app/build/outputs/apk/release
+          for file in *.apk; do
+            if [[ "$file" == *"armeabi-v7a"* ]]; then
+              mv "$file" "app-release-armeabi-v7a.apk"
+            elif [[ "$file" == *"arm64-v8a"* ]]; then
+              mv "$file" "app-release-arm64-v8a.apk"
+            elif [[ "$file" == *"x86_64"* ]]; then
+              mv "$file" "app-release-x86_64.apk"
+            elif [[ "$file" == *"x86"* ]]; then
+              mv "$file" "app-release-x86.apk"
+            elif [[ "$file" == "app-release.apk" ]]; then
+              mv "$file" "app-release-universal.apk"
+            fi
+          done
+          ls -la *.apk
+
       # 上传 Debug APK 作为构建产物
-      - name: Upload Debug APK
+      - name: Upload Debug APKs
         if: ${{ github.event.inputs.build_type == 'debug' && !startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: |
+            android/app/build/outputs/apk/debug/*.apk
 
-      # 上传 Release APK 作为构建产物
-      - name: Upload Release APK
+      # 上传 Release 全量包和各架构分包
+      - name: Upload Release APKs
         if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: app-release-apks
+          path: |
+            android/app/build/outputs/apk/release/*.apk
 
       # 上传 Release Bundle 作为构建产物
       - name: Upload Release Bundle
@@ -122,17 +159,35 @@ jobs:
           name: app-release-bundle
           path: android/app/build/outputs/bundle/release/app-release.aab
 
-      # 创建 GitHub Release (仅在推送标签时)
+      # 准备更新说明
+      - name: Prepare Release Notes
+        id: release_notes
+        if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            echo "notes<<EOF" >> $GITHUB_OUTPUT
+            echo "${{ github.event.inputs.release_notes }}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "notes=自动构建发布" >> $GITHUB_OUTPUT
+          fi
+
+      # 创建 GitHub Release (推送标签时或手动触发 release)
       - name: Create Release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: ${{ startsWith(github.ref, 'refs/tags/v') || (github.event.inputs.build_type == 'release' && github.event_name == 'workflow_dispatch') }}
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            android/app/build/outputs/apk/release/app-release.apk
+            android/app/build/outputs/apk/release/app-release-universal.apk
+            android/app/build/outputs/apk/release/app-release-armeabi-v7a.apk
+            android/app/build/outputs/apk/release/app-release-arm64-v8a.apk
+            android/app/build/outputs/apk/release/app-release-x86.apk
+            android/app/build/outputs/apk/release/app-release-x86_64.apk
             android/app/build/outputs/bundle/release/app-release.aab
-          name: Release ${{ github.ref_name }}
+          name: ${{ github.ref_name || github.event.inputs.version_name }}
+          body: ${{ steps.release_notes.outputs.notes }}
+          tag_name: ${{ github.ref_name || format('v{0}', github.event.inputs.version_name) }}
           draft: false
           prerelease: false
-          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
