@@ -2,6 +2,7 @@ import { create, StateCreator } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { OutTypes } from '~consts/Data'
+import { logging } from '~utils'
 
 interface UserInfoSlice {
   users: User[]
@@ -33,13 +34,13 @@ const createUserSettingsSlice: StateCreator<
   useOnline: true,
   tags: [],
   setTags: tags => {
-    console.info('添加标签:', tags)
+    logging.info('[标签] 添加:', tags)
     const currentTags = get().currentUser?.tags || []
     const _tags = new Set([...currentTags, ...tags])
     set({ currentUser: { ...get().currentUser!, tags: [..._tags] } })
   },
   removeTag: tag => {
-    console.info('删除标签:', tag)
+    logging.info('[标签] 删除:', tag)
     const currentTags = get().currentUser?.tags || []
     const _tags = new Set([...currentTags].filter(t => t !== tag))
     set({ currentUser: { ...get().currentUser!, tags: [..._tags] } })

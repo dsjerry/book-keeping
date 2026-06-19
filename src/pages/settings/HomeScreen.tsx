@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react'
 import { View } from 'react-native'
-import { List, Switch, RadioButton, useTheme, Text } from 'react-native-paper'
+import { List, Switch, RadioButton, useTheme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import { Snackbar } from 'react-native-paper'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { useAppSettingsStore } from '~store/settingStore'
 import { useUserStore } from '~store/userStore'
 import { useKeepingStore } from '~store/keepingStore'
 import CustomDialog from '~components/CustomDialog'
 import Modal from '~components/Modal'
-import { _COLORS } from '~consts/Colors'
 import { OutTypes } from '~consts/Data'
 import { AuthService } from '~api/auth'
 import { logging } from '~utils'
@@ -57,10 +57,24 @@ const Settings = () => {
     })
   }, [])
 
-  const clearCache = () => {
-    setClearConfirm(prev => prev + 1)
-    if (clearConfirm === 2) {
+  const clearCache = async () => {
+    if (clearConfirm === 0) {
+      setClearConfirm(1)
+      return
+    }
+    try {
+      const keys = await AsyncStorage.getAllKeys()
+      const keepKeys = ['user-store', 'setting-store', 'analyze-store']
+      const keysToRemove = keys.filter(k => !keepKeys.includes(k as string))
+      if (keysToRemove.length > 0) {
+        await AsyncStorage.multiRemove(keysToRemove)
+      }
       setClearConfirm(0)
+      setTips('缓存已清除')
+    } catch (error) {
+      logging.error('[设置] 清除缓存失败:', error)
+      setClearConfirm(0)
+      setTips('清除缓存失败')
     }
   }
 
@@ -95,12 +109,11 @@ const Settings = () => {
   }
 
   const fixData = () => {
-    console.info('数据完善...')
-    console.log(currentUser)
-    if (!currentUser) return console.info('用户不存在')
+    logging.info('数据完善...')
+    if (!currentUser) return logging.info('用户不存在')
 
     if (!currentUser.tags || currentUser.tags.length === 0) {
-      console.info('添加标签')
+      logging.info('添加标签')
       updateCurrentUser({ tags: OutTypes })
     }
 
@@ -109,19 +122,22 @@ const Settings = () => {
         item => item === 'cny' || item === 'hkd' || item === 'aud',
       )
     }
+    const { update } = useKeepingStore.getState()
     items.forEach(item => {
-      if (noInclude(item.useToFilter)) {
+      if (noInclude(item.useToFilter || [])) {
+        const newFilter = [...(item.useToFilter || [])]
         if (item.countType === '人民币') {
-          item.useToFilter?.push('cny')
+          newFilter.push('cny')
         } else if (item.countType === '港币') {
-          item.useToFilter?.push('hkd')
+          newFilter.push('hkd')
         } else if (item.countType === '澳元') {
-          item.useToFilter?.push('aud')
+          newFilter.push('aud')
         }
+        update({ ...item, useToFilter: newFilter })
       }
     })
 
-    console.info('完善完成...')
+    logging.info('完善完成...')
   }
 
   const onUseOnlinePress = (flag: boolean) => {
@@ -165,9 +181,9 @@ const Settings = () => {
         <Snackbar
           visible={tips !== ''}
           onDismiss={onDismissSnackBar}
-          rippleColor={_COLORS.main}
+          rippleColor={theme.colors.primary}
           duration={2500}
-          style={{ marginTop: 'auto', backgroundColor: _COLORS.main }}>
+          style={{ marginTop: 'auto', backgroundColor: theme.colors.primary }}>
           {tips}
         </Snackbar>
         <List.Section title="基本设置">
@@ -210,7 +226,7 @@ const Settings = () => {
             <List.Item
               title="删除记录"
               left={props => <List.Icon {...props} icon="delete" />}
-              onPress={() => console.log('Pressed')}
+              onPress={() => {}}
               right={props => (
                 <Switch
                   value={switchStatus.del}
@@ -223,7 +239,7 @@ const Settings = () => {
             <List.Item
               title="退出编辑"
               left={props => <List.Icon {...props} icon="exit-to-app" />}
-              onPress={() => console.log('Pressed')}
+              onPress={() => {}}
               right={props => (
                 <Switch
                   value={switchStatus.exit}

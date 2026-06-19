@@ -3,7 +3,7 @@ import { Button, Dialog, Portal, Text } from 'react-native-paper'
 
 const MyComponent: React.FC<Props> = ({ title, content, onAccess, onCancel, visible }) => {
   const onDismiss = () => {
-    console.log('OnDismiss')
+    onCancel?.()
   }
 
   return (

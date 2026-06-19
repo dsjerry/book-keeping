@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, Fragment } from 'react'
 import { View } from 'react-native'
-import { Card, Button, Text as PaperTetx, Avatar } from 'react-native-paper'
+import { Card, Button, Text as PaperTetx, Avatar, useTheme } from 'react-native-paper'
 import { useRoute, useNavigation } from '@react-navigation/native'
 import { captureRef } from 'react-native-view-shot'
 import Share from 'react-native-share'
@@ -8,7 +8,7 @@ import Share from 'react-native-share'
 import LinearCard from './components/LinearCard'
 import { layout } from './style'
 import { useKeepingStore } from '~store/keepingStore'
-import { _COLORS } from '~consts/Colors'
+import { logging } from '~utils'
 
 const Detail = () => {
   const [isShowNote, setIsShowNote] = useState(true)
@@ -16,6 +16,7 @@ const Detail = () => {
   const { params }: ScreenParam.Detail = useRoute()
   const { items } = useKeepingStore()
   const navigation = useNavigation()
+  const theme = useTheme()
 
   const shareRef = useRef<any>(null)
 
@@ -44,12 +45,12 @@ const Detail = () => {
 
       await Share.open(shareOptions)
     } catch (error) {
-      console.error('捕获失败:', error)
+      logging.error('[分享] 捕获失败:', error)
     }
   }
 
   return (
-    <View style={layout.container}>
+    <View style={[layout.container, { backgroundColor: theme.colors.background }]}>
       {/* 
           捕获 View 组件的时候，需要设置 collapsable 为 false
           https://github.com/gre/react-native-view-shot/issues/7#issuecomment-245302844
@@ -69,16 +70,6 @@ const Detail = () => {
                     <Avatar.Icon {...props} icon="map-marker" size={24} />
                   )}
                 />
-                {/* <Card.Content style={{ marginBottom: 10 }}>
-                  <PaperTetx
-                    variant="titleMedium"
-                    style={{ color: _COLORS.main }}>
-                    {item.address.name}
-                  </PaperTetx>
-                  <PaperTetx variant="titleSmall" style={{ marginTop: 10 }}>
-                    {'区域：' + item.address.businessarea}
-                  </PaperTetx>
-                </Card.Content> */}
               </Card>
             )}
             {item.note && (

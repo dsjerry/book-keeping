@@ -3,6 +3,7 @@ import { View, Button, StyleSheet, Text, Image } from 'react-native'
 import ViewShot from 'react-native-view-shot'
 import { captureRef } from 'react-native-view-shot'
 import Share from 'react-native-share'
+import { logging } from '~utils'
 
 interface Props {
   // 将被分享的内容
@@ -35,7 +36,7 @@ const ShareThis: React.FC<Props> = ({ children }) => {
       // 分享图片
       await Share.open(shareOptions)
     } catch (error) {
-      console.error('节点捕获出错:', error)
+      logging.error('[ShareThis] 节点捕获出错:', error)
     }
   }
 

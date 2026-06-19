@@ -1,5 +1,6 @@
 import axios from 'axios'
 import Config from 'react-native-config'
+import { logging } from './logger'
 
 type Coords = { latitude: number; longitude: number }
 class Amap {
@@ -16,7 +17,7 @@ class Amap {
       const { data } = await axios.get(url)
       return data
     } catch (error) {
-      console.log(error)
+      logging.error('[Amap] regeo 失败:', error)
     }
   }
 }

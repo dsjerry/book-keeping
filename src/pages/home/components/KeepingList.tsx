@@ -4,21 +4,17 @@ import {
   FlatList,
   StyleSheet,
   Pressable,
-  Dimensions,
-  useColorScheme,
 } from 'react-native'
 import { Checkbox, Chip, Icon, useTheme } from 'react-native-paper'
 import type { MD3Theme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import type { MenuAction } from '@react-native-menu/menu'
+import React, { useCallback, memo } from 'react'
 
-// import LongPressMenu from '~components/LongPressMenu'
 import CustomMenuView from '~components/CustomMenuView'
 import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
 import { _date } from '~utils'
-import { _COLORS } from '~consts/Colors'
 import { useAppSettingsStore } from '~store/settingStore'
-import { KeepingService } from '~api/keeping'
 
 interface Props {
   item: KeepingItem[]
@@ -32,21 +28,35 @@ interface ItemProps {
   onLongPress: (itemId: KeepingItem['id']) => void
   onMenuPress: (actionId: MenuAction['id'], itemId: KeepingItem['id']) => void
   toggle: (id: string) => void
-  theme: MD3Theme // 添加主题属性
+  theme: MD3Theme
 }
 
-/**
- * Checkbox 长按的时候再显示
- */
-const Item: React.FC<ItemProps> = ({
+const getMenuActions = (theme: MD3Theme): MenuAction[] => [
+  {
+    id: 'info',
+    title: '详情',
+    titleColor: theme.colors.primary,
+  },
+  {
+    id: 'toggle',
+    title: '选中',
+    titleColor: theme.colors.primary,
+  },
+  {
+    id: 'del',
+    title: '删除',
+    titleColor: theme.colors.primary,
+  },
+]
+
+const ListItem: React.FC<ItemProps> = memo(({
   item,
   doNavigate,
   onLongPress,
   onMenuPress,
   toggle,
-  theme, // 从外部接收主题对象
+  theme,
 }) => {
-  const isDarkMode = theme.dark;
   return (
     <>
       {item.isShow !== false && (
@@ -68,7 +78,6 @@ const Item: React.FC<ItemProps> = ({
               {item.note && <Icon source={'note-text-outline'} size={14} color={theme.colors.primary} />}
               {item.image && <Icon source={'image-outline'} size={14} color={theme.colors.primary} />}
               <Text style={{ color: theme.colors.primary, marginLeft: 5 }}>
-                {/* {dayjs(item.date).format('YYYY-MM-DD')} */}
                 {_date(item.date)}
               </Text>
             </View>
@@ -105,111 +114,91 @@ const Item: React.FC<ItemProps> = ({
       )}
     </>
   )
-}
+})
 
 const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
   const theme = useTheme()
   const {
-    isShowMenu,
-    longPressMenu: menu,
     modal,
     activeKeeping,
   } = useHomeStore()
 
-  const { confirmRemove, useOnline } = useAppSettingsStore()
+  const { confirmRemove } = useAppSettingsStore()
 
-  // 长按菜单显示范围
-  const screenWidth = Dimensions.get('screen').width
-  const menuWidth = screenWidth * 0.25
-  const safeArea = screenWidth - menuWidth
-
-  const doNavigate = (id: string) => {
+  const doNavigate = useCallback((id: string) => {
     navigation.navigate('DetailScreen', { hideHeader: true, id })
-  }
-  const onItemLongPress = (itemId: KeepingItem['id']) => {
-    dispatch({ type: 'activeKeeping', payload: [itemId] })
-  }
+  }, [navigation])
 
-  const onItemMenuPress = (
-    actionId: MenuAction['id'],
-    itemId: KeepingItem['id'],
-  ) => {
+  const onItemLongPress = useCallback((itemId: KeepingItem['id']) => {
     dispatch({ type: 'activeKeeping', payload: [itemId] })
-    if (actionId === 'del') {
-      if (!confirmRemove) return activeKeeping.forEach(id => remove(id))
-      dispatch({
-        type: 'modal',
-        payload: {
-          ...modal,
-          title: '删除',
-          body: '确认删除吗?',
-          isShow: true,
-          onAccess: () => {
-            activeKeeping.forEach(id => remove(id))
-            dispatch({
-              type: 'modal',
-              payload: {
-                ...modal,
-                isShow: false,
-                status: true,
-              },
-            })
+  }, [dispatch])
+
+  const onItemMenuPress = useCallback(
+    (actionId: MenuAction['id'], itemId: KeepingItem['id']) => {
+      dispatch({ type: 'activeKeeping', payload: [itemId] })
+      if (actionId === 'del') {
+        if (!confirmRemove) return activeKeeping.forEach(id => remove(id))
+        dispatch({
+          type: 'modal',
+          payload: {
+            ...modal,
+            title: '删除',
+            body: '确认删除吗?',
+            isShow: true,
+            onAccess: () => {
+              activeKeeping.forEach(id => remove(id))
+              dispatch({
+                type: 'modal',
+                payload: {
+                  ...modal,
+                  isShow: false,
+                  status: true,
+                },
+              })
+            },
+            onCancel: () => {
+              dispatch({
+                type: 'modal',
+                payload: { ...modal, isShow: false, status: false },
+              })
+            },
           },
-          onCancel: () => {
-            dispatch({
-              type: 'modal',
-              payload: { ...modal, isShow: false, status: false },
-            })
-          },
-        },
-      })
-    }
-    // 选中/取消选中
-    else if (actionId === 'toggle') {
-      toggle(itemId)
-    } else {
-      navigation.navigate('DetailScreen', { hideHeader: true, id: itemId })
-    }
-  }
+        })
+      } else if (actionId === 'toggle') {
+        toggle(itemId)
+      } else {
+        navigation.navigate('DetailScreen', { hideHeader: true, id: itemId })
+      }
+    },
+    [dispatch, confirmRemove, activeKeeping, modal, remove, toggle, navigation],
+  )
+
+  const renderItem = useCallback(
+    ({ item }: { item: KeepingItem }) => (
+      <ListItem
+        item={item}
+        doNavigate={doNavigate}
+        onLongPress={onItemLongPress}
+        onMenuPress={onItemMenuPress}
+        toggle={toggle}
+        theme={theme}
+      />
+    ),
+    [doNavigate, onItemLongPress, onItemMenuPress, toggle, theme],
+  )
+
   return (
     <View style={style.container}>
       <FlatList
         data={item}
-        renderItem={({ item }) =>
-          Item({
-            item,
-            doNavigate,
-            onLongPress: onItemLongPress,
-            onMenuPress: onItemMenuPress,
-            toggle,
-            theme, // 传递主题对象
-          })
-        }
+        renderItem={renderItem}
+        keyExtractor={item => item.id}
       />
     </View>
   )
 }
-
-// 菜单动作配置
-const getMenuActions = (theme: MD3Theme): MenuAction[] => [
-  {
-    id: 'info',
-    title: '详情',
-    titleColor: theme.colors.primary,
-  },
-  {
-    id: 'toggle',
-    title: '选中',
-    titleColor: theme.colors.primary,
-  },
-  {
-    id: 'del',
-    title: '删除',
-    titleColor: theme.colors.primary,
-  },
-]
 
 const style = StyleSheet.create({
   container: {

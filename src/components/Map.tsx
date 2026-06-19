@@ -38,9 +38,9 @@ const Map = () => {
           },
           zoom: 15,
         }}
-        onLoad={() => console.log('onLoad')}
-        onPress={({ nativeEvent }) => console.log(nativeEvent)}
-        onCameraIdle={({ nativeEvent }) => console.log(nativeEvent)}
+        onLoad={() => {}}
+        onPress={() => {}}
+        onCameraIdle={() => {}}
       />
     </View>
   )

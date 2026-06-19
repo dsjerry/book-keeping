@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { View, StyleSheet, Pressable, Text } from 'react-native'
 import { Button, Avatar, useTheme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
@@ -49,10 +48,6 @@ const DrawerItemUser: React.FC<DrawerItemUserProps> = ({ toggleDrawer }) => {
   const navigation = useNavigation()
   const { currentUser } = useUserStore()
   const theme = useTheme() // 获取当前主题
-
-  useEffect(() => {
-    console.log(currentUser)
-  }, [currentUser])
 
   const onLoginPress = () => {
     navigation.navigate('User', { screen: 'LoginScreen' })

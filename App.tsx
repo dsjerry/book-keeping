@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react'
-import { useColorScheme, AppState, AppStateStatus, ColorSchemeName } from 'react-native'
+import React, { useEffect, useMemo } from 'react'
+import { useColorScheme, AppState, AppStateStatus } from 'react-native'
 import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper'
-import { DefaultTheme, DarkTheme } from '@react-navigation/native'
+import { DefaultTheme, DarkTheme, Theme } from '@react-navigation/native'
 import { _COLORS } from './src/consts/Colors'
 import { useAppSettingsStore } from './src/store/settingStore'
+import { NavigationThemeProvider } from './src/contexts/NavigationThemeContext'
+import ErrorBoundary from './src/components/ErrorBoundary'
 
 import AppLayout from './src/layouts'
 
@@ -45,8 +47,9 @@ function App(): React.JSX.Element {
   // 获取用户主题设置
   const { themeMode } = useAppSettingsStore()
   
-  // 根据主题设置和系统颜色方案确定当前主题
-  const getThemeBasedOnSettings = (systemScheme: ColorSchemeName): typeof customLightTheme => {
+  const isDark = (themeMode === 'dark') || (themeMode === 'system' && colorScheme === 'dark')
+  
+  const appTheme = useMemo(() => {
     switch (themeMode) {
       case 'light':
         return customLightTheme
@@ -54,42 +57,33 @@ function App(): React.JSX.Element {
         return customDarkTheme
       case 'system':
       default:
-        return systemScheme === 'dark' ? customDarkTheme : customLightTheme
+        return colorScheme === 'dark' ? customDarkTheme : customLightTheme
     }
-  }
-  
-  const [appTheme, setAppTheme] = useState(getThemeBasedOnSettings(colorScheme))
+  }, [colorScheme, themeMode])
 
-  // 监听系统主题变化和用户设置变化
+  const navigationTheme = useMemo<Theme>(
+    () => (isDark ? NavigationDarkTheme : NavigationLightTheme),
+    [isDark]
+  )
+
+  // 监听系统主题变化（App 从后台恢复时重新检测）
   useEffect(() => {
-    const updateTheme = (scheme: ColorSchemeName) => {
-      // 根据主题设置和系统颜色方案确定当前主题
-      const newTheme = getThemeBasedOnSettings(scheme)
-      setAppTheme(newTheme)
-
-      // 设置全局变量以便在布局中使用
-      const isDark = (themeMode === 'dark') || (themeMode === 'system' && scheme === 'dark')
-      global.navigationTheme = isDark ? NavigationDarkTheme : NavigationLightTheme
-    }
-
-    // 立即应用当前主题
-    updateTheme(colorScheme)
-
     const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active') {
-        updateTheme(colorScheme)
-      }
+      // 系统主题变化时 useColorScheme 会自动更新，无需额外处理
     })
 
     return () => {
       subscription.remove()
     }
-  // 添加 themeMode 作为依赖项，确保主题设置变化时重新应用主题
-  }, [colorScheme, themeMode])
+  }, [])
 
   return (
     <PaperProvider theme={appTheme}>
-      <AppLayout />
+      <ErrorBoundary>
+        <NavigationThemeProvider theme={navigationTheme}>
+          <AppLayout />
+        </NavigationThemeProvider>
+      </ErrorBoundary>
     </PaperProvider>
   )
 }

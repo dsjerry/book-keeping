@@ -95,16 +95,17 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
 ) => ({
   items: [],
   add: item => {
-    set(state => {
-      item.id = Date.now().toString()
-      item.date = Date.now()
-      item.no = state.items.length + 1
-      item.useToFilter = [
-        ...item.tags.map(item => item.alias),
+    const newItem: KeepingItem = {
+      ...item,
+      id: item.id || Date.now().toString(),
+      date: item.date || Date.now(),
+      no: item.no || get().items.length + 1,
+      useToFilter: [
+        ...item.tags.map(tag => tag.alias),
         CountType[item.countType],
-      ]
-      return { items: [...state.items, item] }
-    })
+      ],
+    }
+    set(state => ({ items: [...state.items, newItem] }))
 
     get().sort({ sortBy: get().sortBy, sortOrder: get().sortOrder })
   },
@@ -120,13 +121,13 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
 
   },
   removeChecked: () => {
-    const items = get().items
-    const beDeletedItems = items.filter(item => item.isChecked)
-    beDeletedItems.forEach(item => {
-      item.isChecked = false
-      item.syncStatus = 'deleted'
-    })
-    set({ items })
+    set(state => ({
+      items: state.items.map(item =>
+        item.isChecked
+          ? { ...item, isChecked: false, syncStatus: 'deleted' as SyncStatus }
+          : item
+      ),
+    }))
   },
   update: item => {
     set(state => ({
@@ -141,18 +142,15 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
     }))
   },
   selectAll: () => {
-    const items = get().items
-    items.forEach(item => {
-      item.isChecked = true
-    })
-    set(state => ({ ...state, items }))
+    set(state => ({
+      items: state.items.map(item => ({ ...item, isChecked: true })),
+    }))
   },
   selectInverse: () => {
-    const items = get().items
-    items.forEach(item => {
-      item.isChecked = !item.isChecked
-    })
-    set(state => ({ ...state, items }))
+    set(state => ({
+      items: state.items.map(item => ({
+      ...item, isChecked: !item.isChecked })),
+    }))
   },
   sort: ({ sortBy, sortOrder }) => {
     let items = get().items
@@ -167,26 +165,16 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
     set({ items })
   },
   filter: () => {
-    const items = get().items
     const filterBy = get().filterBy
-    if (filterBy.length === 0) {
-      items.forEach(item => {
-        item.isShow = true
-      })
-      return set(state => ({ ...state, items }))
-    }
-
-    for (let i = 0; i < items.length; i++) {
-      for (let j = 0; j < filterBy.length; j++) {
-        let useToFilter = items[i].useToFilter
-        if (useToFilter?.includes(filterBy[j])) {
-          items[i].isShow = true
-        } else {
-          items[i].isShow = false
+    set(state => ({
+      items: state.items.map(item => {
+        if (filterBy.length === 0) {
+          return { ...item, isShow: true }
         }
-      }
-    }
-    set(state => ({ ...state, items }))
+        const shouldShow = filterBy.some(f => item.useToFilter?.includes(f))
+        return { ...item, isShow: shouldShow }
+      }),
+    }))
   },
 })
 

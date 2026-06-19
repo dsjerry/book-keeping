@@ -4,8 +4,7 @@ import { Text, RadioButton, useTheme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import Geolocation from '@react-native-community/geolocation'
 
-import { _COLORS } from '~consts/Colors'
-import { Amap } from '~utils'
+import { Amap, logging } from '~utils'
 import { useHomeStoreDispatch } from './contexts/HomeContext'
 import LoadingIndicator from '~components/LoadingIndicator'
 
@@ -41,7 +40,7 @@ const AddressList = () => {
           setNearBy(_addr)
         })
         .catch((err: any) => {
-          console.error('/n获取详细地址失败!', err)
+          logging.error('[地址] 获取详细地址失败!', err)
           setLoadMsg('加载失败!')
         })
         .finally(() => {

@@ -48,11 +48,3 @@ interface AppSettingStore extends AppSettings {
   toggleUseBiometrics: () => void
   setThemeMode: (mode: 'system' | 'light' | 'dark') => void
 }
-
-interface AppSettings {
-  useOnline: boolean
-  confirmExitEdit: boolean
-  confirmRemove: boolean
-  useBiometrics: boolean
-  themeMode: 'system' | 'light' | 'dark'
-}

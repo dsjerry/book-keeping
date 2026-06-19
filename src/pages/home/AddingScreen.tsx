@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 import { View, Text, StyleSheet, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native'
 import { TextInput, Chip, Button, Modal, Portal, IconButton, useTheme } from 'react-native-paper'
@@ -36,7 +36,7 @@ const Adding: React.FC<Props> = ({ route }) => {
   const navigation = useNavigation()
   const { params }: ScreenParam.Adding = useRoute()
 
-  function handleBeforeRemove(e: any) {
+  const handleBeforeRemove = useCallback((e: any) => {
     if (confirmExitEdit) {
       e.preventDefault()
       dispatch({
@@ -62,7 +62,7 @@ const Adding: React.FC<Props> = ({ route }) => {
         },
       })
     }
-  }
+  }, [confirmExitEdit, dispatch, modal, navigation])
 
   useEffect(() => {
     let _tags = [] as OutType[]
@@ -146,7 +146,7 @@ const Adding: React.FC<Props> = ({ route }) => {
     }
 
     return unsubscribe
-  }, [navigation, isSubmit])
+  }, [navigation, isSubmit, handleBeforeRemove])
 
   const formChanged = (item: Partial<KeepingItem>) => {
     dispatch({ type: 'addForm', payload: { ...form, ...item } })

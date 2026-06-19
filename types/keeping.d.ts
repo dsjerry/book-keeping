@@ -42,14 +42,6 @@ interface RequestOptions {
   data: any
 }
 
-interface OutType {
-  id: string
-  name: string
-  icon: string
-  isChecked: boolean
-  alias: string
-}
-
 interface NearByItem {
   address: string
   businessarea: string

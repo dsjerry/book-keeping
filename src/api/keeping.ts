@@ -3,6 +3,7 @@ import http from "../utils/http";
 import { useKeepingStore } from "~store/keepingStore";
 import { LastSyncAtKey } from "~consts/StorageKey";
 import { OutTypes, CountType } from "~consts/Data";
+import { logging } from "~utils";
 
 export enum ConflictType {
     CREATE = 'create',
@@ -158,7 +159,7 @@ export const KeepingService = {
 
         const { data, success } = await http.post<SyncResult>('/keeping/sync', payload)
         const conflicts = data?.conflicts
-        console.log(data)
+        logging.info('[同步] 结果:', data)
         if (success && !conflicts?.length) {
             // 更新最后同步时间
             await AsyncStorage.setItem(LastSyncAtKey, data.serverTime)

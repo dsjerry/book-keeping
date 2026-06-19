@@ -4,7 +4,7 @@ import { List, Button, TextInput, HelperText } from 'react-native-paper'
 import ImagePicker from 'react-native-image-crop-picker'
 
 import { useUserContext } from './contexts/UserContext'
-import { handleImage } from '~utils'
+import { handleImage, logging } from '~utils'
 import HalfModal from '~components/HalfModal'
 
 type HalfModalType = 'nickname' | 'note'
@@ -48,7 +48,7 @@ const ProfileEdit = () => {
 
       userStore.updateCurrentUser({ avatar: cropResult.path })
     } catch (error) {
-      console.log(error)
+      logging.error('[头像] 裁剪失败:', error)
     }
   }
 

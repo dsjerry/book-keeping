@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import axios from 'axios'
+import { logging } from '~utils'
 
 export const useFetch = (url: string, options: RequestOptions) => {
   const [isFetching, setIsFetching] = useState(false)
@@ -15,7 +16,7 @@ export const useFetch = (url: string, options: RequestOptions) => {
       })
       return data
     } catch (error) {
-      console.log(error)
+      logging.error('[useFetch]', error)
     } finally {
       setIsFetching(false)
     }

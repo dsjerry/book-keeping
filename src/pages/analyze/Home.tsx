@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
 import { StyleSheet, ScrollView, View, Text, TouchableOpacity, Animated } from 'react-native'
 import { Card, Button, Divider, List, useTheme } from 'react-native-paper'
 import { ButtonGroup } from '@rneui/themed'
@@ -13,12 +13,11 @@ import { format } from 'date-fns'
 import { useKeepingStore } from '~store/keepingStore'
 import { useAnalyzeStore, AnalysisResult } from '~store/analyzeStore'
 import { GetData } from '~utils'
-import { _COLORS } from '~consts/Colors'
 import { PiePane, CountBarChart, LoadingIndicator } from './components'
 
 // 初始化DeepSeek客户端
 const deepseekClient = createDeepSeek({
-  apiKey: Config.DEEPSEEK_API_KEY || 'your-key'
+  apiKey: Config.DEEPSEEK_API_KEY || ''
 })
 
 // 定义AI分析结果的数据模式
@@ -42,13 +41,13 @@ const Home = () => {
   const fadeAnim = useRef(new Animated.Value(1)).current
 
   const { items, output, income, setCounting } = useKeepingStore()
-  const { results, addResult, getResult } = useAnalyzeStore() // 使用分析结果存储
+  const { results, addResult, getResult } = useAnalyzeStore()
 
   const shareRef = useRef<any>(null)
 
-  const chartData = new GetData(items)
-  const { tagCounts, aliasCountArray } = chartData.getTags()
-  const data = chartData.getDate()
+  const chartData = useMemo(() => new GetData(items), [items])
+  const { tagCounts, aliasCountArray } = useMemo(() => chartData.getTags(), [chartData])
+  const data = useMemo(() => chartData.getDate(), [chartData])
 
   useEffect(() => {
     setCounting()
@@ -193,7 +192,7 @@ const Home = () => {
           <Card style={homeStyle.card}>
             <ButtonGroup
               selectedIndex={btnIndex}
-              selectedButtonStyle={{ backgroundColor: _COLORS.main }}
+              selectedButtonStyle={{ backgroundColor: theme.colors.primary }}
               buttons={['支出', '收入']}
               onPress={index => onCountTypePress(index)}
               containerStyle={{

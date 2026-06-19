@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Alert, StyleSheet, ActivityIndicator, Button } from 'react-native';
 import { isSensorAvailable, simplePrompt } from '@sbaiahmed1/react-native-biometrics';
+import { useTheme } from 'react-native-paper';
 import { useAppSettingsStore } from '~store/settingStore';
+import { logging } from '~utils';
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -13,6 +15,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, onAuthFailed }) => {
   const [loading, setLoading] = useState(true);
   const [biometryType, setBiometryType] = useState<string>('生物识别');
   const { useBiometrics } = useAppSettingsStore();
+  const theme = useTheme();
 
   const resolveBiometryLabel = (type?: string) => {
     switch (type) {
@@ -44,7 +47,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, onAuthFailed }) => {
   // 执行生物识别验证
   const startAuthentication = async () => {
     setLoading(true);
-    console.log('生物识别状态:', useBiometrics ? '已启用' : '未启用');
+    logging.info('[生物识别]', useBiometrics ? '已启用' : '未启用');
     
     // 如果未启用生物识别，则直接通过验证
     if (!useBiometrics) {
@@ -63,9 +66,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, onAuthFailed }) => {
     }
 
     try {
-      console.log('正在调用生物识别验证...');
       const result = await simplePrompt(`验证以解锁应用`);
-      console.log('生物识别验证结果:', result);
 
       if (result.success) {
         setIsAuthenticated(true);
@@ -76,7 +77,7 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, onAuthFailed }) => {
         onAuthFailed?.();
       }
     } catch (error: any) {
-      console.log('生物识别验证错误:', error);
+      logging.error('[生物识别] 验证错误:', error);
       if (error?.code !== 'USER_CANCELED') {
         Alert.alert('错误', JSON.stringify(error));
       }
@@ -87,24 +88,23 @@ const AuthGuard: React.FC<AuthGuardProps> = ({ children, onAuthFailed }) => {
 
   // 当 useBiometrics 变化时重新验证
   useEffect(() => {
-    console.log('AuthGuard 初始化, 生物识别状态:', useBiometrics ? '已启用' : '未启用');
-    setIsAuthenticated(false); // 重置验证状态
+    setIsAuthenticated(false);
     startAuthentication();
   }, [useBiometrics]); // 添加 useBiometrics 作为依赖，确保设置变化时重新验证
 
   // 未验证通过，显示验证界面
   if (!isAuthenticated) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
         {loading ? (
           <>
-            <ActivityIndicator size="large" color="#0066CC" />
-            <Text style={styles.text}>正在准备验证...</Text>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={[styles.text, { color: theme.colors.onSurface }]}>正在准备验证...</Text>
           </>
         ) : (
           <>
-            <Text style={styles.text}>验证未通过</Text>
-            <Button title="重新验证" onPress={startAuthentication} />
+            <Text style={[styles.text, { color: theme.colors.onSurface }]}>验证未通过</Text>
+            <Button title="重新验证" onPress={startAuthentication} color={theme.colors.primary} />
           </>
         )}
       </View>
@@ -120,7 +120,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
     padding: 20,
   },
   text: {

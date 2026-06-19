@@ -59,7 +59,6 @@ const Header: React.FC<HeaderProps> = ({
     }
 
     const _name = routeName()
-    console.log('路由:', _name)
 
     switch (_name) {
       case 'ProfileEditScreen':

@@ -13,6 +13,8 @@ interface AppSettings {
   useOnline: boolean
   confirmExitEdit: boolean
   confirmRemove: boolean
+  useBiometrics: boolean
+  themeMode: 'system' | 'light' | 'dark'
 }
 
 interface User {

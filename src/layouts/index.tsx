@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { View } from 'react-native'
-import { NavigationContainer, useNavigation, DefaultTheme } from '@react-navigation/native'
+import { NavigationContainer, useNavigation } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { Drawer } from 'react-native-drawer-layout'
 import { List, useTheme } from 'react-native-paper'
@@ -19,6 +19,7 @@ import AuthGuard from '~components/AuthGuard'
 import { CustomHeaderWithTitle } from './widgets'
 
 import { HeaderProvider } from '../contexts/HeaderContext'
+import { useNavigationTheme } from '../contexts/NavigationThemeContext'
 
 const RootStack = createStackNavigator()
 
@@ -94,24 +95,7 @@ const CustomDrawerContent: React.FC<DrawerContent> = ({ toggleDrawer }) => {
 
 export default function AppLayout() {
   const [isShowDrawer, setIsShowDrawer] = useState(false)
-  const [navigationTheme, setNavigationTheme] = useState(global.navigationTheme || DefaultTheme)
-
-  // 监听全局主题变化
-  useEffect(() => {
-    const checkTheme = () => {
-      if (global.navigationTheme && global.navigationTheme !== navigationTheme) {
-        setNavigationTheme(global.navigationTheme)
-      }
-    }
-
-    // 初始检查
-    checkTheme()
-
-    // 设置定时器定期检查主题变化
-    const intervalId = setInterval(checkTheme, 300)
-
-    return () => clearInterval(intervalId)
-  }, [navigationTheme])
+  const navigationTheme = useNavigationTheme()
 
   return (
     <SafeAreaProvider>

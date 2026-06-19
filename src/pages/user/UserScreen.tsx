@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { View, Text, StyleSheet, Image } from 'react-native'
-import { IconButton, List, Snackbar, RadioButton } from 'react-native-paper'
+import { IconButton, List, Snackbar, RadioButton, useTheme } from 'react-native-paper'
 import LinearGradient from 'react-native-linear-gradient'
 import { useNavigation } from '@react-navigation/native'
 import { captureRef } from 'react-native-view-shot'
@@ -33,6 +33,7 @@ interface UserCardProps {
 
 const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
   const shareRef = useRef<any>(null)
+  const theme = useTheme()
 
   const onShare = async () => {
     try {
@@ -49,14 +50,21 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
 
       await Share.open(shareOptions)
     } catch (error) {
-      console.error('捕获失败:', error)
+      logging.error('[分享] 捕获失败:', error)
     }
   }
+
+  const gradientColors = theme.dark
+    ? ['#4a3a6e', '#6b5b8e', '#2a2a2a']
+    : ['#6750a4', '#a89ac7', '#e7e0ec']
+  const cardBg = theme.dark ? '#3a3a3a' : '#e7e0ec'
+  const textLight = theme.dark ? '#d0c8e0' : '#e7e0ec'
+  const textDark = theme.dark ? '#e0d8f0' : '#6750a4'
 
   return (
     <LinearGradient
       ref={shareRef}
-      colors={['#6750a4', '#a89ac7', '#e7e0ec']}
+      colors={gradientColors as [string, string, string]}
       style={card.container}>
       <View
         style={{
@@ -69,7 +77,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
               width: 60,
               height: 60,
               borderRadius: 4,
-              backgroundColor: '#e7e0ec',
+              backgroundColor: cardBg,
             }}>
             {user.avatar ? (
               <Image
@@ -82,36 +90,36 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
           </View>
         </View>
         <View style={{ flex: 6, justifyContent: 'space-between' }}>
-          <Text style={{ fontWeight: 'bold', fontSize: 20, color: '#e7e0ec' }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 20, color: textLight }}>
             {user.username || '飞翔的企鹅'}
           </Text>
-          <Text style={{ color: '#e7e0ec' }}>UID: {user.id || '123456'}</Text>
+          <Text style={{ color: textLight }}>UID: {user.id || '123456'}</Text>
         </View>
         <View style={{ flex: 1 }}>
           <IconButton
             icon={'share-outline'}
-            iconColor="#a89ac7"
+            iconColor={textLight}
             onPress={onShare}
           />
         </View>
       </View>
       <View style={{ paddingVertical: 20 }}>
-        <Text style={{ color: '#e7e0ec' }}>
+        <Text style={{ color: textLight }}>
           {user.note || '这家伙很懒，什么也没留下~'}
         </Text>
       </View>
       <View style={card.countPane}>
         <View style={card.countItem}>
-          <Text style={card.countNum}>{data.record}</Text>
-          <Text style={{ color: '#6750a4' }}>记录</Text>
+          <Text style={[card.countNum, { color: textDark }]}>{data.record}</Text>
+          <Text style={{ color: textDark }}>记录</Text>
         </View>
         <View style={card.countItem}>
-          <Text style={card.countNum}>{data.output}</Text>
-          <Text style={{ color: '#6750a4' }}>支出</Text>
+          <Text style={[card.countNum, { color: textDark }]}>{data.output}</Text>
+          <Text style={{ color: textDark }}>支出</Text>
         </View>
         <View style={card.countItem}>
-          <Text style={card.countNum}>{data.income}</Text>
-          <Text style={{ color: '#6750a4' }}>收入</Text>
+          <Text style={[card.countNum, { color: textDark }]}>{data.income}</Text>
+          <Text style={{ color: textDark }}>收入</Text>
         </View>
       </View>
     </LinearGradient>
@@ -120,6 +128,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
 
 const UserHome: React.FC<UserHomeProps> = ({ route }) => {
   const navigation = useNavigation()
+  const theme = useTheme()
 
   const { keepingStore } = useUserContext()
   const { toggleUseOnline } = useAppSettingsStore()
@@ -245,7 +254,7 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
             width: '90%',
             elevation: 4,
             borderRadius: 4,
-            backgroundColor: '#e6dfec',
+            backgroundColor: theme.colors.surfaceVariant,
           }} >
             <List.Item
               title="额度设置"
@@ -273,7 +282,7 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
               width: '90%',
               elevation: 4,
               borderRadius: 4,
-              backgroundColor: '#e6dfec',
+              backgroundColor: theme.colors.surfaceVariant,
             }}>
             <List.Item
               title="编辑信息"
@@ -367,7 +376,6 @@ const card = StyleSheet.create({
     marginRight: 5,
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#6750a4',
   },
 })
 

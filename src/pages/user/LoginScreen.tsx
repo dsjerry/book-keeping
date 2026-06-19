@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Text, View } from 'react-native'
-import { HelperText, TextInput, Button, Snackbar } from 'react-native-paper'
+import { HelperText, TextInput, Button, Snackbar, useTheme } from 'react-native-paper'
 import { CheckBox } from '@rneui/themed'
 import { useNavigation } from '@react-navigation/native'
 
@@ -39,6 +39,7 @@ const InputPane: React.FC<InputPane> = ({
 const LoginPane = () => {
   const navigation = useNavigation()
   const { state, dispatch } = useUserContext()
+  const theme = useTheme()
   const [tips, setTips] = useState('')
   const [badNameTips, setBadNameTips] = useState('')
   const [badPassTips, setBadPassTips] = useState('')
@@ -75,7 +76,7 @@ const LoginPane = () => {
     }, timer)
   }
 
-  const onError = (error: any) => console.log('[登录注册]', error?.message)
+  const onError = (error: any) => logging.error('[登录注册]', error?.message)
 
   const onLogin = async () => {
     try {
@@ -101,7 +102,9 @@ const LoginPane = () => {
       } else {
         setBadNameTips('用户名或密码不正确！')
       }
-    } catch (error) { }
+    } catch (error) {
+      onError(error)
+    }
   }
 
   const onRegister = async () => {
@@ -213,7 +216,7 @@ const LoginPane = () => {
               containerStyle={{
                 backgroundColor: 'transparent',
               }}
-              checkedColor="#6b4faa"
+              checkedColor={theme.colors.primary}
               onPress={toggleUseOnline}
             />
           )}
