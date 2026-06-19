@@ -136,6 +136,16 @@ dependencies {
     }
 }
 
-apply from: file("../node_modules/react-native-vector-icons/fonts.gradle"); applyNativeModulesAppBuildGradle(project)
-apply from: file("../node_modules/react-native-vector-icons/fonts.gradle")
+apply from: file("../../node_modules/@react-native-community/cli-platform-android/native_modules.gradle"); applyNativeModulesAppBuildGradle(project)
+apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 apply from: project(':react-native-config').projectDir.getPath() + "/dotenv.gradle"
+
+// 修复 react-native-vector-icons 与 Gradle 8.x 的任务依赖问题
+afterEvaluate {
+    def copyFontsTask = tasks.findByName("copyReactNativeVectorIconFonts")
+    if (copyFontsTask != null) {
+        tasks.matching { it.name == "generateReleaseLintVitalReportModel" }.configureEach {
+            dependsOn copyFontsTask
+        }
+    }
+}
