@@ -12,30 +12,28 @@ import Modal from '~components/Modal'
 const HomeScreen = () => {
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
-  const { items, remove, toggle, addItems } = useKeepingStore()
+  const { items, toggle, addItems } = useKeepingStore()
   const { modal } = useHomeStore()
   const { currentUser } = useUserStore()
   const { get } = userUsersKeepingStore()
 
-  const initData = () => {
+  // 当前用户变化时（登录/切换账号）加载该用户保存的账本
+  useEffect(() => {
     if (!currentUser) return
-
     const userKeeping = get(currentUser.id)
     if (userKeeping) {
       addItems(userKeeping.keeping)
     }
-  }
-
-  useEffect(() => {
-    initData()
-  }, [])
+  }, [currentUser?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderItems = items.filter(item => item.syncStatus !== 'deleted')
 
   return (
     <>
-      <Pressable style={homeStyle.container} onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
-        <KeepingList item={renderItems} toggle={toggle} remove={remove} />
+      <Pressable
+        style={homeStyle.container}
+        onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
+        <KeepingList item={renderItems} toggle={toggle} />
         {renderItems.length === 0 && <NothingHere />}
         <View style={homeStyle.btnArea}>
           <AddingButton onPress={() => navigation.navigate('Adding', {})} />

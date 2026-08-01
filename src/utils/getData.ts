@@ -1,6 +1,8 @@
 import _ from 'lodash'
 import dayjs from 'dayjs'
 
+const toNumber = (value: string | number): number => Number(value) || 0
+
 class GetData {
   list: KeepingItem[] = []
 
@@ -21,14 +23,9 @@ class GetData {
     const aliasCountMap = {} as AnyObj
 
     this.list.forEach(item => {
-      const count = parseInt(item.count)
-
+      const count = toNumber(item.count)
       item.tags.forEach(tag => {
-        if (aliasCountMap[tag.name]) {
-          aliasCountMap[tag.name] += count
-        } else {
-          aliasCountMap[tag.name] = count
-        }
+        aliasCountMap[tag.name] = (aliasCountMap[tag.name] || 0) + count
       })
     })
 
@@ -40,56 +37,35 @@ class GetData {
   }
 
   getDate(isIncome = false) {
-    let _list = null
-    if (isIncome) {
-      _list = this.list.filter(item => item.type === 'in')
-    } else {
-      _list = this.list.filter(item => item.type === 'out')
-    }
+    const list = isIncome
+      ? this.list.filter(item => item.type === 'in')
+      : this.list.filter(item => item.type === 'out')
 
-    const processedData = _list.map(item => {
+    const dateCounts = list.reduce((acc: AnyObj, item) => {
       const date = dayjs(item.date).format('YYYY-MM-DD')
-      return {
-        date: date, // 日期 x轴
-        count: parseInt(item.count), // 花费 y轴
-      }
-    })
-
-    const dateCounts = processedData.reduce((acc: AnyObj, { date, count }) => {
-      if (!acc[date]) acc[date] = 0
-      acc[date] += count
+      acc[date] = (acc[date] || 0) + toNumber(item.count)
       return acc
     }, {})
 
-    const dates = Object.keys(dateCounts)
-    const counts = dates.map(date => dateCounts[date])
-
-    return { dates, counts }
+    return {
+      dates: Object.keys(dateCounts),
+      counts: Object.values(dateCounts) as number[],
+    }
   }
 
   // 获取消费地点分布数据
   getLocation(isIncome = false) {
-    // 根据收入/支出类型筛选数据
-    let _list = null
-    if (isIncome) {
-      _list = this.list.filter(item => item.type === 'in')
-    } else {
-      _list = this.list.filter(item => item.type === 'out')
-    }
+    const list = isIncome
+      ? this.list.filter(item => item.type === 'in')
+      : this.list.filter(item => item.type === 'out')
 
     // 按地点分组并统计金额
     const locationMap = {} as AnyObj
-    
-    _list.forEach(item => {
+
+    list.forEach(item => {
       // 如果没有地点信息，归类为"未知地点"
       const location = item.address?.name || '未知地点'
-      const count = parseInt(item.count)
-      
-      if (locationMap[location]) {
-        locationMap[location] += count
-      } else {
-        locationMap[location] = count
-      }
+      locationMap[location] = (locationMap[location] || 0) + toNumber(item.count)
     })
 
     // 转换为图表所需的数据格式

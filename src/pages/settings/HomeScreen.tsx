@@ -1,8 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { View } from 'react-native'
-import { List, Switch, RadioButton, useTheme } from 'react-native-paper'
+import { List, Switch, RadioButton, Snackbar, useTheme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
-import { Snackbar } from 'react-native-paper'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 
 import { useAppSettingsStore } from '~store/settingStore'
@@ -14,20 +13,24 @@ import { OutTypes } from '~consts/Data'
 import { AuthService } from '~api/auth'
 import { logging } from '~utils'
 
+// 清除缓存时保留用户核心数据（各 store 的持久化 key）
+const KEEP_STORAGE_KEYS = [
+  'user',
+  'users-keeping',
+  'app-settings',
+  'analyze-results',
+]
+
 const Settings = () => {
   const [isShowDialog, setIsShowDialog] = useState(false)
   const [tips, setTips] = useState('')
-  const [switchStatus, setSwitchStatus] = useState({
-    del: false,
-    exit: false,
-  })
 
   const [modal, setModal] = useState({
     title: '',
     body: '',
     isShow: false,
-    onCancel: () => { },
-    onAccess: () => { },
+    onCancel: () => {},
+    onAccess: () => {},
   })
 
   const [clearConfirm, setClearConfirm] = useState(0)
@@ -50,13 +53,6 @@ const Settings = () => {
 
   const navigation = useNavigation()
 
-  useEffect(() => {
-    setSwitchStatus({
-      del: confirmRemove,
-      exit: confirmExitEdit,
-    })
-  }, [])
-
   const clearCache = async () => {
     if (clearConfirm === 0) {
       setClearConfirm(1)
@@ -64,8 +60,7 @@ const Settings = () => {
     }
     try {
       const keys = await AsyncStorage.getAllKeys()
-      const keepKeys = ['user-store', 'setting-store', 'analyze-store']
-      const keysToRemove = keys.filter(k => !keepKeys.includes(k as string))
+      const keysToRemove = keys.filter(k => !KEEP_STORAGE_KEYS.includes(k))
       if (keysToRemove.length > 0) {
         await AsyncStorage.multiRemove(keysToRemove)
       }
@@ -80,23 +75,6 @@ const Settings = () => {
 
   const onDismissSnackBar = () => {
     setTips('')
-  }
-
-  interface SwitchParams {
-    type: keyof typeof switchStatus
-    flag: boolean
-  }
-  const onSwitchPress = ({ type, flag }: SwitchParams) => {
-    setSwitchStatus(prev => ({ ...prev, [type]: flag }))
-
-    switch (type) {
-      case 'del':
-        toggleConfirmRemove()
-        break
-      case 'exit':
-        toggleConfirmExitEdit()
-        break
-    }
   }
 
   const handleUpdatePress = () => {
@@ -148,25 +126,25 @@ const Settings = () => {
         title: '用户未启用同步功能',
         body: '此操作将会使用你的用户名和密码登录服务器，是否继续？',
         isShow: true,
-        onCancel: () => setModal({ ...modal, isShow: false }),
+        onCancel: () => setModal(prev => ({ ...prev, isShow: false })),
         onAccess: () => {
           if (!currentUser) return logging.info('用户不存在')
           const { username, password } = currentUser
-          AuthService.signup({ username, password, password2: password }).then(res => {
-            if (res.success) {
-              setTips('同步功能已启用')
-              setModal({ ...modal, isShow: false })
-              updateCurrentUser({ serverId: res.data.id })
-              toggleUseOnline()
-            }
-          })
+          AuthService.signup({ username, password, password2: password }).then(
+            res => {
+              if (res.success) {
+                setTips('同步功能已启用')
+                setModal(prev => ({ ...prev, isShow: false }))
+                updateCurrentUser({ serverId: res.data.id })
+                toggleUseOnline()
+              } else {
+                setTips(res.message || '启用同步失败')
+              }
+            },
+          )
         },
       })
     }
-  }
-
-  const onUseBiometricsPress = (flag: boolean) => {
-    toggleUseBiometrics()
   }
 
   return (
@@ -196,7 +174,9 @@ const Settings = () => {
               <List.Icon {...props} icon="theme-light-dark" />
             )}>
             <RadioButton.Group
-              onValueChange={value => setThemeMode(value as 'system' | 'light' | 'dark')}
+              onValueChange={value =>
+                setThemeMode(value as 'system' | 'light' | 'dark')
+              }
               value={themeMode}>
               <RadioButton.Item
                 label="跟随系统"
@@ -227,12 +207,10 @@ const Settings = () => {
               title="删除记录"
               left={props => <List.Icon {...props} icon="delete" />}
               onPress={() => {}}
-              right={props => (
+              right={() => (
                 <Switch
-                  value={switchStatus.del}
-                  onValueChange={value =>
-                    onSwitchPress({ type: 'del', flag: value })
-                  }
+                  value={confirmRemove}
+                  onValueChange={() => toggleConfirmRemove()}
                 />
               )}
             />
@@ -240,12 +218,10 @@ const Settings = () => {
               title="退出编辑"
               left={props => <List.Icon {...props} icon="exit-to-app" />}
               onPress={() => {}}
-              right={props => (
+              right={() => (
                 <Switch
-                  value={switchStatus.exit}
-                  onValueChange={value =>
-                    onSwitchPress({ type: 'exit', flag: value })
-                  }
+                  value={confirmExitEdit}
+                  onValueChange={() => toggleConfirmExitEdit()}
                 />
               )}
             />
@@ -263,16 +239,18 @@ const Settings = () => {
             descriptionStyle={{ fontSize: 12 }}
             left={props => <List.Icon {...props} icon="fingerprint" />}
             right={() => (
-              <Switch 
-                value={useBiometrics} 
-                onValueChange={onUseBiometricsPress} 
+              <Switch
+                value={useBiometrics}
+                onValueChange={toggleUseBiometrics}
               />
             )}
           />
           <List.Item
             title="清除缓存"
-            left={props => <List.Icon {...props} icon="delete-forever-outline" />}
-            description={clearConfirm == 1 ? '再次点击清除' : undefined}
+            left={props => (
+              <List.Icon {...props} icon="delete-forever-outline" />
+            )}
+            description={clearConfirm === 1 ? '再次点击清除' : undefined}
             right={props =>
               clearConfirm === 1 && (
                 <List.Icon

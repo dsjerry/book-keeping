@@ -36,33 +36,41 @@ const Adding: React.FC<Props> = ({ route }) => {
   const navigation = useNavigation()
   const { params }: ScreenParam.Adding = useRoute()
 
-  const handleBeforeRemove = useCallback((e: any) => {
-    if (confirmExitEdit) {
-      e.preventDefault()
-      dispatch({
-        type: 'modal',
-        payload: {
-          title: '确定要退出吗？',
-          body: '内容将不会被保存',
-          isShow: true,
-          type: 'exit',
-          onAccess: () => {
-            dispatch({
-              type: 'modal',
-              payload: { ...modal, isShow: false, status: false },
-            })
-            navigation.dispatch(e.data.action)
+  // 只把变更的字段交给 reducer，由 reducer 与当前表单合并
+  const formChanged = (item: Partial<KeepingItem>) => {
+    dispatch({ type: 'addForm', payload: item })
+  }
+
+  const handleBeforeRemove = useCallback(
+    (e: any) => {
+      if (confirmExitEdit) {
+        e.preventDefault()
+        dispatch({
+          type: 'modal',
+          payload: {
+            title: '确定要退出吗？',
+            body: '内容将不会被保存',
+            isShow: true,
+            type: 'exit',
+            onAccess: () => {
+              dispatch({
+                type: 'modal',
+                payload: { ...modal, isShow: false, status: false },
+              })
+              navigation.dispatch(e.data.action)
+            },
+            onCancel: () => {
+              dispatch({
+                type: 'modal',
+                payload: { ...modal, isShow: false, status: false },
+              })
+            },
           },
-          onCancel: () => {
-            dispatch({
-              type: 'modal',
-              payload: { ...modal, isShow: false, status: false },
-            })
-          },
-        },
-      })
-    }
-  }, [confirmExitEdit, dispatch, modal, navigation])
+        })
+      }
+    },
+    [confirmExitEdit, dispatch, modal, navigation],
+  )
 
   useEffect(() => {
     let _tags = [] as OutType[]
@@ -114,7 +122,13 @@ const Adding: React.FC<Props> = ({ route }) => {
         }
       }
 
-      setOutTypes([...newTag])
+      // 编辑模式下，按已保存的标签标记选中状态
+      setOutTypes(
+        newTag.map(t => ({
+          ...t,
+          isChecked: item.tags.some(saved => saved.id === t.id),
+        })),
+      )
       dispatch({ type: 'fromEditing', payload: item })
 
       // 如果是编辑模式，设置已保存的日期
@@ -135,7 +149,7 @@ const Adding: React.FC<Props> = ({ route }) => {
       showSubscription.remove()
       hideSubscription.remove()
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     let unsubscribe: any
@@ -147,10 +161,6 @@ const Adding: React.FC<Props> = ({ route }) => {
 
     return unsubscribe
   }, [navigation, isSubmit, handleBeforeRemove])
-
-  const formChanged = (item: Partial<KeepingItem>) => {
-    dispatch({ type: 'addForm', payload: { ...form, ...item } })
-  }
 
   // 处理日期变更
   const onDateChange = (event: any, date?: Date) => {
@@ -180,20 +190,21 @@ const Adding: React.FC<Props> = ({ route }) => {
     navigation.navigate('HomeScreen', {})
   }
 
+  // 不可变地更新选中标签：同时更新表单 tags 和面板选中样式
   const onChipPress = (chip: OutType) => {
-    chip.isChecked = !chip.isChecked
-    const newTags = form.tags
-    if (chip.isChecked && !newTags?.includes(chip)) {
-      newTags?.push(chip)
-    } else {
-      newTags?.splice(newTags.indexOf(chip), 1)
+    const checked = !chip.isChecked
+    const current = form.tags || []
+    const nextTags = current.filter(t => t.id !== chip.id)
+    if (checked) {
+      nextTags.push({ ...chip, isChecked: true })
     }
-
-    formChanged({ tags: newTags })
+    formChanged({ tags: nextTags })
+    setOutTypes(prev =>
+      prev.map(t => (t.id === chip.id ? { ...t, isChecked: checked } : t)),
+    )
   }
 
   return (
-    
     <View style={[style.container, { backgroundColor: theme.colors.background }]}>
       <Text>记一笔</Text>
       <View style={style.count}>
@@ -305,7 +316,7 @@ const style = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
     padding: 20,
-    overflow: "scroll"
+    overflow: 'scroll',
   },
   count: {
     width: '100%',
@@ -323,17 +334,14 @@ const style = StyleSheet.create({
     paddingVertical: 10,
     marginTop: 10,
     borderBottomWidth: 1,
-    // 边框颜色将通过主题动态设置
   },
   dateLabel: {
     fontSize: 16,
-    // 颜色将通过主题动态设置
     marginRight: 10,
   },
   dateValue: {
     fontSize: 16,
     flex: 1,
-    // 颜色将通过主题动态设置
   },
   countType: {
     width: '100%',
@@ -349,11 +357,9 @@ const style = StyleSheet.create({
     borderRadius: 5,
   },
   modalContainer: {
-    // 背景色将通过主题动态设置
     padding: 20,
     margin: 20,
     borderRadius: 10,
-    // 确保弹窗在键盘上方
     position: 'absolute',
     top: 50,
     left: 0,

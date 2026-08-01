@@ -34,16 +34,28 @@ const createUserSettingsSlice: StateCreator<
   useOnline: true,
   tags: [],
   setTags: tags => {
+    const current = get().currentUser
+    if (!current) return
+    const merged = [...new Set([...(current.tags || []), ...tags])]
+    const nextUser: User = { ...current, tags: merged }
+    set(state => ({
+      currentUser: nextUser,
+      users: state.users.map(u => (u.id === nextUser.id ? nextUser : u)),
+    }))
     logging.info('[标签] 添加:', tags)
-    const currentTags = get().currentUser?.tags || []
-    const _tags = new Set([...currentTags, ...tags])
-    set({ currentUser: { ...get().currentUser!, tags: [..._tags] } })
   },
   removeTag: tag => {
+    const current = get().currentUser
+    if (!current) return
+    const nextUser: User = {
+      ...current,
+      tags: (current.tags || []).filter(t => t !== tag),
+    }
+    set(state => ({
+      currentUser: nextUser,
+      users: state.users.map(u => (u.id === nextUser.id ? nextUser : u)),
+    }))
     logging.info('[标签] 删除:', tag)
-    const currentTags = get().currentUser?.tags || []
-    const _tags = new Set([...currentTags].filter(t => t !== tag))
-    set({ currentUser: { ...get().currentUser!, tags: [..._tags] } })
   },
 })
 
@@ -55,13 +67,16 @@ const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (
     users: [],
     currentUser: null,
     add: user => {
-      set(state => {
-        // 初始化用户数据
-        user.id = Date.now().toString()
-        user.tags = OutTypes
-        user.note = user.note || '这个人很懒，什么也没留下'
-        return { users: [...state.users, user], currentUser: user }
-      })
+      const newUser: User = {
+        ...user,
+        id: user.id || Date.now().toString(),
+        tags: user.tags || OutTypes,
+        note: user.note || '这个人很懒，什么也没留下',
+      }
+      set(state => ({
+        users: [...state.users, newUser],
+        currentUser: newUser,
+      }))
     },
     remove: id => {
       set(() => {

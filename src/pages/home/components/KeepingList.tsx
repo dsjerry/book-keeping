@@ -1,10 +1,4 @@
-import {
-  View,
-  Text,
-  FlatList,
-  StyleSheet,
-  Pressable,
-} from 'react-native'
+import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native'
 import { Checkbox, Chip, Icon, useTheme } from 'react-native-paper'
 import type { MD3Theme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
@@ -15,11 +9,11 @@ import CustomMenuView from '~components/CustomMenuView'
 import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
 import { _date } from '~utils'
 import { useAppSettingsStore } from '~store/settingStore'
+import { useKeepingStore } from '~store/keepingStore'
 
 interface Props {
   item: KeepingItem[]
   toggle: KeepingStore['toggle']
-  remove: KeepingStore['remove']
 }
 
 interface ItemProps {
@@ -49,97 +43,117 @@ const getMenuActions = (theme: MD3Theme): MenuAction[] => [
   },
 ]
 
-const ListItem: React.FC<ItemProps> = memo(({
-  item,
-  doNavigate,
-  onLongPress,
-  onMenuPress,
-  toggle,
-  theme,
-}) => {
-  return (
-    <>
-      {item.isShow !== false && (
-        <CustomMenuView
-          actions={getMenuActions(theme)}
-          onPress={id => onMenuPress(id, item.id)}>
-          <Pressable
-            style={({ pressed }) => ({
-              ...style.item,
-              backgroundColor: pressed
-                ? theme.colors.surfaceVariant
-                : theme.colors.surface,
-              elevation: pressed ? 8 : 2,
-              borderColor: theme.colors.outline,
-            })}
-            onPress={() => doNavigate(item.id)}
-            onLongPress={e => onLongPress(item.id)}>
-            <View style={style.itemHeader}>
-              {item.note && <Icon source={'note-text-outline'} size={14} color={theme.colors.primary} />}
-              {item.image && <Icon source={'image-outline'} size={14} color={theme.colors.primary} />}
-              <Text style={{ color: theme.colors.primary, marginLeft: 5 }}>
-                {_date(item.date)}
-              </Text>
-            </View>
-            <View style={style.itemBody}>
-              <Checkbox
-                status={item.isChecked ? 'checked' : 'unchecked'}
-                onPress={() => toggle(item.id)}
-              />
-              <Text style={{ color: theme.colors.primary }}>{item.type === 'in' ? '收入' : '支出'}</Text>
-              <Text style={[style.itemCount, { color: theme.colors.primary }]}>{item.count}</Text>
-              <Text style={{ color: theme.colors.primary }}>元</Text>
-            </View>
-            <View style={tag.pane}>
-              {item.tags.map(tagItem => (
-                <Chip
-                  style={tag.item}
-                  icon={tagItem.icon}
-                  mode="outlined"
-                  key={tagItem.id}>
-                  {tagItem.name}
-                </Chip>
-              ))}
-              {item.tags.length === 0 && (
-                <Chip
-                  style={[tag.item, { opacity: 0.5 }]}
-                  mode="outlined"
-                  icon="tag-multiple-outline">
-                  分类
-                </Chip>
-              )}
-            </View>
-          </Pressable>
-        </CustomMenuView>
-      )}
-    </>
-  )
-})
+const ListItem: React.FC<ItemProps> = memo(
+  ({ item, doNavigate, onLongPress, onMenuPress, toggle, theme }) => {
+    return (
+      <>
+        {item.isShow !== false && (
+          <CustomMenuView
+            actions={getMenuActions(theme)}
+            onPress={id => onMenuPress(id, item.id)}>
+            <Pressable
+              style={({ pressed }) => ({
+                ...style.item,
+                backgroundColor: pressed
+                  ? theme.colors.surfaceVariant
+                  : theme.colors.surface,
+                elevation: pressed ? 8 : 2,
+                borderColor: theme.colors.outline,
+              })}
+              onPress={() => doNavigate(item.id)}
+              onLongPress={e => onLongPress(item.id)}>
+              <View style={style.itemHeader}>
+                {item.note && (
+                  <Icon
+                    source={'note-text-outline'}
+                    size={14}
+                    color={theme.colors.primary}
+                  />
+                )}
+                {item.image && (
+                  <Icon
+                    source={'image-outline'}
+                    size={14}
+                    color={theme.colors.primary}
+                  />
+                )}
+                <Text style={{ color: theme.colors.primary, marginLeft: 5 }}>
+                  {_date(item.date)}
+                </Text>
+              </View>
+              <View style={style.itemBody}>
+                <Checkbox
+                  status={item.isChecked ? 'checked' : 'unchecked'}
+                  onPress={() => toggle(item.id)}
+                />
+                <Text style={{ color: theme.colors.primary }}>
+                  {item.type === 'in' ? '收入' : '支出'}
+                </Text>
+                <Text
+                  style={[style.itemCount, { color: theme.colors.primary }]}>
+                  {item.count}
+                </Text>
+                <Text style={{ color: theme.colors.primary }}>元</Text>
+              </View>
+              <View style={tag.pane}>
+                {item.tags.map(tagItem => (
+                  <Chip
+                    style={tag.item}
+                    icon={tagItem.icon}
+                    mode="outlined"
+                    key={tagItem.id}>
+                    {tagItem.name}
+                  </Chip>
+                ))}
+                {item.tags.length === 0 && (
+                  <Chip
+                    style={[tag.item, { opacity: 0.5 }]}
+                    mode="outlined"
+                    icon="tag-multiple-outline">
+                    分类
+                  </Chip>
+                )}
+              </View>
+            </Pressable>
+          </CustomMenuView>
+        )}
+      </>
+    )
+  },
+)
 
-const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
+const KeepingList: React.FC<Props> = ({ item, toggle }) => {
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
   const theme = useTheme()
-  const {
-    modal,
-    activeKeeping,
-  } = useHomeStore()
-
+  const { modal, activeKeeping } = useHomeStore()
   const { confirmRemove } = useAppSettingsStore()
 
-  const doNavigate = useCallback((id: string) => {
-    navigation.navigate('DetailScreen', { hideHeader: true, id })
-  }, [navigation])
+  const doNavigate = useCallback(
+    (id: string) => {
+      navigation.navigate('DetailScreen', { hideHeader: true, id })
+    },
+    [navigation],
+  )
 
-  const onItemLongPress = useCallback((itemId: KeepingItem['id']) => {
-    dispatch({ type: 'activeKeeping', payload: [itemId] })
-  }, [dispatch])
+  const onItemLongPress = useCallback(
+    (itemId: KeepingItem['id']) => {
+      dispatch({ type: 'activeKeeping', payload: [itemId] })
+    },
+    [dispatch],
+  )
+
+  // 从 store 中取删除方法，避免在回调中持有过期引用
+  const removeItem = useCallback((id: string) => {
+    const { remove } = useKeepingStore.getState()
+    remove(id)
+  }, [])
 
   const onItemMenuPress = useCallback(
     (actionId: MenuAction['id'], itemId: KeepingItem['id']) => {
       dispatch({ type: 'activeKeeping', payload: [itemId] })
       if (actionId === 'del') {
-        if (!confirmRemove) return activeKeeping.forEach(id => remove(id))
+        if (!confirmRemove) return activeKeeping.forEach(id => removeItem(id))
         dispatch({
           type: 'modal',
           payload: {
@@ -148,7 +162,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
             body: '确认删除吗?',
             isShow: true,
             onAccess: () => {
-              activeKeeping.forEach(id => remove(id))
+              activeKeeping.forEach(id => removeItem(id))
               dispatch({
                 type: 'modal',
                 payload: {
@@ -172,7 +186,15 @@ const KeepingList: React.FC<Props> = ({ item, toggle, remove }) => {
         navigation.navigate('DetailScreen', { hideHeader: true, id: itemId })
       }
     },
-    [dispatch, confirmRemove, activeKeeping, modal, remove, toggle, navigation],
+    [
+      dispatch,
+      confirmRemove,
+      activeKeeping,
+      modal,
+      navigation,
+      toggle,
+      removeItem,
+    ],
   )
 
   const renderItem = useCallback(
@@ -213,9 +235,8 @@ const style = StyleSheet.create({
     marginRight: 'auto',
     padding: 5,
     paddingRight: 10,
-    borderRadius: 5,
+    borderRadius: 8,
     elevation: 2,
-    // borderWidth: 0.5,
   },
   itemHeader: {
     flexDirection: 'row',
@@ -227,7 +248,6 @@ const style = StyleSheet.create({
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
-  itemFooter: {},
   itemCount: {
     fontSize: 20,
     marginHorizontal: 5,
@@ -244,8 +264,8 @@ const tag = StyleSheet.create({
     marginLeft: 30,
   },
   item: {
-    marginHorizontal: -10,
-    transform: [{ scale: 0.65 }],
+    marginHorizontal: 4,
+    marginVertical: 2,
   },
 })
 

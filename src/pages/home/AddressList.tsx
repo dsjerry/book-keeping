@@ -5,6 +5,7 @@ import { useNavigation } from '@react-navigation/native'
 import Geolocation from '@react-native-community/geolocation'
 
 import { Amap, logging } from '~utils'
+import { _COLORS } from '~consts/Colors'
 import { useHomeStoreDispatch } from './contexts/HomeContext'
 import LoadingIndicator from '~components/LoadingIndicator'
 
@@ -76,7 +77,11 @@ const AddressList = () => {
           不使用位置
         </Text>
       </Pressable>
-      <LoadingIndicator animating={loading} text={loadMsg} indicatorBoxStyle={{ backgroundColor: theme.colors.background }} />
+      <LoadingIndicator
+        animating={loading}
+        text={loadMsg}
+        indicatorBoxStyle={{ backgroundColor: theme.colors.background }}
+      />
       {nearBy.length === 0 && (
         <View
           style={{
