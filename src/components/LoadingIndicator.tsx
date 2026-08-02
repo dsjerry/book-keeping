@@ -1,13 +1,5 @@
-import {
-  View,
-  Text,
-  Modal,
-  ActivityIndicator,
-  StyleSheet,
-  ViewStyle,
-} from 'react-native'
-
-import { _COLORS } from '~consts/Colors'
+import { View, Text, Modal, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native'
+import { useTheme } from 'react-native-paper'
 
 interface Props {
   animating: boolean
@@ -16,33 +8,18 @@ interface Props {
   children?: React.ReactNode
 }
 
-const LoadingIndicator: React.FC<Props> = ({
-  animating,
-  text,
-  indicatorBoxStyle,
-  children,
-}) => {
+const LoadingIndicator: React.FC<Props> = ({ animating, text, indicatorBoxStyle, children }) => {
+  const theme = useTheme()
+
   return (
-    <Modal
-      animationType="fade"
-      transparent
-      visible={animating}
-      statusBarTranslucent
-      onRequestClose={() => {}}>
-      <View style={styles.container}>
-        <View style={[styles.indicatorBox, indicatorBoxStyle]}>
-          <ActivityIndicator
-            size={'large'}
-            animating={animating}
-            hidesWhenStopped
-            color={_COLORS.main}
-          />
+    <Modal animationType="fade" transparent visible={animating} statusBarTranslucent onRequestClose={() => {}}>
+      <View style={[styles.container, { backgroundColor: theme.colors.backdrop }]}>
+        <View style={[styles.indicatorBox, { backgroundColor: theme.colors.surface }, indicatorBoxStyle]}>
+          <ActivityIndicator size={'large'} animating={animating} hidesWhenStopped color={theme.colors.primary} />
           {children ? (
             children
           ) : (
-            <Text style={{ color: _COLORS.main }}>
-              {text ? text : '加载中...'}
-            </Text>
+            <Text style={[styles.text, { color: theme.colors.primary }]}>{text ? text : '加载中...'}</Text>
           )}
         </View>
       </View>
@@ -60,19 +37,19 @@ const styles = StyleSheet.create({
     bottom: 0,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   indicatorBox: {
-    width: '50%',
-    height: '15%',
+    width: 180,
+    minHeight: 120,
+    paddingVertical: 24,
+    paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: 'white',
-    borderRadius: 4,
+    borderRadius: 12,
   },
   text: {
-    color: _COLORS.main,
     fontWeight: 'bold',
+    marginTop: 12,
   },
 })
 

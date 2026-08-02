@@ -1,7 +1,5 @@
-import { View } from 'react-native'
-import { Dialog } from '@rneui/themed'
-
-import { _COLORS } from '~consts/Colors'
+import { View, StyleSheet } from 'react-native'
+import { Dialog, Portal, ActivityIndicator, useTheme } from 'react-native-paper'
 
 interface Props {
   title?: string
@@ -11,35 +9,38 @@ interface Props {
   onBackdropPress: () => void
 }
 
-const CustomDialog: React.FC<Props> = ({
-  title,
-  indicator,
-  width = 200,
-  children,
-  onBackdropPress,
-}) => {
+const CustomDialog: React.FC<Props> = ({ title, indicator, width, children, onBackdropPress }) => {
+  const theme = useTheme()
+
   return (
-    <Dialog
-      overlayStyle={{
-        width: width,
-        transform: [{ translateY: -50 }],
-      }}
-      onBackdropPress={onBackdropPress}>
-      {/* loading 动画 */}
-      {indicator !== false ? (
-        <Dialog.Loading loadingProps={{ size: 'large', color: _COLORS.main }} />
-      ) : null}
-      {/* 显示插槽或者标题 */}
-      {children ? (
-        children
-      ) : (
-        <Dialog.Title
-          title={title ? title : ''}
-          titleStyle={{ textAlign: 'center', color: _COLORS.main_50 }}
-        />
-      )}
-    </Dialog>
+    <Portal>
+      <Dialog
+        visible
+        onDismiss={onBackdropPress}
+        style={[style.dialog, width ? { width, alignSelf: 'center' } : { marginHorizontal: 40 }]}>
+        {indicator !== false && (
+          <Dialog.Content style={style.loadingContent}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </Dialog.Content>
+        )}
+        {children ? (
+          <View>{children}</View>
+        ) : (
+          <Dialog.Title style={{ textAlign: 'center' }}>{title ? title : ''}</Dialog.Title>
+        )}
+      </Dialog>
+    </Portal>
   )
 }
+
+const style = StyleSheet.create({
+  dialog: {
+    borderRadius: 12,
+  },
+  loadingContent: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
+})
 
 export default CustomDialog
