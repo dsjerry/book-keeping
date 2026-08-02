@@ -39,7 +39,6 @@
     "native-base": "^3.4.28",
     "react": "18.2.0",
     "react-native": "0.73.6",
-    "react-native-amap3d": "^3.2.4",
     "react-native-config": "^1.5.1",
     "react-native-drawer-layout": "^3.3.0",
     "react-native-gesture-handler": "^2.16.0",
@@ -56,6 +55,7 @@
     "react-native-svg": "^15.2.0",
     "react-native-vector-icons": "^10.0.3",
     "react-native-view-shot": "^3.8.0",
+    "react-native-webview": "^14.0.1",
     "react-native-wheely": "^0.6.0",
     "zod": "^3.24.4",
     "zustand": "^4.5.2"

@@ -1,7 +1,7 @@
 buildscript {
     ext {
         buildToolsVersion = "35.0.0" 
-        minSdkVersion = 23
+        minSdkVersion = 24
         compileSdkVersion = 35       
         targetSdkVersion = 35        
         ndkVersion = "26.1.10909125" 
@@ -19,3 +19,24 @@ buildscript {
 }
 
 apply plugin: "com.facebook.react.rootproject"
+
+// @sbaiahmed1/react-native-biometrics 0.7.2 的 codegen 生成的
+// NativeReactNativeBiometricsSpec.java 引用了不存在的方法（mEventEmitterCallback），
+// 导致 Java 编译失败。在编译前删除其 generated 目录，让库使用自身实现
+//（与 CI workflow 的 "Remove problematic generated directory" 步骤一致）。
+gradle.projectsEvaluated {
+    def bioProject = gradle.rootProject.subprojects.find { it.path == ':sbaiahmed1_react-native-biometrics' }
+    if (bioProject != null) {
+        bioProject.tasks.configureEach { task ->
+            if (task.name == 'compileDebugJavaWithJavac' || task.name == 'compileReleaseJavaWithJavac') {
+                task.doFirst {
+                    def genDir = new File(bioProject.projectDir, 'src/main/java/com/sbaiahmed1/reactnativebiometrics/generated')
+                    if (genDir.exists()) {
+                        genDir.deleteDir()
+                        println "Removed problematic codegen dir: ${genDir}"
+                    }
+                }
+            }
+        }
+    }
+}
