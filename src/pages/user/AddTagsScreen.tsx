@@ -1,15 +1,17 @@
 import { useState, useRef } from 'react'
-import { View, Text, TextInput, StyleSheet } from 'react-native'
-import { HelperText, IconButton, Snackbar } from 'react-native-paper'
+import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native'
+import { TextInput, HelperText, IconButton, Button, Snackbar, useTheme } from 'react-native-paper'
 
 import CustomChipPane from '~components/CustomChipPane'
 import CustomDivider from '~components/CustomDivider'
 import CustomDialog from '~components/CustomDialog'
-import { _COLORS } from '~consts/Colors'
 import { OutTypes } from '~consts/Data'
 import { useUserContext } from './contexts/UserContext'
 
 const AddTagsScreen = () => {
+  const theme = useTheme()
+  // paper 5.x 的 TextInput ref 类型为 RN TextInput 与 TextInputHandles 的混合联合，
+  // useRef 无法干净表达，此处 any 为库类型怪癖的务实妥协
   const inputRef = useRef<any>(null)
   const [currentTags, setCurrentTags] = useState<OutType>() // 正在编辑的tag
   const [isShowDialog, setIsShowDialog] = useState(false)
@@ -22,6 +24,8 @@ const AddTagsScreen = () => {
   const { userStore } = useUserContext()
   const { currentUser } = userStore
 
+  const customTags = currentUser?.tags?.filter(item => item.isCustom) || []
+
   const onTagPress = (tag: OutType) => {}
 
   const onCustomTagPress = (tag: OutType) => {
@@ -31,11 +35,18 @@ const AddTagsScreen = () => {
 
   const handleAddTags = (str: string) => {
     if (!str.trim()) return
-    const _str = str.trim().replace('，', ',')
-    const strArr = _str.split(',').map(item => item.substring(0, 4))
+    // 全角逗号（，）与半角逗号（,）统一按逗号分割
+    const strArr = str
+      .trim()
+      .replace(/[,，]/g, ',')
+      .split(',')
+      .map(item => item.trim().substring(0, 4))
+      .filter(Boolean)
 
-    const tagsBeAdded = strArr.map(item => ({
-      id: Date.now().toString(),
+    if (strArr.length === 0) return
+
+    const tagsBeAdded = strArr.map((item, index) => ({
+      id: `${Date.now()}-${index}`,
       name: item,
       alias: item,
       icon: 'tag-plus-outline',
@@ -47,6 +58,14 @@ const AddTagsScreen = () => {
     inputRef.current?.clear()
   }
 
+  // 保存修改后的标签（名称/别名同步更新）
+  const handleSaveTag = () => {
+    if (!currentTags) return
+    if (!currentTags.name.trim()) return // 名称不能为空
+    userStore.updateTag({ ...currentTags, alias: currentTags.name.trim() })
+    setIsShowDialog(false)
+  }
+
   // 触发：点击删除按钮、键盘确认按钮
   const handleDelTag = () => {
     const str = tagBeDel.trim()
@@ -56,6 +75,7 @@ const AddTagsScreen = () => {
     userStore.removeTag(currentTags)
 
     setIsShowDialog(false)
+    setTagBeDel('')
     setSnackBar({
       visible: true,
       message: '删除标签成功',
@@ -63,61 +83,96 @@ const AddTagsScreen = () => {
   }
 
   return (
-    <View style={style.container}>
-      <View style={style.inputArea}>
-        <TextInput
-          ref={inputRef}
-          placeholder="添加标签"
-          style={{ borderBottomWidth: 1, borderBottomColor: _COLORS.main_50 }}
-          onSubmitEditing={e => handleAddTags(e.nativeEvent.text)}
-        />
-        <HelperText type="info" style={{ color: _COLORS.main_50 }}>
-          每个标签限制4个字符, 可添加多个标签, 以逗号分隔
-        </HelperText>
-      </View>
-      <CustomDivider text="默认标签" textPosi="left" />
-      <CustomChipPane items={OutTypes} onPress={item => onTagPress(item)} />
-      <CustomDivider text="自定义标签" textPosi="left" />
-      <CustomChipPane
-        items={currentUser?.tags?.filter(item => item.isCustom) || []}
-        onPress={item => onCustomTagPress(item)}
-      />
-      {currentUser?.tags?.length == 0 && (
-        <Text
-          style={{ color: _COLORS.main_50, textAlign: 'center' }}
-          onPress={() => inputRef.current.focus()}>
-          暂无自定义标签，去添加
-        </Text>
-      )}
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24, flexGrow: 1 }}>
+        {/* Card: Input Area */}
+        <View
+          style={{
+            borderRadius: 12,
+            backgroundColor: theme.colors.surfaceVariant,
+            paddingVertical: 12,
+            paddingHorizontal: 12,
+            marginBottom: 16,
+          }}>
+          <TextInput
+            ref={inputRef}
+            mode="outlined"
+            placeholder="添加标签"
+            onSubmitEditing={e => handleAddTags(e.nativeEvent.text)}
+            outlineStyle={{ borderRadius: 12 }}
+          />
+          <HelperText type="info" style={{ color: theme.colors.onSurfaceVariant }}>
+            每个标签限制4个字符, 可添加多个标签, 以逗号分隔
+          </HelperText>
+        </View>
+
+        {/* Card: Default Tags */}
+        <View
+          style={{
+            borderRadius: 12,
+            backgroundColor: theme.colors.surfaceVariant,
+            paddingVertical: 12,
+            paddingHorizontal: 12,
+            marginBottom: 16,
+          }}>
+          <CustomDivider text="默认标签" textPosi="left" style={{ marginVertical: 8 }} />
+          <CustomChipPane items={OutTypes} onPress={item => onTagPress(item)} />
+        </View>
+
+        {/* Card: Custom Tags */}
+        <View
+          style={{
+            borderRadius: 12,
+            backgroundColor: theme.colors.surfaceVariant,
+            paddingVertical: 12,
+            paddingHorizontal: 12,
+            marginBottom: 16,
+          }}>
+          <CustomDivider text="自定义标签" textPosi="left" style={{ marginVertical: 8 }} />
+          <CustomChipPane items={customTags} onPress={item => onCustomTagPress(item)} />
+          {customTags.length === 0 && (
+            <Text
+              style={{ color: theme.colors.primary, textAlign: 'center', marginTop: 12 }}
+              onPress={() => inputRef.current?.focus()}>
+              暂无自定义标签，去添加
+            </Text>
+          )}
+        </View>
+      </ScrollView>
       {isShowDialog && currentTags && (
-        <CustomDialog
-          width={380}
-          indicator={false}
-          onBackdropPress={() => setIsShowDialog(false)}>
-          <Text style={dialog.title}>管理标签</Text>
+        <CustomDialog width={Dimensions.get('window').width * 0.85} indicator={false} onBackdropPress={handleSaveTag}>
+          <Text style={[dialog.title, { color: theme.colors.primary }]}>管理标签</Text>
           <View style={dialog.editArea}>
             <CustomChipPane items={[currentTags]} onPress={item => {}} />
             <TextInput
               style={dialog.input}
+              mode="outlined"
               placeholder="修改名称"
-              onChangeText={text =>
-                setCurrentTags({ ...currentTags, name: text })
-              }
+              outlineStyle={{ borderRadius: 12 }}
+              onChangeText={text => setCurrentTags({ ...currentTags, name: text })}
             />
           </View>
+          <Button mode="contained" style={dialog.saveBtn} onPress={handleSaveTag}>
+            保存
+          </Button>
           <CustomDivider text="危险操作" />
           <View style={dialog.delArea}>
             <TextInput
               style={{ textAlign: 'center' }}
+              mode="outlined"
               placeholder="输入标签名删除此标签"
               value={tagBeDel}
+              outlineStyle={{ borderRadius: 12 }}
               onChangeText={text => setTagBeDel(text)}
               onSubmitEditing={handleDelTag}
             />
             {tagBeDel === currentTags.name && (
               <IconButton
                 icon="delete-forever-outline"
-                iconColor="#e54166"
+                iconColor={theme.colors.error}
                 style={{ position: 'absolute', right: 0 }}
                 onPress={handleDelTag}
               />
@@ -133,11 +188,7 @@ const AddTagsScreen = () => {
             setSnackBar({ ...snackBar, visible: false })
           },
         }}
-        style={{
-          backgroundColor: _COLORS.main,
-          marginLeft: 20,
-          marginRight: -20,
-        }}
+        style={{ backgroundColor: theme.colors.inverseSurface }}
         visible={snackBar.visible}
         onDismiss={() => setSnackBar({ ...snackBar, visible: false })}>
         {snackBar.message}
@@ -146,23 +197,10 @@ const AddTagsScreen = () => {
   )
 }
 
-const style = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'flex-start',
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-  },
-  inputArea: {
-    marginBottom: 20,
-  },
-})
-
 const dialog = StyleSheet.create({
   title: {
     textAlign: 'center',
     fontWeight: 'bold',
-    color: _COLORS.main,
   },
   editArea: {
     width: '100%',
@@ -179,8 +217,10 @@ const dialog = StyleSheet.create({
   input: {
     width: 150,
     marginLeft: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: _COLORS.main_50,
+  },
+  saveBtn: {
+    marginTop: 12,
+    borderRadius: 12,
   },
 })
 

@@ -4,6 +4,7 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
     "baseUrl": "./",
     "paths": {
       "~utils": ["./src/utils"],
@@ -13,7 +14,8 @@
       "~consts/*": ["./src/consts/*"],
       "~store/*": ["./src/store/*"],
       "~layouts/*": ["./src/layouts/*"],
-      "~assets/*": ["./src/assets/*"]
+      "~assets/*": ["./src/assets/*"],
+      "~api/*": ["./src/api/*"]
     }
   },
   "include": ["types", "src"],

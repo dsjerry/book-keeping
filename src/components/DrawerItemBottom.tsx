@@ -1,4 +1,4 @@
-import { View, ViewStyle } from 'react-native'
+import { View, ViewStyle, StyleSheet } from 'react-native'
 import { Button, useTheme } from 'react-native-paper'
 
 import { useUserStore } from '~store/userStore'
@@ -8,7 +8,7 @@ const CloseLogout = () => {
   const { currentUser, setCurrentUser, users } = useUserStore()
   const { items, clearItems } = useKeepingStore()
   const { add } = userUsersKeepingStore()
-  const theme = useTheme() // 获取当前主题
+  const theme = useTheme()
   const onBtnPress = () => {
     add({
       userid: currentUser!.id,
@@ -18,11 +18,7 @@ const CloseLogout = () => {
     clearItems()
   }
   return (
-    <View
-      style={{
-        paddingVertical: 10,
-        marginRight: 'auto',
-      }}>
+    <View style={style.closeLogout}>
       <Button mode="text" icon={'power'} textColor={theme.colors.primary} onPress={onBtnPress}>
         关闭 / 退出登录
       </Button>
@@ -37,5 +33,12 @@ const DrawerItemBottom = ({ style }: { style?: ViewStyle }) => {
     </View>
   )
 }
+
+const style = StyleSheet.create({
+  closeLogout: {
+    paddingVertical: 10,
+    marginRight: 'auto',
+  },
+})
 
 export default DrawerItemBottom

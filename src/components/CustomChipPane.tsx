@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { View, StyleSheet } from 'react-native'
 import { Chip } from 'react-native-paper'
 
@@ -15,20 +14,11 @@ interface Props {
 }
 
 const CustomChipPane: React.FC<Props> = ({ items, onPress }) => {
-  const chips = items
   const paneWidth = items.length > 1 ? '100%' : 'auto'
-
-  useEffect(() => {
-    return () => {
-      chips.forEach(item => {
-        item.isChecked = false
-      })
-    }
-  }, [])
 
   return (
     <View style={[style.pane, { width: paneWidth }]}>
-      {chips.map(item => (
+      {items.map(item => (
         <Chip
           selected={item.isChecked}
           showSelectedOverlay

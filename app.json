@@ -1,4 +1,15 @@
 {
   "name": "bk",
-  "displayName": "bk"
+  "displayName": "JKeep",
+  "version": "1.0.2",
+  "icon": "./assets/icon.png",
+  "splash": {
+    "image": "./assets/splash.png",
+    "resizeMode": "contain",
+    "backgroundColor": "#FFFFFF",
+    "dark": {
+      "image": "./assets/splash.png",
+      "backgroundColor": "#121212"
+    }
+  }
 }

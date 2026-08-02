@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react'
-import { Image } from 'react-native'
-import { List, Button, TextInput, HelperText } from 'react-native-paper'
+import { Image, ScrollView, View, Text, Pressable } from 'react-native'
+import { List, TextInput, HelperText, useTheme } from 'react-native-paper'
 import ImagePicker from 'react-native-image-crop-picker'
 
 import { useUserContext } from './contexts/UserContext'
-import { handleImage } from '~utils'
+import { handleImage, logging } from '~utils'
 import HalfModal from '~components/HalfModal'
 
 type HalfModalType = 'nickname' | 'note'
 
 const ProfileEdit = () => {
+  const theme = useTheme()
   const [isShowModal, setIsShowModal] = useState(false)
   const [halfModalType, setHalfModalType] = useState<HalfModalType>('nickname')
   const [editObj, setEditObj] = useState({ nickname: '', note: '', email: '' })
@@ -48,7 +49,7 @@ const ProfileEdit = () => {
 
       userStore.updateCurrentUser({ avatar: cropResult.path })
     } catch (error) {
-      console.log(error)
+      logging.error('[头像] 裁剪失败:', error)
     }
   }
 
@@ -76,73 +77,84 @@ const ProfileEdit = () => {
     })
   }
 
+  const renderValueRow = (value: string, disabled = false, onPress?: () => void) => (
+    <Pressable onPress={onPress} disabled={disabled} style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <Text
+        style={{
+          color: disabled ? theme.colors.onSurfaceDisabled : theme.colors.onSurfaceVariant,
+          marginRight: 4,
+          fontSize: 14,
+        }}
+        numberOfLines={1}>
+        {value}
+      </Text>
+      <List.Icon icon="chevron-right" />
+    </Pressable>
+  )
+
   return (
     <>
-      <List.Section
-        style={{
-          marginTop: 20,
-          paddingLeft: 10,
-          width: '100%',
-        }}>
-        <List.Item
-          title="UID"
-          right={props => (
-            <Button
-              icon={'chevron-right'}
-              textColor="grey"
-              contentStyle={{ flexDirection: 'row-reverse' }}
-              disabled={!!_currentUser.id}
-              onPress={generateUid}>
-              {_currentUser.id || '缺失, 点击分配'}
-            </Button>
-          )}
-        />
-        <List.Item
-          title="个人头像"
-          right={props =>
-            _currentUser.avatar ? (
-              <Image
-                source={{
-                  uri: _currentUser?.avatar,
-                  width: 50,
-                  height: 50,
-                }}
-                style={{
-                  marginRight: 15,
-                  borderRadius: 4,
-                }}
-              />
-            ) : null
-          }
-          onPress={onAvatarPress}
-        />
-        <List.Item
-          title="个性昵称"
-          right={props => (
-            <Button icon={'chevron-right'} textColor="grey" contentStyle={{ flexDirection: 'row-reverse' }}>
-              {editObj.nickname}
-            </Button>
-          )}
-          onPress={onNicknamePress}
-        />
-        <List.Item
-          title="个性签名"
-          right={props => (
-            <Button icon={'chevron-right'} textColor="grey" contentStyle={{ flexDirection: 'row-reverse' }}>
-              {editObj.note}
-            </Button>
-          )}
-          onPress={onNotePress}
-        />
-        <List.Item
-          title="邮箱"
-          right={props => (
-            <Button icon={'chevron-right'} textColor="grey" contentStyle={{ flexDirection: 'row-reverse' }}>
-              {editObj.email}
-            </Button>
-          )}
-        />
-      </List.Section>
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        style={{ backgroundColor: theme.colors.background }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24 }}>
+        <List.Section
+          style={{
+            marginTop: 20,
+            borderRadius: 12,
+            backgroundColor: theme.colors.surfaceVariant,
+          }}>
+          <List.Item
+            title="UID"
+            left={props => <List.Icon {...props} icon="account-key-outline" />}
+            right={props => renderValueRow(_currentUser.id || '缺失, 点击分配', !!_currentUser.id, generateUid)}
+          />
+          <List.Item
+            title="个人头像"
+            left={props => <List.Icon {...props} icon="account-circle-outline" />}
+            right={props =>
+              _currentUser.avatar ? (
+                <Image
+                  source={{ uri: _currentUser.avatar, width: 50, height: 50 }}
+                  style={{ borderRadius: 12, marginRight: 4 }}
+                />
+              ) : (
+                <View
+                  style={{
+                    width: 50,
+                    height: 50,
+                    borderRadius: 12,
+                    backgroundColor: theme.colors.primaryContainer,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    marginRight: 4,
+                  }}>
+                  <Text style={{ color: theme.colors.primary, fontSize: 20, fontWeight: '700' }}>
+                    {(_currentUser.username || '?').substring(0, 1).toUpperCase()}
+                  </Text>
+                </View>
+              )
+            }
+            onPress={onAvatarPress}
+          />
+          <List.Item
+            title="个性昵称"
+            left={props => <List.Icon {...props} icon="badge-account-outline" />}
+            right={props => renderValueRow(editObj.nickname, false, onNicknamePress)}
+          />
+          <List.Item
+            title="个性签名"
+            left={props => <List.Icon {...props} icon="text-box-outline" />}
+            right={props => renderValueRow(editObj.note, false, onNotePress)}
+          />
+          <List.Item
+            title="邮箱"
+            left={props => <List.Icon {...props} icon="email-outline" />}
+            right={props => renderValueRow(editObj.email)}
+          />
+        </List.Section>
+      </ScrollView>
       <HalfModal
         isShow={isShowModal}
         onClosePress={onHalfModalClose}
@@ -151,12 +163,10 @@ const ProfileEdit = () => {
         {halfModalType === 'nickname' ? (
           <>
             <TextInput
+              mode="outlined"
               value={editObj.nickname}
-              style={{
-                marginTop: 10,
-                borderWidth: 0,
-                backgroundColor: 'transparent',
-              }}
+              style={{ marginTop: 10 }}
+              outlineStyle={{ borderRadius: 12 }}
               onChangeText={text => setEditObj({ ...editObj, nickname: text })}
             />
             <HelperText style={{ marginBottom: 10, marginHorizontal: 5 }} type="info">
@@ -166,12 +176,10 @@ const ProfileEdit = () => {
         ) : (
           <>
             <TextInput
+              mode="outlined"
               value={editObj.note}
-              style={{
-                marginTop: 10,
-                borderWidth: 0,
-                backgroundColor: 'transparent',
-              }}
+              style={{ marginTop: 10 }}
+              outlineStyle={{ borderRadius: 12 }}
               onChangeText={text => setEditObj({ ...editObj, note: text })}
             />
             <HelperText style={{ marginBottom: 10, marginHorizontal: 5 }} type="info">

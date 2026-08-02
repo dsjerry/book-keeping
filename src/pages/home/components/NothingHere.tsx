@@ -1,12 +1,25 @@
-import { View, Text } from 'react-native'
-import { Icon } from 'react-native-paper'
+import { View, Text, StyleSheet } from 'react-native'
+import { Icon, useTheme } from 'react-native-paper'
 
 export function NothingHere() {
+  const theme = useTheme()
   return (
-    <View
-      style={{ height: '90%', justifyContent: 'center', alignItems: 'center' }}>
-      <Icon source="book-open-blank-variant" size={24} color="#6d57a7" />
-      <Text style={{ color: '#6d57a7', marginTop: 10 }}>这里什么都没有</Text>
+    <View style={[style.container, { backgroundColor: theme.colors.background }]}>
+      <Icon source="book-open-blank-variant" size={32} color={theme.colors.primary} />
+      <Text style={[style.text, { color: theme.colors.primary }]}>这里什么都没有</Text>
     </View>
   )
 }
+
+const style = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  text: {
+    marginTop: 12,
+    fontSize: 15,
+    fontWeight: '500',
+  },
+})

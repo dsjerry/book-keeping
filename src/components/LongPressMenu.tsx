@@ -1,13 +1,23 @@
 import { View, StyleSheet, GestureResponderEvent } from 'react-native'
-import { Menu } from 'react-native-paper'
+import { Menu, useTheme } from 'react-native-paper'
 
 /**
  * shadow 只能用来设置 IOS 的阴影，安卓端使用 elevation: number
  */
 
 const LongPressMenu: React.FC<Props> = ({ items, position, onPress }) => {
+  const theme = useTheme()
+
   return (
-    <View style={[style.container, { top: position?.y, left: position?.x }]}>
+    <View
+      style={[
+        style.container,
+        {
+          backgroundColor: theme.colors.surface,
+          top: position?.y,
+          left: position?.x,
+        },
+      ]}>
       {items.map(item => (
         <Menu.Item
           key={item.id}
@@ -23,14 +33,12 @@ const LongPressMenu: React.FC<Props> = ({ items, position, onPress }) => {
 
 const style = StyleSheet.create({
   container: {
-    width: '25%',
-    flex: 1,
+    minWidth: 140,
     position: 'absolute',
-    right: 30,
     zIndex: 9999,
-    backgroundColor: '#ffffff',
-    elevation: 5, // android 端设置阴影
-    borderRadius: 5,
+    elevation: 5,
+    borderRadius: 12,
+    paddingVertical: 4,
   },
   menu: {},
 })

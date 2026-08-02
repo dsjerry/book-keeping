@@ -1,4 +1,4 @@
-import { Platform, View, Text } from 'react-native'
+import { Platform } from 'react-native'
 import { MenuView } from '@react-native-menu/menu'
 import type { MenuAction, NativeActionEvent } from '@react-native-menu/menu'
 

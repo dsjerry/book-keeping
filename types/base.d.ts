@@ -13,6 +13,8 @@ interface AppSettings {
   useOnline: boolean
   confirmExitEdit: boolean
   confirmRemove: boolean
+  useBiometrics: boolean
+  themeMode: 'system' | 'light' | 'dark'
 }
 
 interface User {
@@ -24,6 +26,7 @@ interface User {
   useOnline?: boolean
   email?: string
   tags?: OutType[]
+  serverId?: number // 启用线上之后的ID
 }
 
 interface OutType {

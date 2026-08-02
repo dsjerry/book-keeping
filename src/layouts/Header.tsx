@@ -2,18 +2,14 @@ import { useMemo } from 'react'
 import { View, Text, StyleSheet, Pressable } from 'react-native'
 import { IconButton, Menu, Divider, useTheme } from 'react-native-paper'
 import { getFocusedRouteNameFromRoute } from '@react-navigation/native'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 
 import type { StackHeaderProps } from '@react-navigation/stack'
 
 import HalfModal from '~components/HalfModal'
 import { useKeepingStore } from '~store/keepingStore'
 import { logging } from '~utils'
-import {
-  SortByPane,
-  FilterByPane,
-  MenuItemFroChecked,
-  MenuItemForNormal,
-} from './widgets'
+import { SortByPane, FilterByPane, MenuItemFroChecked, MenuItemForNormal } from './widgets'
 import { useHeaderContext } from '../contexts/HeaderContext'
 
 interface HeaderProps extends StackHeaderProps {
@@ -22,56 +18,42 @@ interface HeaderProps extends StackHeaderProps {
 }
 export type RightMenuItem = 'sort' | 'filter' | 'all' | 'invert' | 'delete'
 
-const Header: React.FC<HeaderProps> = ({
-  route,
-  navigation,
-  options,
-  toggleDrawer,
-}) => {
+const Header: React.FC<HeaderProps> = ({ route, navigation, options, toggleDrawer }) => {
+  const insets = useSafeAreaInsets()
   // 获取当前主题
-  const theme = useTheme();
-  const {
-    items,
-    sort,
-    sortBy,
-    sortOrder,
-    filterBy,
-    filter,
-    selectAll,
-    selectInverse,
-    removeChecked,
-  } = useKeepingStore()
+  const theme = useTheme()
+  const { items, sort, sortBy, sortOrder, filterBy, filter, selectAll, selectInverse, removeChecked } =
+    useKeepingStore()
   const {
     state: { isShowRightMenu, isShowBottomModal, halfModalType },
     dispatch,
   } = useHeaderContext()
 
   // 子页面（不在 AppLayout 里面的）路由，自定义软件头
+  const _name = (getFocusedRouteNameFromRoute(route) ?? 'Home') as keyof ScreenParamsList
+
   const _header = useMemo<{
     title: string | undefined
     type: 'back' | 'menu'
   }>(() => {
-    const routeName = () => {
-      const name = getFocusedRouteNameFromRoute(route) ?? 'Home'
-      return name as keyof ScreenParamsList
-    }
-
-    const _name = routeName()
-    console.log('路由:', _name)
-
     switch (_name) {
       case 'ProfileEditScreen':
         return { title: '编辑信息', type: 'back' }
-      case 'LoginScreen':
-        return { title: '登录 / 注册', type: 'back' }
       case 'AboutScreen':
         return { title: '关于', type: 'back' }
       case 'AddTagsScreen':
         return { title: '编辑标签', type: 'back' }
+      case 'PermissionScreen':
+        return { title: '权限管理', type: 'back' }
+      case 'LicensesScreen':
+        return { title: '开源许可', type: 'back' }
       default:
         return { title: options.title, type: 'menu' }
     }
-  }, [route])
+  }, [_name])
+
+  // 登录/注册页采用全屏沉浸式布局，不展示顶部导航栏
+  if (_name === 'LoginScreen') return null
 
   const page = route.name
 
@@ -85,7 +67,7 @@ const Header: React.FC<HeaderProps> = ({
   }
 
   const onLeftMenuPress = () => toggleDrawer && toggleDrawer()
-  const onRightMenuClose = () => { }
+  const onRightMenuClose = () => {}
   const onRightMenuItemPress = (item: RightMenuItem) => {
     // TODO
     if (item == 'filter' || item == 'sort') {
@@ -124,13 +106,19 @@ const Header: React.FC<HeaderProps> = ({
   }
 
   return (
-    <Pressable style={[style.container, { backgroundColor: theme.colors.elevation.level5 }]}>
+    <Pressable
+      style={[
+        style.container,
+        {
+          paddingTop: insets.top,
+          backgroundColor: theme.colors.elevation.level5,
+          borderBottomWidth: StyleSheet.hairlineWidth,
+          borderBottomColor: theme.colors.outlineVariant,
+        },
+      ]}>
       <View>
         {_header.type === 'back' ? (
-          <IconButton
-            icon={'chevron-left'}
-            onPress={() => navigation.goBack()}
-          />
+          <IconButton icon={'chevron-left'} onPress={() => navigation.goBack()} />
         ) : (
           <IconButton icon="menu" onPress={onLeftMenuPress} />
         )}
@@ -148,6 +136,7 @@ const Header: React.FC<HeaderProps> = ({
           <Menu
             visible={isShowRightMenu}
             onDismiss={onRightMenuClose}
+            statusBarHeight={insets.top}
             anchor={
               <IconButton
                 icon={itemSelected > 0 ? 'menu-open' : 'dots-vertical'}
@@ -155,22 +144,10 @@ const Header: React.FC<HeaderProps> = ({
                 onPress={() => setIsShowRightMenu(true)}
               />
             }>
-            {itemSelected > 0 && (
-              <MenuItemFroChecked
-                onPress={value => onRightMenuItemPress(value)}
-              />
-            )}
-            {itemSelected === 0 && (
-              <MenuItemForNormal
-                onPress={value => onRightMenuItemPress(value)}
-              />
-            )}
+            {itemSelected > 0 && <MenuItemFroChecked onPress={value => onRightMenuItemPress(value)} />}
+            {itemSelected === 0 && <MenuItemForNormal onPress={value => onRightMenuItemPress(value)} />}
             <Divider />
-            <Menu.Item
-              onPress={() => setIsShowRightMenu(false)}
-              title="取消"
-              leadingIcon={'close'}
-            />
+            <Menu.Item onPress={() => setIsShowRightMenu(false)} title="取消" leadingIcon={'close'} />
           </Menu>
         )}
       </View>
@@ -190,8 +167,6 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
-    // 背景色将通过主题动态设置
-    elevation: 10,
   },
   right: {
     flexDirection: 'row',

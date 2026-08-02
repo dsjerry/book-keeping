@@ -56,18 +56,16 @@ const createCountingSlice: StateCreator<CommonSlice, [], [], CountingSlice> = (
   income: 0,
   setCounting: () => {
     const items = get().items
-    const outputItem = items.filter(item => item.type === 'out')
-    const incomeItem = items.filter(item => item.type === 'in')
-
-    let output = 0,
-      income = 0
-    outputItem.forEach(item => {
-      output += parseFloat(item.count)
+    let output = 0
+    let income = 0
+    items.forEach(item => {
+      const amount = Number(item.count) || 0
+      if (item.type === 'out') {
+        output += amount
+      } else if (item.type === 'in') {
+        income += amount
+      }
     })
-    incomeItem.forEach(item => {
-      income += parseFloat(item.count)
-    })
-
     set({ record: items.length, output, income })
   },
 })
@@ -95,32 +93,46 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
 ) => ({
   items: [],
   add: item => {
-    set(state => {
-      item.id = Date.now().toString()
-      item.date = Date.now()
-      item.no = state.items.length + 1
-      item.useToFilter = [
-        ...item.tags.map(item => item.alias),
+    const newItem: KeepingItem = {
+      ...item,
+      id: item.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      date: item.date || Date.now(),
+      no: item.no || get().items.length + 1,
+      useToFilter: [
+        ...item.tags.map(tag => tag.alias),
         CountType[item.countType],
-      ]
-      return { items: [...state.items, item] }
-    })
+      ],
+    }
+    set(state => ({ items: [...state.items, newItem] }))
 
     get().sort({ sortBy: get().sortBy, sortOrder: get().sortOrder })
   },
-  addItems: items => {
-    set(state => ({ items: [...items] }))
+  // 合并批量数据（登录后加载 / 服务端同步），按 id 去重并保留本地已有记录
+  addItems: incoming => {
+    set(state => {
+      const incomingIds = new Set(incoming.map(item => item.id))
+      const existing = state.items.filter(item => !incomingIds.has(item.id))
+      return { items: [...existing, ...incoming] }
+    })
   },
   clearItems: () => {
     set({ items: [] })
   },
   remove: id => {
-    set(state => ({ items: state.items.filter(item => item.id !== id) }))
+    // 软删除，等待同步时上报服务端
+    set(state => ({
+      items: state.items.map(item =>
+        item.id === id ? { ...item, syncStatus: 'deleted' } : item,
+      ),
+    }))
   },
   removeChecked: () => {
-    const items = get().items
     set(state => ({
-      items: items.filter(item => !item.isChecked),
+      items: state.items.map(item =>
+        item.isChecked
+          ? { ...item, isChecked: false, syncStatus: 'deleted' as SyncStatus }
+          : item,
+      ),
     }))
   },
   update: item => {
@@ -136,52 +148,42 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
     }))
   },
   selectAll: () => {
-    const items = get().items
-    items.forEach(item => {
-      item.isChecked = true
-    })
-    set(state => ({ ...state, items }))
+    set(state => ({
+      items: state.items.map(item => ({ ...item, isChecked: true })),
+    }))
   },
   selectInverse: () => {
-    const items = get().items
-    items.forEach(item => {
-      item.isChecked = !item.isChecked
-    })
-    set(state => ({ ...state, items }))
+    set(state => ({
+      items: state.items.map(item => ({
+        ...item,
+        isChecked: !item.isChecked,
+      })),
+    }))
   },
   sort: ({ sortBy, sortOrder }) => {
-    let items = get().items
+    const items = get().items
+    let sorted = items
     // 按日期排序
     if (sortBy === 'date') {
-      items = _.orderBy(items, 'date', sortOrder)
+      sorted = _.orderBy(items, 'date', sortOrder)
     }
     // 按金额排序
     else if (sortBy === 'amount') {
-      items = _.orderBy(items, 'count', sortOrder)
+      sorted = _.orderBy(items, 'count', sortOrder)
     }
-    set({ items })
+    set({ items: sorted })
   },
   filter: () => {
-    const items = get().items
     const filterBy = get().filterBy
-    if (filterBy.length === 0) {
-      items.forEach(item => {
-        item.isShow = true
-      })
-      return set(state => ({ ...state, items }))
-    }
-
-    for (let i = 0; i < items.length; i++) {
-      for (let j = 0; j < filterBy.length; j++) {
-        let useToFilter = items[i].useToFilter
-        if (useToFilter.includes(filterBy[j])) {
-          items[i].isShow = true
-        } else {
-          items[i].isShow = false
+    set(state => ({
+      items: state.items.map(item => {
+        if (filterBy.length === 0) {
+          return { ...item, isShow: true }
         }
-      }
-    }
-    set(state => ({ ...state, items }))
+        const shouldShow = filterBy.some(f => item.useToFilter?.includes(f))
+        return { ...item, isShow: shouldShow }
+      }),
+    }))
   },
 })
 
@@ -218,15 +220,16 @@ export const userUsersKeepingStore = create<UsersKeepingSlice>()(
     (set, get) => ({
       items: [],
       add: item => {
-        const arr = get().items.map(user => {
-          if (user.userid === item.userid) {
-            return item
-          } else {
-            return user
-          }
+        set(state => {
+          const exists = state.items.some(user => user.userid === item.userid)
+          return exists
+            ? {
+                items: state.items.map(user =>
+                  user.userid === item.userid ? item : user,
+                ),
+              }
+            : { items: [...state.items, item] }
         })
-
-        set({ items: arr })
       },
       get(userid) {
         return get().items.find(item => item.userid === userid)

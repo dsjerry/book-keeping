@@ -5,17 +5,19 @@
 使用脚手架搭建，主要用到的库：
 
 - 界面
-    - 组件库：react-native-paper
-    - 图表：@wuba/react-native-echarts
-    - 图标：react-native-vector-icons
+
+  - 组件库：react-native-paper
+  - 图表：@wuba/react-native-echarts
+  - 图标：react-native-vector-icons
 
 - 存储
-    - 状态管理：zustand
-    - 持久化：async-storage
+
+  - 状态管理：zustand
+  - 持久化：async-storage
 
 - LLM 调用：ai、@ai-sdk/deepseek
 
-# 开发和打包
+## 开发和打包
 
 使用 yarn 安装依赖
 
@@ -39,7 +41,7 @@ cd android
 
 - [打包教程](https://reactnative.cn/docs/signed-apk-android)
 
-# 预览
+## 预览
 
 <div>
 <img src="https://s21.ax1x.com/2025/01/05/pE9E9j1.jpg" alt="首页-空" width="200" />
@@ -50,3 +52,18 @@ cd android
 <img src="https://s21.ax1x.com/2025/05/12/pEXkxzj.jpg" alt="首页-暗色" width="200" />
 <img src="https://s21.ax1x.com/2025/05/12/pEXASQs.jpg" alt="AI分析-暗色" width="200" />
 </div>
+
+## 数据同步流程
+
+1. 首次同步：
+
+   - 调用`sync`同步方法发送本地变更
+   - 服务端处理并且返回结果
+   - 更新本地数据状态（同步、新增、修改、删除）
+
+2. 处理冲突：
+   - 如果有冲突的数据，客户端显示冲突信息并且展示解决方式（客户端、服务端、合并）
+   - 使用`resolveConflicts`生成解决方案
+   - 再次调用`sync(resolutions)`同步方法将数据发给服务端
+   - 服务端处理并且返回结果
+   - 更新本地数据状态（同步、新增、修改、删除）

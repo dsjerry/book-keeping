@@ -1,4 +1,4 @@
-package com.bk
+package com.dsjerry.bk
 
 import android.app.Application
 import com.facebook.react.PackageList

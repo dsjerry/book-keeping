@@ -1,10 +1,12 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.USE_BIOMETRIC" />
 
     <application
       android:name=".MainApplication"
@@ -27,5 +29,11 @@
             <category android:name="android.intent.category.LAUNCHER" />
         </intent-filter>
       </activity>
+
+      <!-- 覆盖 Ucrop 裁剪 Activity 主题：退出 Android 15+ 强制 edge-to-edge，避免内容顶到状态栏 -->
+      <activity
+        android:name="com.yalantis.ucrop.UCropActivity"
+        android:theme="@style/UcropTheme"
+        tools:replace="android:theme" />
     </application>
 </manifest>

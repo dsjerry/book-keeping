@@ -1,11 +1,10 @@
-import React, { useEffect, useState, useRef } from 'react'
-import { StyleSheet, ScrollView, View, Text, TouchableOpacity, Animated } from 'react-native'
+import React, { useEffect, useState, useRef, useMemo } from 'react'
+import { StyleSheet, ScrollView, View, Text, TouchableOpacity } from 'react-native'
 import { Card, Button, Divider, List, useTheme } from 'react-native-paper'
-import { ButtonGroup } from '@rneui/themed'
 import { captureRef } from 'react-native-view-shot'
 import Share from 'react-native-share'
 import Config from 'react-native-config'
-import { deepseek, createDeepSeek } from '@ai-sdk/deepseek'
+import { createDeepSeek } from '@ai-sdk/deepseek'
 import { generateObject } from 'ai'
 import { z } from 'zod'
 import { format } from 'date-fns'
@@ -13,18 +12,18 @@ import { format } from 'date-fns'
 import { useKeepingStore } from '~store/keepingStore'
 import { useAnalyzeStore, AnalysisResult } from '~store/analyzeStore'
 import { GetData } from '~utils'
-import { _COLORS } from '~consts/Colors'
+import SegmentedControl from '~components/SegmentedControl'
 import { PiePane, CountBarChart, LoadingIndicator } from './components'
 
 // 初始化DeepSeek客户端
 const deepseekClient = createDeepSeek({
-  apiKey: Config.DEEPSEEK_API_KEY || 'your-key'
+  apiKey: Config.DEEPSEEK_API_KEY || '',
 })
 
 // 定义AI分析结果的数据模式
 const AnalysisResultSchema = z.object({
   reasoning: z.string().optional(),
-  answer: z.string()
+  answer: z.string(),
 })
 
 const Home = () => {
@@ -38,17 +37,19 @@ const Home = () => {
   const [showReasoning, setShowReasoning] = useState(false) // 控制推理过程的显示/隐藏
   const [showHistory, setShowHistory] = useState(false) // 控制历史分析记录的显示/隐藏
 
-  // 添加动画值
-  const fadeAnim = useRef(new Animated.Value(1)).current
+  // 动画值已移除：Animated.View 的 opacity/transform 动画会导致卡片阴影异常
 
   const { items, output, income, setCounting } = useKeepingStore()
-  const { results, addResult, getResult } = useAnalyzeStore() // 使用分析结果存储
+  const { results, addResult, getResult } = useAnalyzeStore()
 
   const shareRef = useRef<any>(null)
 
-  const chartData = new GetData(items)
-  const { tagCounts, aliasCountArray } = chartData.getTags()
-  const data = chartData.getDate()
+  const chartData = useMemo(() => new GetData(items), [items])
+  const { tagCounts, aliasCountArray } = useMemo(() => chartData.getTags(), [chartData])
+  const data = useMemo(() => chartData.getDate(), [chartData])
+  // 地点分布数据也必须 useMemo 缓存稳定引用——直接调用会在每次渲染时生成新数组，
+  // 导致图表组件 useEffect 依赖 data 变化而销毁重建（echarts.init 开销大，是卡顿根因）
+  const locationData = useMemo(() => chartData.getLocation(false), [chartData])
 
   useEffect(() => {
     setCounting()
@@ -60,26 +61,9 @@ const Home = () => {
   }, [output, income])
 
   const onCountTypePress = (index: number) => {
-    // 先淡出
-    Animated.timing(fadeAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true
-    }).start(() => {
-      setBtnIndex(index)
-      if (index === 0) {
-        setDisplay({ count: output })
-      } else {
-        setDisplay({ count: income })
-      }
-
-      // 然后淡入
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 300,
-        useNativeDriver: true
-      }).start()
-    })
+    if (index === btnIndex) return
+    setBtnIndex(index)
+    setDisplay({ count: index === 0 ? output : income })
   }
 
   const onShare = async () => {
@@ -128,7 +112,8 @@ const Home = () => {
         prompt: prompt,
         temperature: 0.2, // 降低随机性，使回答更加确定
         maxTokens: 1000, // 增加token限制以容纳推理过程
-        system: "你是一个专业的财务分析师，擅长分析消费数据并给出合理的理财建议。请使用中文回答。请直接返回一个包含reasoning和answer字段的JSON对象，其中reasoning是你的思考过程，answer是你的最终建议。不要在回答中使用<think>或<answer>等标签。"
+        system:
+          '你是一个专业的财务分析师，擅长分析消费数据并给出合理的理财建议。请使用中文回答。请直接返回一个包含reasoning和answer字段的JSON对象，其中reasoning是你的思考过程，answer是你的最终建议。不要在回答中使用 thinking或<answer>等标签。',
       })
 
       // 设置结果到状态中
@@ -144,10 +129,10 @@ const Home = () => {
           income,
           tagCounts,
           aliasCountArray,
-          timeDistribution: data
+          timeDistribution: data,
         },
         result: analysisResult.answer,
-        reasoning: analysisResult.reasoning
+        reasoning: analysisResult.reasoning,
       })
     } catch (error) {
       console.error('AI分析出错:', error)
@@ -191,52 +176,49 @@ const Home = () => {
         <>
           {/* 支出/收入 切换 */}
           <Card style={homeStyle.card}>
-            <ButtonGroup
-              selectedIndex={btnIndex}
-              selectedButtonStyle={{ backgroundColor: _COLORS.main }}
-              buttons={['支出', '收入']}
-              onPress={index => onCountTypePress(index)}
-              containerStyle={{
-                borderRadius: 10,
-                backgroundColor: theme.colors.elevation.level5,
-              }}
+            <SegmentedControl
+              options={['支出', '收入']}
+              activeIndex={btnIndex}
+              onChange={onCountTypePress}
+              style={{ marginHorizontal: 10, marginVertical: 5 }}
             />
           </Card>
-          <Animated.View
-            style={[homeStyle.sharepane, { opacity: fadeAnim }]}
-            collapsable={false}
-            ref={shareRef}>
+          <View style={homeStyle.sharepane} collapsable={false} ref={shareRef}>
             <Card style={[homeStyle.card, countPaneStyle.container]}>
               <View style={countPaneStyle.count}>
                 <Text style={[countPaneStyle.countNum, { color: theme.colors.primary }]}>{display.count}</Text>
-                <Text>&nbsp;&nbsp;元</Text>
+                <Text style={[countPaneStyle.unitText, { color: theme.colors.primary }]}>{'  '}元</Text>
               </View>
             </Card>
             {/* 各个图表 */}
             {btnIndex === 0 && <PiePane data={tagCounts} units="次" title="消费类型" />}
             <PiePane data={aliasCountArray} units="元" title="金额占比" />
             {/* 消费地点分布图表 */}
-            {btnIndex === 0 && <PiePane data={chartData.getLocation(false)} units="元" title="消费地点" />}
+            {btnIndex === 0 && <PiePane data={locationData} units="元" title="消费地点" />}
             {btnIndex === 0 && <CountBarChart data={data} title="消费时间" />}
-          </Animated.View>
+          </View>
 
           {/* AI分析结果 */}
           {aiResult ? (
-            <Card style={[homeStyle.card, { marginVertical: 10, padding: 15 }]}>
-              <Text style={{ fontWeight: 'bold', marginBottom: 10, color: theme.colors.primary }}>AI分析结果</Text>
-              <Text>{aiResult}</Text>
+            <Card style={[homeStyle.card, aiStyles.resultCard]}>
+              <Text style={[aiStyles.resultTitle, { color: theme.colors.primary }]}>AI分析结果</Text>
+              <Text style={{ color: theme.colors.onSurface }}>{aiResult}</Text>
 
               {/* 显示AI推理过程（可折叠） */}
               {aiReasoning ? (
                 <View>
-                  <TouchableOpacity onPress={toggleReasoning} style={{ marginTop: 15, flexDirection: 'row', alignItems: 'center' }}>
-                    <Text style={{ fontWeight: 'bold', color: theme.colors.outline, marginRight: 5 }}>AI思考过程</Text>
-                    <Text style={{ color: theme.colors.outline, fontSize: 12 }}>{showReasoning ? '(点击收起)' : '(点击展开)'}</Text>
+                  <TouchableOpacity onPress={toggleReasoning} style={aiStyles.toggleRow}>
+                    <Text style={[aiStyles.toggleLabel, { color: theme.colors.outline }]}>AI思考过程</Text>
+                    <Text style={[aiStyles.toggleHint, { color: theme.colors.outline }]}>
+                      {showReasoning ? '(点击收起)' : '(点击展开)'}
+                    </Text>
                   </TouchableOpacity>
 
                   {showReasoning && (
-                    <View style={{ marginTop: 5, padding: 10, backgroundColor: theme.colors.surfaceVariant, borderRadius: 5 }}>
-                      <Text style={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}>{aiReasoning}</Text>
+                    <View style={[aiStyles.reasoningBox, { backgroundColor: theme.colors.surfaceVariant }]}>
+                      <Text style={[aiStyles.reasoningText, { color: theme.colors.onSurfaceVariant }]}>
+                        {aiReasoning}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -246,26 +228,32 @@ const Home = () => {
 
           {/* AI分析历史记录 */}
           {results.length > 0 && (
-            <Card style={[homeStyle.card, { marginVertical: 10 }]}>
-              <Card.Title title="AI分析历史" />
+            <Card style={[homeStyle.card, aiStyles.historyCard]}>
+              <Card.Title title="AI分析历史" titleStyle={{ color: theme.colors.onSurface }} />
               <Card.Content>
-                <TouchableOpacity onPress={toggleHistory} style={{ flexDirection: 'row', alignItems: 'center' }}>
-                  <Text style={{ fontWeight: 'bold', color: theme.colors.outline, marginRight: 5 }}>历史记录</Text>
-                  <Text style={{ color: theme.colors.outline, fontSize: 12 }}>{showHistory ? '(点击收起)' : `(点击展开, ${results.length}条)`}</Text>
+                <TouchableOpacity onPress={toggleHistory} style={aiStyles.toggleRow}>
+                  <Text style={[aiStyles.toggleLabel, { color: theme.colors.outline }]}>历史记录</Text>
+                  <Text style={[aiStyles.toggleHint, { color: theme.colors.outline }]}>
+                    {showHistory ? '(点击收起)' : `(点击展开, ${results.length}条)`}
+                  </Text>
                 </TouchableOpacity>
 
                 {showHistory && (
-                  <View style={{ maxHeight: 300 }}>
+                  <View style={aiStyles.historyList}>
                     {[...results].reverse().map(item => (
                       <React.Fragment key={item.id}>
                         <List.Item
                           title={formatDate(item.timestamp)}
+                          titleStyle={{ color: theme.colors.onSurface }}
                           description={`支出: ${item.data.output}元 | 收入: ${item.data.income}元`}
-                          left={props => <List.Icon {...props} icon="history" />}
+                          descriptionStyle={{ color: theme.colors.onSurfaceVariant }}
+                          left={props => <List.Icon {...props} icon="history" color={theme.colors.onSurfaceVariant} />}
                           onPress={() => loadHistoryResult(item)}
-                          style={{ paddingVertical: 4 }}
+                          style={aiStyles.historyItem}
                         />
-                        {item.id !== results[0].id && <Divider />}
+                        {item.id !== results[0].id && (
+                          <Divider style={{ backgroundColor: theme.colors.outlineVariant }} />
+                        )}
                       </React.Fragment>
                     ))}
                   </View>
@@ -274,13 +262,14 @@ const Home = () => {
             </Card>
           )}
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-            <Button icon={'share'} mode="text" onPress={onShare}>
+          <View style={homeStyle.actionRow}>
+            <Button icon={'share'} mode="text" textColor={theme.colors.primary} onPress={onShare}>
               {'分享'}
             </Button>
             <Button
               icon={'robot'}
               mode="text"
+              textColor={theme.colors.primary}
               onPress={aiAnalysis}
               loading={aiLoading}
               disabled={aiLoading}>
@@ -298,26 +287,87 @@ const homeStyle = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    justifyContent: 'center',
+    flexGrow: 1,
     alignItems: 'center',
     paddingBottom: 20,
+    paddingHorizontal: 16,
   },
   card: {
-    width: '90%',
+    width: '100%',
     marginTop: 20,
+    borderRadius: 12,
   },
   sharepane: {
-    flex: 1,
+    width: '100%',
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 16,
+    marginBottom: 24,
+    paddingHorizontal: 4,
   },
 })
 
 const countPaneStyle = StyleSheet.create({
-  container: { width: 'auto', paddingHorizontal: 20, paddingVertical: 20 },
+  container: {
+    width: '100%',
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderRadius: 12,
+  },
   count: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  countNum: { fontSize: 24, fontWeight: 'bold' }, // 颜色将通过主题动态设置
+  countNum: { fontSize: 24, fontWeight: 'bold' },
+  unitText: { fontSize: 16 },
+})
+
+const aiStyles = StyleSheet.create({
+  resultCard: {
+    marginVertical: 10,
+    padding: 16,
+    borderRadius: 12,
+  },
+  resultTitle: {
+    fontWeight: 'bold',
+    marginBottom: 10,
+    fontSize: 14,
+  },
+  toggleRow: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  toggleLabel: {
+    fontWeight: 'bold',
+    marginRight: 5,
+    fontSize: 13,
+  },
+  toggleHint: {
+    fontSize: 12,
+  },
+  reasoningBox: {
+    marginTop: 8,
+    padding: 12,
+    borderRadius: 12,
+  },
+  reasoningText: {
+    fontSize: 12,
+  },
+  historyCard: {
+    marginVertical: 10,
+    borderRadius: 12,
+  },
+  historyList: {
+    maxHeight: 300,
+  },
+  historyItem: {
+    paddingVertical: 4,
+  },
 })
 
 export default Home

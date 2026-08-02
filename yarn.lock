@@ -2785,6 +2785,11 @@
   resolved "https://registry.yarnpkg.com/@rneui/themed/-/themed-4.0.0-rc.8.tgz#5c0e1aaa3d190ead88936693c5cef50ec404cd05"
   integrity sha512-8L/XOrL9OK/r+/iBLvx63TbIdZOXF8SIjN9eArMYm6kRbMr8m4BitXllDN8nBhBsSPNYvL6EAgjk+i2MfY4sBA==
 
+"@sbaiahmed1/react-native-biometrics@^0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@sbaiahmed1/react-native-biometrics/-/react-native-biometrics-0.7.2.tgz#e58d04ccaffc2fa893048d3452f301ef0c1b1689"
+  integrity sha512-HPAXVqfMQ8nMShdAVUgOOwRahn+Dfg9NG3ccVx0naeg1Xfp61Tz1wk/7G9EzuqdXxnaaxna1T81tGCRUe/ziJw==
+
 "@shopify/react-native-skia@^1.2.3":
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@shopify/react-native-skia/-/react-native-skia-1.2.3.tgz#d87efd01c362b69f62375ce950c30e453586d6f9"
@@ -6943,10 +6948,10 @@ react-native-reanimated@^3.8.1:
     convert-source-map "^2.0.0"
     invariant "^2.2.4"
 
-react-native-safe-area-context@^4.9.0:
-  version "4.9.0"
-  resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-4.9.0.tgz#21a570ca3594cb4259ba65f93befaa60d91bcbd0"
-  integrity sha512-/OJD9Pb8IURyvn+1tWTszWPJqsbZ4hyHBU9P0xhOmk7h5owSuqL0zkfagU0pg7Vh0G2NKQkaPpUKUMMCUMDh/w==
+react-native-safe-area-context@4:
+  version "4.14.1"
+  resolved "https://registry.yarnpkg.com/react-native-safe-area-context/-/react-native-safe-area-context-4.14.1.tgz#980c3c9db02a2314fa8ceb07f614728802320367"
+  integrity sha512-+tUhT5WBl8nh5+P+chYhAjR470iCByf9z5EYdCEbPaAK3Yfzw+o8VRPnUgmPAKlSccOgQBxx3NOl/Wzckn9ujg==
 
 react-native-screens@^3.30.1:
   version "3.30.1"

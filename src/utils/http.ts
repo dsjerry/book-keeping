@@ -1,195 +1,193 @@
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
-import Config from 'react-native-config';
+import axios, {
+  AxiosError,
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+} from 'axios'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import Config from 'react-native-config'
+import { logging } from './logger'
+import { Auth } from '../api/auth'
 
 // 默认配置
-const DEFAULT_TIMEOUT = 30000; // 30秒超时
-const TOKEN_KEY = 'auth_token';
+const DEFAULT_TIMEOUT = 30000 // 30秒超时
 
-// 响应数据接口
+export const TOKEN_KEY = 'token'
+
 export interface ApiResponse<T = any> {
-  code: number;
-  data: T;
-  message: string;
-  success: boolean;
+  code: number
+  data: T
+  message: string
+  success: boolean
+  timestamp: string
 }
 
-// 创建HTTP实例
+const STATUS_MESSAGES: Record<number, string> = {
+  // 4xx 客户端错误
+  400: '请求参数校验失败',
+  401: '身份验证失败',
+  403: '无权限访问资源',
+  404: '资源不存在',
+  409: '资源冲突',
+  422: '实体校验失败',
+  // 5xx 服务端错误
+  500: '服务器内部错误',
+  502: '上游服务不可用',
+  503: '服务暂时不可用',
+  504: '网关请求超时',
+}
+
 class HttpClient {
-  private instance: AxiosInstance;
-  private baseURL: string;
+  private instance: AxiosInstance
+  private baseURL: string
 
   constructor() {
-    // 从环境变量获取API基础URL，如果没有则使用默认值
-    this.baseURL = Config.API_URL || 'https://api.example.com';
-    
-    // 创建axios实例
+    this.baseURL = Config.API_URL || 'http://127.0.0.1:3031'
+
     this.instance = axios.create({
       baseURL: this.baseURL,
       timeout: DEFAULT_TIMEOUT,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Platform': Platform.OS,
-        'X-App-Version': Config.APP_VERSION || '1.0.0',
       },
-    });
+    })
 
-    // 初始化拦截器
-    this.setupInterceptors();
+    this.setupInterceptors()
   }
 
-  // 配置请求和响应拦截器
   private setupInterceptors() {
-    // 请求拦截器
     this.instance.interceptors.request.use(
-      async (config) => {
-        // 从AsyncStorage获取token并添加到请求头
-        const token = await AsyncStorage.getItem(TOKEN_KEY);
+      async config => {
+        const token = await Auth.getToken()
         if (token && config.headers) {
-          config.headers.Authorization = `Bearer ${token}`;
+          config.headers.Authorization = 'Bearer ' + token.access_token
         }
-        return config;
+        return config
       },
-      (error) => {
-        return Promise.reject(error);
-      }
-    );
+      error => {
+        logging.error('[REQ] ' + this.baseURL, error)
+        return Promise.reject(error)
+      },
+    )
 
-    // 响应拦截器
     this.instance.interceptors.response.use(
       (response: AxiosResponse) => {
-        // 直接返回响应数据
-        return response.data;
+        return response.data
       },
-      (error: AxiosError) => {
-        // 处理错误响应
-        if (error.response) {
-          // 服务器返回了错误状态码
-          const status = error.response.status;
-          
-          // 处理401未授权错误（token过期或无效）
-          if (status === 401) {
-            // 清除本地token
-            AsyncStorage.removeItem(TOKEN_KEY);
-            // 这里可以添加重定向到登录页面的逻辑
-          }
-          
-          // 返回错误信息
-          return Promise.reject({
-            code: status,
-            message: this.getErrorMessage(status, error.response.data),
-            data: null,
-            success: false
-          });
-        } else if (error.request) {
-          // 请求已发出但没有收到响应
-          return Promise.reject({
-            code: -1,
-            message: '网络请求失败，请检查网络连接',
-            data: null,
-            success: false
-          });
-        } else {
-          // 请求配置出错
-          return Promise.reject({
-            code: -2,
-            message: error.message || '请求配置错误',
-            data: null,
-            success: false
-          });
-        }
-      }
-    );
+      error => {
+        const normalized = this.toErrorResponse(error)
+        logging.error('[RES]', normalized.message, normalized.code)
+        return Promise.reject(error)
+      },
+    )
   }
 
-  // 获取错误信息
-  private getErrorMessage(status: number, data: any): string {
-    // 可以根据后端API的错误格式自定义
-    if (data && data.message) {
-      return data.message;
+  /**
+   * 将请求失败归一化为与成功响应同结构的 ApiResponse，
+   * 调用方统一通过 `success` 判断结果，通过 `message` 展示错误。
+   */
+  private toErrorResponse<T>(error: unknown): ApiResponse<T> {
+    const axiosError = error as AxiosError<ApiResponse>
+    const status = axiosError.response?.status
+    const data = axiosError.response?.data
+    return {
+      code: status || 0,
+      data: (data?.data as T) ?? (null as unknown as T),
+      message:
+        data?.message ||
+        STATUS_MESSAGES[status || 0] ||
+        '网络连接失败，请稍后重试',
+      success: false,
+      timestamp: new Date().toISOString(),
     }
-    
-    // 常见HTTP状态码错误信息
-    const statusMessages: Record<number, string> = {
-      400: '请求参数错误',
-      401: '未授权，请重新登录',
-      403: '拒绝访问',
-      404: '请求的资源不存在',
-      500: '服务器内部错误',
-      502: '网关错误',
-      503: '服务不可用',
-      504: '网关超时',
-    };
-    
-    return statusMessages[status] || `未知错误(${status})`;
   }
 
   // GET请求
-  public async get<T = any>(url: string, params?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  public async get<T = any>(
+    url: string,
+    params?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     try {
-      return await this.instance.get(url, { params, ...config });
+      return await this.instance.get(url, { params, ...config })
     } catch (error) {
-      return error as ApiResponse<T>;
+      return this.toErrorResponse<T>(error)
     }
   }
 
   // POST请求
-  public async post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  public async post<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     try {
-      return await this.instance.post(url, data, config);
+      return await this.instance.post(url, data, config)
     } catch (error) {
-      return error as ApiResponse<T>;
+      return this.toErrorResponse<T>(error)
     }
   }
 
   // PUT请求
-  public async put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  public async put<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     try {
-      return await this.instance.put(url, data, config);
+      return await this.instance.put(url, data, config)
     } catch (error) {
-      return error as ApiResponse<T>;
+      return this.toErrorResponse<T>(error)
     }
   }
 
   // DELETE请求
-  public async delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  public async delete<T = any>(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     try {
-      return await this.instance.delete(url, config);
+      return await this.instance.delete(url, config)
     } catch (error) {
-      return error as ApiResponse<T>;
+      return this.toErrorResponse<T>(error)
     }
   }
 
   // 上传文件
-  public async upload<T = any>(url: string, formData: FormData, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
+  public async upload<T = any>(
+    url: string,
+    formData: FormData,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
     const uploadConfig: AxiosRequestConfig = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
       ...config,
-    };
-    
+    }
+
     try {
-      return await this.instance.post(url, formData, uploadConfig);
+      return await this.instance.post(url, formData, uploadConfig)
     } catch (error) {
-      return error as ApiResponse<T>;
+      return this.toErrorResponse<T>(error)
     }
   }
 
   // 下载文件
-  public async download(url: string, config?: AxiosRequestConfig): Promise<Blob> {
+  public async download(
+    url: string,
+    config?: AxiosRequestConfig,
+  ): Promise<Blob> {
     const downloadConfig: AxiosRequestConfig = {
       responseType: 'blob',
       ...config,
-    };
-    
-    const response = await this.instance.get(url, downloadConfig);
-    return response as unknown as Blob;
+    }
+
+    const response = await this.instance.get(url, downloadConfig)
+    return response as unknown as Blob
   }
 }
 
 // 创建并导出HTTP客户端实例
-const http = new HttpClient();
-export default http;
+const http = new HttpClient()
+export default http

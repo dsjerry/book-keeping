@@ -24,6 +24,8 @@ declare global {
     SettingsScreen: {}
     AnalyzeScreen: {}
     AboutScreen: {}
+    PermissionScreen: {}
+    LicensesScreen: {}
     AddTagsScreen: {}
   }
   /**

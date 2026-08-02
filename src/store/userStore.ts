@@ -2,6 +2,7 @@ import { create, StateCreator } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { OutTypes } from '~consts/Data'
+import { logging } from '~utils'
 
 interface UserInfoSlice {
   users: User[]
@@ -20,47 +21,69 @@ interface UserSettingsSlice {
   tags: OutType[]
   setTags: (tags: OutType[]) => void
   removeTag: (tag: OutType) => void
+  updateTag: (tag: OutType) => void
 }
 
 export interface UserStore extends UserSettingsSlice, UserInfoSlice {}
 
-const createUserSettingsSlice: StateCreator<
-  UserStore,
-  [],
-  [],
-  UserSettingsSlice
-> = (set, get) => ({
+const createUserSettingsSlice: StateCreator<UserStore, [], [], UserSettingsSlice> = (set, get) => ({
   useOnline: true,
   tags: [],
   setTags: tags => {
-    console.info('添加标签:', tags)
-    const currentTags = get().currentUser?.tags || []
-    const _tags = new Set([...currentTags, ...tags])
-    set({ currentUser: { ...get().currentUser!, tags: [..._tags] } })
+    const current = get().currentUser
+    if (!current) return
+    // 按 id 去重（对象引用去重对每次新建的 tag 无效）
+    const merged = Array.from(new Map([...(current.tags || []), ...tags].map(t => [t.id, t])).values())
+    const nextUser: User = { ...current, tags: merged }
+    set(state => ({
+      currentUser: nextUser,
+      users: state.users.map(u => (u.id === nextUser.id ? nextUser : u)),
+    }))
+    logging.info('[标签] 添加:', tags)
   },
   removeTag: tag => {
-    console.info('删除标签:', tag)
-    const currentTags = get().currentUser?.tags || []
-    const _tags = new Set([...currentTags].filter(t => t !== tag))
-    set({ currentUser: { ...get().currentUser!, tags: [..._tags] } })
+    const current = get().currentUser
+    if (!current) return
+    const nextUser: User = {
+      ...current,
+      tags: (current.tags || []).filter(t => t.id !== tag.id),
+    }
+    set(state => ({
+      currentUser: nextUser,
+      users: state.users.map(u => (u.id === nextUser.id ? nextUser : u)),
+    }))
+    logging.info('[标签] 删除:', tag)
+  },
+  updateTag: tag => {
+    const current = get().currentUser
+    if (!current) return
+    const nextUser: User = {
+      ...current,
+      tags: (current.tags || []).map(t => (t.id === tag.id ? tag : t)),
+    }
+    set(state => ({
+      currentUser: nextUser,
+      users: state.users.map(u => (u.id === nextUser.id ? nextUser : u)),
+    }))
+    logging.info('[标签] 更新:', tag)
   },
 })
 
-const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (
-  set,
-  get,
-) => {
+const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (set, get) => {
   return {
     users: [],
     currentUser: null,
     add: user => {
-      set(state => {
-        // 初始化用户数据
-        user.id = Date.now().toString()
-        user.tags = OutTypes
-        user.note = user.note || '这个人很懒，什么也没留下'
-        return { users: [...state.users, user], currentUser: user }
-      })
+      const newUser: User = {
+        ...user,
+        id: user.id || Date.now().toString(),
+        tags: user.tags || OutTypes,
+        note: user.note || '这个人很懒，什么也没留下',
+      }
+      set(state => ({
+        users: [...state.users, newUser],
+        currentUser: newUser,
+      }))
     },
     remove: id => {
       set(() => {

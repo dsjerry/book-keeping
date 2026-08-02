@@ -83,7 +83,6 @@ const HomeContext = createContext<State>(initialState)
 const HomeDispatchContext = createContext<Dispatch<Action> | null>(null)
 
 export const HomeProvider: React.FC<Props> = ({ children }) => {
-  // 这里初始化的时候，reducer 函数里面要实现对应的操作
   const [state, dispatch] = useReducer(reducer, initialState)
 
   return (
@@ -133,7 +132,6 @@ interface State {
 
 type Action =
   | { type: 'isShowMenu'; payload: boolean }
-  | { type: 'isShowModal'; payload: boolean }
   | {
       type: 'activeKeeping'
       payload: KeepingItem['id'][]
@@ -147,26 +145,7 @@ type Action =
       payload: Partial<KeepingItem>
     }
   | {
-      type: 'editForm'
-      payload: KeepingItem
-    }
-  | {
       type: 'emptyForm'
-    }
-  | {
-      type: 'countTypeIndex'
-      payload: number
-    }
-  | {
-      type: 'setModal'
-      payload: {
-        title: string
-        body: string
-      }
-    }
-  | {
-      type: 'modelStatus'
-      payload: boolean
     }
   | {
       type: 'modal'

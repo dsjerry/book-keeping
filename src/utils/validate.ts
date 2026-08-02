@@ -1,17 +1,9 @@
-export const checkUsername = (username: string) => {
+export const checkUsername = (username: string): string | null => {
   const value = username.trim()
-  if (value.length < 6) {
-    return false
-  } else {
-    return value
-  }
+  return value.length < 6 ? null : value
 }
 
-export const checkPassword = (password: string) => {
+export const checkPassword = (password: string): string | null => {
   const value = password.trim()
-  if (value.length < 6) {
-    return false
-  } else {
-    return value
-  }
+  return value.length < 6 ? null : value
 }
