@@ -41,6 +41,17 @@ cd android
 
 - [打包教程](https://reactnative.cn/docs/signed-apk-android)
 
+## 开发注意事项
+
+- [开发约定与踩坑](docs/notes.md) —— 设计语言、环境变量、性能、Android 原生等约定
+- [Bug 记录与修复](docs/bugs.md) —— 已解决的 bug 与排查思路
+
+常见问题速查：
+
+- 改 `.env` 后看不到效果？→ 环境变量是构建期注入，需重新构建；且改样式后先 `yarn start --reset-cache` 清 Metro 缓存
+- 颜色拼接崩 `rgba(..., 1)1A`？→ MD3 主题色是 rgba 格式，透明度必须用 `withAlpha`，禁止 `theme.colors.X + 'XX'`
+- 裁剪图片内容顶到状态栏？→ Android 15 edge-to-edge，见 `docs/bugs.md` #2
+
 ## 预览
 
 <div>
