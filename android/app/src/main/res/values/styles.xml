@@ -6,4 +6,12 @@
         <item name="android:editTextBackground">@drawable/rn_edit_text_material</item>
     </style>
 
+    <!-- 图片裁剪界面（Ucrop）主题：
+         Android 15+ (targetSdk 35) 强制 edge-to-edge，Ucrop 布局未适配 insets，
+         会导致裁剪内容顶到状态栏。windowOptOutEdgeToEdgeEnforcement 使其退出
+         edge-to-edge（API 35+ 生效，低版本自动忽略）。 -->
+    <style name="UcropTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="android:windowOptOutEdgeToEdgeEnforcement">true</item>
+    </style>
+
 </resources>

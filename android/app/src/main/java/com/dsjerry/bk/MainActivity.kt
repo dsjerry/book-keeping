@@ -1,4 +1,4 @@
-package com.bk
+package com.dsjerry.bk
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
