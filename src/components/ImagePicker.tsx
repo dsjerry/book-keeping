@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Pressable, Image, StyleSheet, Text, View } from 'react-native'
 import { Icon, IconButton, useTheme } from 'react-native-paper'
+import ImagePickerCrop from 'react-native-image-crop-picker'
 import { handleImage, logging } from '~utils'
 
 const ImagePicker: React.FC<Props> = ({ isShow = true, uploaded }) => {
@@ -9,10 +10,22 @@ const ImagePicker: React.FC<Props> = ({ isShow = true, uploaded }) => {
   const onUploadPress = async () => {
     const res = await handleImage({ limit: 1 })
     const uri = res ? res[0].uri : ''
-    if (uri) {
-      logging.info('image uri:', uri)
-      setImage(uri)
-      uploaded(uri)
+    if (!uri) return
+    try {
+      // 选图/拍照后进入裁剪，裁剪结果作为最终图片
+      const cropResult = await ImagePickerCrop.openCropper({
+        path: uri,
+        width: 1080,
+        height: 1080,
+        mediaType: 'photo',
+        cropperToolbarTitle: '图片裁剪',
+      })
+      const finalUri = cropResult?.path || uri
+      logging.info('image uri:', finalUri)
+      setImage(finalUri)
+      uploaded(finalUri)
+    } catch (error) {
+      logging.error('[图片] 裁剪失败:', error)
     }
   }
   const onRemovePress = () => {
@@ -57,7 +70,7 @@ const style = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
-    aspectRatio: 2,
+    height: 100,
     borderWidth: 2,
     borderStyle: 'dashed',
     borderRadius: 12,
@@ -74,7 +87,7 @@ const style = StyleSheet.create({
   },
   image: {
     width: '100%',
-    aspectRatio: 2,
+    height: 100,
     borderRadius: 12,
   },
   imageFunc: {

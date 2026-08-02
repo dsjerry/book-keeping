@@ -55,6 +55,14 @@ export const PiePane: React.FC<ChartsProps> = memo(
       }
       const option: EChartsOption = {
         backgroundColor: 'transparent',
+        color: [
+          theme.colors.tertiary,
+          theme.colors.primary,
+          theme.colors.secondary,
+          theme.colors.tertiaryContainer,
+          theme.colors.primaryContainer,
+          theme.colors.error,
+        ],
         title: {
           text: title,
           left: 'center',
@@ -94,6 +102,12 @@ export const PiePane: React.FC<ChartsProps> = memo(
       units,
       theme.colors.onSurface,
       theme.colors.onSurfaceVariant,
+      theme.colors.tertiary,
+      theme.colors.primary,
+      theme.colors.secondary,
+      theme.colors.tertiaryContainer,
+      theme.colors.primaryContainer,
+      theme.colors.error,
     ])
 
     return (
@@ -151,7 +165,7 @@ export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
           data: data.counts,
           type: 'bar',
           barWidth: 30,
-          itemStyle: { color: theme.colors.primary },
+          itemStyle: { color: theme.colors.tertiary },
         },
       ],
     }
@@ -167,7 +181,7 @@ export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
     theme.colors.onSurface,
     theme.colors.onSurfaceVariant,
     theme.colors.outlineVariant,
-    theme.colors.primary,
+    theme.colors.tertiary,
   ])
 
   return (

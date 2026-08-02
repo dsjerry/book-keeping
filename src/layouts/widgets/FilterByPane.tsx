@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { View, StyleSheet } from 'react-native'
-import { Chip, useTheme } from 'react-native-paper'
+import { Chip, Icon, useTheme } from 'react-native-paper'
 
 import { OutTypes, CountTypeWithIconList } from '~consts/Data'
 import CustomDivider from '~components/CustomDivider'
@@ -50,20 +50,25 @@ export const FilterByPane: React.FC = () => {
       <CustomDivider text="类型" textPosi="left" />
 
       <View style={style.wrapRow}>
-        {outTypes.map(item => (
-          <Chip
-            key={item.id}
-            icon={item.icon}
-            mode="outlined"
-            style={style.chip}
-            selected={filterBy.includes(item.alias)}
-            showSelectedOverlay
-            onPress={() => {
-              onChipPress(item.alias)
-            }}>
-            {item.name}
-          </Chip>
-        ))}
+        {outTypes.map(item => {
+          const iconColor = (
+            item.color ? theme.colors[item.color as keyof typeof theme.colors] : theme.colors.onSurfaceVariant
+          ) as string
+          return (
+            <Chip
+              key={item.id}
+              icon={({ size }) => <Icon source={item.icon} size={size} color={iconColor} />}
+              mode="outlined"
+              style={style.chip}
+              selected={filterBy.includes(item.alias)}
+              showSelectedOverlay
+              onPress={() => {
+                onChipPress(item.alias)
+              }}>
+              {item.name}
+            </Chip>
+          )
+        })}
       </View>
 
       <CustomDivider text="货币" textPosi="left" />

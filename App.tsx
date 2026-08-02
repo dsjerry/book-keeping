@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react'
 import { useColorScheme } from 'react-native'
-import { PaperProvider, MD3LightTheme, MD3DarkTheme } from 'react-native-paper'
+import { PaperProvider } from 'react-native-paper'
+import { LightTheme, DarkTheme as PaperDarkTheme } from './src/theme'
 import { DefaultTheme, DarkTheme, Theme } from '@react-navigation/native'
 import { _COLORS } from './src/consts/Colors'
 import { useAppSettingsStore } from './src/store/settingStore'
@@ -33,18 +34,14 @@ function App(): React.JSX.Element {
 
   // system 模式跟随系统，light / dark 强制指定
   const isDark = useMemo(
-    () =>
-      themeMode === 'dark' || (themeMode === 'system' && colorScheme === 'dark'),
+    () => themeMode === 'dark' || (themeMode === 'system' && colorScheme === 'dark'),
     [themeMode, colorScheme],
   )
 
-  const navigationTheme = useMemo<Theme>(
-    () => (isDark ? NavigationDarkTheme : NavigationLightTheme),
-    [isDark],
-  )
+  const navigationTheme = useMemo<Theme>(() => (isDark ? NavigationDarkTheme : NavigationLightTheme), [isDark])
 
   return (
-    <PaperProvider theme={isDark ? MD3DarkTheme : MD3LightTheme}>
+    <PaperProvider theme={isDark ? PaperDarkTheme : LightTheme}>
       <ErrorBoundary>
         <NavigationThemeProvider theme={navigationTheme}>
           <AppLayout />

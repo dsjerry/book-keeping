@@ -55,7 +55,7 @@ const LinearCard: React.FC<Props> = ({ item }) => {
           {item.tags.map(tag => (
             <Chip
               key={tag.id}
-              icon={tag.icon}
+              icon={({ size }) => <Icon source={tag.icon} size={size} color={theme.colors.onPrimary} />}
               mode="flat"
               compact
               textStyle={{ color: theme.colors.onPrimary, fontSize: 12 }}

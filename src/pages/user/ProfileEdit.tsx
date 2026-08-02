@@ -125,12 +125,12 @@ const ProfileEdit = () => {
                     width: 50,
                     height: 50,
                     borderRadius: 12,
-                    backgroundColor: theme.colors.primaryContainer,
+                    backgroundColor: theme.colors.tertiaryContainer,
                     justifyContent: 'center',
                     alignItems: 'center',
                     marginRight: 4,
                   }}>
-                  <Text style={{ color: theme.colors.primary, fontSize: 20, fontWeight: '700' }}>
+                  <Text style={{ color: theme.colors.onTertiaryContainer, fontSize: 20, fontWeight: '700' }}>
                     {(_currentUser.username || '?').substring(0, 1).toUpperCase()}
                   </Text>
                 </View>

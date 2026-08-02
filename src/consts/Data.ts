@@ -9,6 +9,7 @@ export const OutTypes = [
     alias: 'food',
     icon: 'food-outline',
     isChecked: false,
+    color: 'primary',
   },
   {
     id: '2',
@@ -16,6 +17,7 @@ export const OutTypes = [
     alias: 'shop',
     icon: 'cart',
     isChecked: false,
+    color: 'tertiary',
   },
   {
     id: '3',
@@ -23,6 +25,7 @@ export const OutTypes = [
     alias: 'traffic',
     icon: 'car',
     isChecked: false,
+    color: 'secondary',
   },
   {
     id: '4',
@@ -30,6 +33,7 @@ export const OutTypes = [
     alias: 'communication',
     icon: 'phone',
     isChecked: false,
+    color: 'onTertiaryContainer',
   },
   {
     id: '5',
@@ -37,6 +41,15 @@ export const OutTypes = [
     alias: 'entertainment',
     icon: 'gamepad',
     isChecked: false,
+    color: 'onPrimaryContainer',
+  },
+  {
+    id: '6',
+    name: '词元',
+    alias: 'token',
+    icon: 'robot',
+    isChecked: false,
+    color: 'onSecondaryContainer',
   },
 ]
 
