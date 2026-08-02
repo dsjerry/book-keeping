@@ -60,7 +60,6 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
     withAlpha(theme.colors.primary, 0.2),
   ]
   const textLight = theme.colors.onPrimary
-  const textDark = theme.colors.onSurface
 
   return (
     <LinearGradient ref={shareRef} colors={gradientColors as [string, string, string]} style={card.container}>
@@ -93,17 +92,17 @@ const UserCard: React.FC<UserCardProps> = ({ user, data }) => {
       {/* 统计面板 - 三等分等宽 + 竖排数字/标签 + 细分隔线 */}
       <View style={[card.countPane, { backgroundColor: theme.colors.surface, borderRadius: 12, paddingVertical: 12 }]}>
         <View style={card.countCol}>
-          <Text style={[card.countNum, { color: textDark }]}>{data.record}</Text>
+          <Text style={[card.countNum, { color: theme.colors.tertiary }]}>{data.record}</Text>
           <Text style={[card.countLabel, { color: theme.colors.onSurfaceVariant }]}>记录</Text>
         </View>
         <View style={[card.countDivider, { backgroundColor: theme.colors.outlineVariant }]} />
         <View style={card.countCol}>
-          <Text style={[card.countNum, { color: textDark }]}>{data.output}</Text>
+          <Text style={[card.countNum, { color: theme.colors.tertiary }]}>{data.output}</Text>
           <Text style={[card.countLabel, { color: theme.colors.onSurfaceVariant }]}>支出</Text>
         </View>
         <View style={[card.countDivider, { backgroundColor: theme.colors.outlineVariant }]} />
         <View style={card.countCol}>
-          <Text style={[card.countNum, { color: textDark }]}>{data.income}</Text>
+          <Text style={[card.countNum, { color: theme.colors.tertiary }]}>{data.income}</Text>
           <Text style={[card.countLabel, { color: theme.colors.onSurfaceVariant }]}>收入</Text>
         </View>
       </View>
@@ -250,10 +249,7 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
               title="额度设置"
               left={props => <List.Icon {...props} icon="counter" />}
               right={props => <List.Icon {...props} icon="chevron-right" />}
-              onPress={() => {
-                navigation.navigate('ProfileEditScreen', {})
-                navigation.setOptions({ headerShown: false })
-              }}
+              onPress={() => navigation.navigate('BudgetSettings', {})}
             />
             <List.Item
               title="API KEY"
@@ -275,12 +271,6 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
                 navigation.navigate('ProfileEditScreen', {})
                 navigation.setOptions({ headerShown: false })
               }}
-            />
-            <List.Item
-              title="类型管理"
-              left={props => <List.Icon {...props} icon="format-list-bulleted-type" />}
-              right={props => <List.Icon {...props} icon="chevron-right" />}
-              onPress={() => navigation.navigate('AddTagsScreen', {})}
             />
             <List.Item
               title="数据管理"

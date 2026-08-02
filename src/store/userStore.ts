@@ -106,7 +106,15 @@ const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (set
 
       const userInStore = get().users.find(u => u.id === user?.id)
       if (userInStore) {
-        set({ currentUser: { ...userInStore, ...user } })
+        // 补全 OutTypes 中缺失的默认标签（如新增的"词元"）——
+        // 默认标签在编辑页只读（不可删除），因此合并不会把用户删掉的标签加回来
+        const userTags = userInStore.tags || []
+        const mergedTags = [...userTags, ...OutTypes.filter(def => !userTags.some(t => t.id === def.id))]
+        const nextUser: User = { ...userInStore, ...user, tags: mergedTags }
+        set(state => ({
+          currentUser: nextUser,
+          users: state.users.map(u => (u.id === nextUser.id ? nextUser : u)),
+        }))
       }
     },
     // 修改个人信息

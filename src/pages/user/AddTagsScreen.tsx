@@ -8,6 +8,8 @@ import CustomDialog from '~components/CustomDialog'
 import { OutTypes } from '~consts/Data'
 import { useUserContext } from './contexts/UserContext'
 
+const TAG_COLOR_PALETTE = ['primary', 'tertiary', 'secondary', 'onTertiaryContainer', 'onPrimaryContainer']
+
 const AddTagsScreen = () => {
   const theme = useTheme()
   // paper 5.x 的 TextInput ref 类型为 RN TextInput 与 TextInputHandles 的混合联合，
@@ -52,6 +54,7 @@ const AddTagsScreen = () => {
       icon: 'tag-plus-outline',
       isChecked: false,
       isCustom: true,
+      color: TAG_COLOR_PALETTE[index % TAG_COLOR_PALETTE.length],
     }))
     userStore.setTags(tagsBeAdded)
 

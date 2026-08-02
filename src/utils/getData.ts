@@ -10,8 +10,10 @@ class GetData {
     this.list = list
   }
 
-  getTags() {
-    const tagsArr = this.list.map(item => item.tags).flat()
+  getTags(isIncome = false) {
+    const list = isIncome ? this.list.filter(item => item.type === 'in') : this.list.filter(item => item.type === 'out')
+
+    const tagsArr = list.map(item => item.tags).flat()
     const tagName = _.countBy(tagsArr, 'name')
     const tagCounts = Object.keys(tagName).map(key => {
       return {
@@ -22,7 +24,7 @@ class GetData {
 
     const aliasCountMap = {} as AnyObj
 
-    this.list.forEach(item => {
+    list.forEach(item => {
       const count = toNumber(item.count)
       item.tags.forEach(tag => {
         aliasCountMap[tag.name] = (aliasCountMap[tag.name] || 0) + count
@@ -37,9 +39,7 @@ class GetData {
   }
 
   getDate(isIncome = false) {
-    const list = isIncome
-      ? this.list.filter(item => item.type === 'in')
-      : this.list.filter(item => item.type === 'out')
+    const list = isIncome ? this.list.filter(item => item.type === 'in') : this.list.filter(item => item.type === 'out')
 
     const dateCounts = list.reduce((acc: AnyObj, item) => {
       const date = dayjs(item.date).format('YYYY-MM-DD')
@@ -55,9 +55,7 @@ class GetData {
 
   // 获取消费地点分布数据
   getLocation(isIncome = false) {
-    const list = isIncome
-      ? this.list.filter(item => item.type === 'in')
-      : this.list.filter(item => item.type === 'out')
+    const list = isIncome ? this.list.filter(item => item.type === 'in') : this.list.filter(item => item.type === 'out')
 
     // 按地点分组并统计金额
     const locationMap = {} as AnyObj

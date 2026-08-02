@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 
 import {
   View,
@@ -36,10 +36,14 @@ const Adding: React.FC<Props> = ({ route }) => {
   const [noteModalVisible, setNoteModalVisible] = useState(false)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showDatePicker, setShowDatePicker] = useState(false)
+  const [tagInput, setTagInput] = useState('')
+  const tagInputRef = useRef<any>(null)
+  const [editTag, setEditTag] = useState<OutType | null>(null)
+  const [tagEditText, setTagEditText] = useState('')
 
   const { add, update, items } = useKeepingStore()
   const { confirmExitEdit } = useAppSettingsStore()
-  const { currentUser } = useUserStore()
+  const { currentUser, setTags, updateTag, removeTag } = useUserStore()
 
   const { form, modal } = useHomeStore()
   const dispatch = useHomeStoreDispatch()
@@ -85,7 +89,13 @@ const Adding: React.FC<Props> = ({ route }) => {
   useEffect(() => {
     let _tags = [] as OutType[]
     if (currentUser?.tags) {
-      _tags = currentUser.tags
+      _tags = [...currentUser.tags]
+      // 补全 OutTypes 中新增的默认标签（如"词元"），已有的默认标签不会重复添加
+      OutTypes.forEach(def => {
+        if (!_tags.some(t => t.id === def.id)) {
+          _tags.push(def)
+        }
+      })
     } else {
       _tags = [...OutTypes]
     }
@@ -212,6 +222,61 @@ const Adding: React.FC<Props> = ({ route }) => {
     setOutTypes(prev => prev.map(t => (t.id === chip.id ? { ...t, isChecked: checked } : t)))
   }
 
+  // 添加自定义标签（逗号分隔，每项限制4字）
+  const handleAddCustomTags = () => {
+    const input = tagInput.trim()
+    if (!input) return
+    const names = input
+      .replace(/[,，]/g, ',')
+      .split(',')
+      .map(s => s.trim().substring(0, 10))
+      .filter(Boolean)
+    if (names.length === 0) return
+
+    const newTags: OutType[] = names.map((name, i) => ({
+      id: `${Date.now()}-${i}`,
+      name,
+      alias: name,
+      icon: 'tag-plus-outline',
+      isChecked: false,
+      isCustom: true,
+    }))
+
+    setTags(newTags)
+    setOutTypes(prev => [...prev, ...newTags])
+    setTagInput('')
+    tagInputRef.current?.clear()
+  }
+
+  // 长按自定义标签 → 打开编辑/删除对话框
+  const handleTagLongPress = (tag: OutType) => {
+    if (!tag.isCustom) return
+    setEditTag(tag)
+    setTagEditText(tag.name)
+  }
+
+  // 保存修改后的标签名称
+  const handleSaveTag = () => {
+    if (!editTag) return
+    const newName = tagEditText.trim()
+    if (!newName) return
+    const updated = { ...editTag, name: newName.substring(0, 10), alias: newName.substring(0, 10) }
+    updateTag(updated)
+    setOutTypes(prev => prev.map(t => (t.id === updated.id ? updated : t)))
+    setEditTag(null)
+  }
+
+  // 删除自定义标签
+  const handleDeleteTag = () => {
+    if (!editTag) return
+    removeTag(editTag)
+    setOutTypes(prev => prev.filter(t => t.id !== editTag.id))
+    // 如果该标签已勾选，从 form.tags 中移除
+    const current = form.tags || []
+    formChanged({ tags: current.filter(t => t.id !== editTag.id) })
+    setEditTag(null)
+  }
+
   return (
     <View style={[style.container, { backgroundColor: theme.colors.background }]}>
       {/* ===== Header ===== */}
@@ -282,7 +347,26 @@ const Adding: React.FC<Props> = ({ route }) => {
             {form.type === 'out' && (
               <View style={style.section}>
                 <Text style={[style.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>类别</Text>
-                <CustomChipPane items={outTypes} onPress={onChipPress} />
+                <CustomChipPane items={outTypes} onPress={onChipPress} onLongPress={handleTagLongPress} />
+                {/* 自定义标签输入 */}
+                <TextInput
+                  ref={tagInputRef}
+                  mode="outlined"
+                  placeholder="添加标签（4字以内，逗号分隔）"
+                  placeholderTextColor={withAlpha(theme.colors.onSurfaceVariant, 0.5)}
+                  value={tagInput}
+                  onChangeText={setTagInput}
+                  onSubmitEditing={handleAddCustomTags}
+                  maxLength={20}
+                  dense
+                  style={{ marginTop: 10, borderRadius: 12 }}
+                  outlineStyle={{ borderRadius: 12 }}
+                  right={
+                    tagInput.trim() ? (
+                      <TextInput.Icon icon="plus-circle" color={theme.colors.primary} onPress={handleAddCustomTags} />
+                    ) : undefined
+                  }
+                />
               </View>
             )}
 
@@ -374,6 +458,31 @@ const Adding: React.FC<Props> = ({ route }) => {
               确定
             </Button>
           </View>
+        </Modal>
+      </Portal>
+
+      {/* ===== 自定义标签编辑/删除对话框 ===== */}
+      <Portal>
+        <Modal
+          visible={!!editTag}
+          onDismiss={() => setEditTag(null)}
+          contentContainerStyle={[style.modalContainer, { backgroundColor: theme.colors.surface }]}>
+          <Text style={[style.modalTitle, { color: theme.colors.primary }]}>管理标签</Text>
+          <TextInput
+            mode="outlined"
+            value={tagEditText}
+            onChangeText={setTagEditText}
+            placeholder="修改名称（10字以内）"
+            maxLength={10}
+            style={{ marginBottom: 12, borderRadius: 12 }}
+            outlineStyle={{ borderRadius: 12 }}
+          />
+          <Button mode="contained" onPress={handleSaveTag} style={{ marginBottom: 8, borderRadius: 12 }}>
+            保存
+          </Button>
+          <Button mode="outlined" textColor={theme.colors.error} onPress={handleDeleteTag} style={{ borderRadius: 12 }}>
+            删除标签
+          </Button>
         </Modal>
       </Portal>
     </View>
