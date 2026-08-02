@@ -5,4 +5,4 @@ export * from './toolkit'
 export * from './getData'
 export * from './amap'
 export * from './http'
-
+export * from './color'

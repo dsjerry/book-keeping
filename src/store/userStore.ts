@@ -21,22 +21,19 @@ interface UserSettingsSlice {
   tags: OutType[]
   setTags: (tags: OutType[]) => void
   removeTag: (tag: OutType) => void
+  updateTag: (tag: OutType) => void
 }
 
 export interface UserStore extends UserSettingsSlice, UserInfoSlice {}
 
-const createUserSettingsSlice: StateCreator<
-  UserStore,
-  [],
-  [],
-  UserSettingsSlice
-> = (set, get) => ({
+const createUserSettingsSlice: StateCreator<UserStore, [], [], UserSettingsSlice> = (set, get) => ({
   useOnline: true,
   tags: [],
   setTags: tags => {
     const current = get().currentUser
     if (!current) return
-    const merged = [...new Set([...(current.tags || []), ...tags])]
+    // 按 id 去重（对象引用去重对每次新建的 tag 无效）
+    const merged = Array.from(new Map([...(current.tags || []), ...tags].map(t => [t.id, t])).values())
     const nextUser: User = { ...current, tags: merged }
     set(state => ({
       currentUser: nextUser,
@@ -49,7 +46,7 @@ const createUserSettingsSlice: StateCreator<
     if (!current) return
     const nextUser: User = {
       ...current,
-      tags: (current.tags || []).filter(t => t !== tag),
+      tags: (current.tags || []).filter(t => t.id !== tag.id),
     }
     set(state => ({
       currentUser: nextUser,
@@ -57,12 +54,22 @@ const createUserSettingsSlice: StateCreator<
     }))
     logging.info('[标签] 删除:', tag)
   },
+  updateTag: tag => {
+    const current = get().currentUser
+    if (!current) return
+    const nextUser: User = {
+      ...current,
+      tags: (current.tags || []).map(t => (t.id === tag.id ? tag : t)),
+    }
+    set(state => ({
+      currentUser: nextUser,
+      users: state.users.map(u => (u.id === nextUser.id ? nextUser : u)),
+    }))
+    logging.info('[标签] 更新:', tag)
+  },
 })
 
-const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (
-  set,
-  get,
-) => {
+const createUserInfoSlice: StateCreator<UserStore, [], [], UserInfoSlice> = (set, get) => {
   return {
     users: [],
     currentUser: null,
