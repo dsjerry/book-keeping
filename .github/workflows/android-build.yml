@@ -53,6 +53,13 @@ jobs:
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
+      # 从 secret 生成 .env（react-native-config 构建期注入；.env 不入库，需在仓库
+      # Settings → Secrets and variables → Actions 配置 ENV_BASE64：
+      #   Windows: [Convert]::ToBase64String([IO.File]::ReadAllBytes(".env"))
+      #   Linux:   base64 -w0 .env
+      - name: Create .env from secret
+        run: echo "${{ secrets.ENV_BASE64 }}" | base64 --decode > .env
+
       - name: Remove problematic generated directory
         run: |
           if [ -d "node_modules/@sbaiahmed1/react-native-biometrics/android/src/main/java/com/sbaiahmed1/reactnativebiometrics/generated" ]; then
