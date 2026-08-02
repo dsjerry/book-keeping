@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View } from 'react-native'
+import { View, ScrollView } from 'react-native'
 import { List, Switch, RadioButton, Snackbar, useTheme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -14,12 +14,7 @@ import { AuthService } from '~api/auth'
 import { logging } from '~utils'
 
 // 清除缓存时保留用户核心数据（各 store 的持久化 key）
-const KEEP_STORAGE_KEYS = [
-  'user',
-  'users-keeping',
-  'app-settings',
-  'analyze-results',
-]
+const KEEP_STORAGE_KEYS = ['user', 'users-keeping', 'app-settings', 'analyze-results']
 
 const Settings = () => {
   const [isShowDialog, setIsShowDialog] = useState(false)
@@ -96,9 +91,7 @@ const Settings = () => {
     }
 
     const noInclude = (arr: string[]) => {
-      return !arr.some(
-        item => item === 'cny' || item === 'hkd' || item === 'aud',
-      )
+      return !arr.some(item => item === 'cny' || item === 'hkd' || item === 'aud')
     }
     const { update } = useKeepingStore.getState()
     items.forEach(item => {
@@ -130,18 +123,16 @@ const Settings = () => {
         onAccess: () => {
           if (!currentUser) return logging.info('用户不存在')
           const { username, password } = currentUser
-          AuthService.signup({ username, password, password2: password }).then(
-            res => {
-              if (res.success) {
-                setTips('同步功能已启用')
-                setModal(prev => ({ ...prev, isShow: false }))
-                updateCurrentUser({ serverId: res.data.id })
-                toggleUseOnline()
-              } else {
-                setTips(res.message || '启用同步失败')
-              }
-            },
-          )
+          AuthService.signup({ username, password, password2: password }).then(res => {
+            if (res.success) {
+              setTips('同步功能已启用')
+              setModal(prev => ({ ...prev, isShow: false }))
+              updateCurrentUser({ serverId: res.data.id })
+              toggleUseOnline()
+            } else {
+              setTips(res.message || '启用同步失败')
+            }
+          })
         },
       })
     }
@@ -150,138 +141,91 @@ const Settings = () => {
   return (
     <>
       <View style={{ flex: 1 }}>
-        {isShowDialog && (
-          <CustomDialog
-            title="加载中"
-            onBackdropPress={() => setIsShowDialog(false)}
-          />
-        )}
+        {isShowDialog && <CustomDialog title="加载中" onBackdropPress={() => setIsShowDialog(false)} />}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{ paddingBottom: 16 }}>
+          <List.Section title="基本设置">
+            <List.Accordion
+              title="主题设置"
+              description="设置应用的显示主题"
+              descriptionStyle={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}
+              style={{ backgroundColor: theme.colors.surfaceVariant }}
+              left={props => <List.Icon {...props} icon="theme-light-dark" />}>
+              <RadioButton.Group
+                onValueChange={value => setThemeMode(value as 'system' | 'light' | 'dark')}
+                value={themeMode}>
+                <RadioButton.Item label="跟随系统" value="system" labelStyle={{ color: theme.colors.onSurface }} />
+                <RadioButton.Item label="浅色模式" value="light" labelStyle={{ color: theme.colors.onSurface }} />
+                <RadioButton.Item label="深色模式" value="dark" labelStyle={{ color: theme.colors.onSurface }} />
+              </RadioButton.Group>
+            </List.Accordion>
+            <List.Accordion
+              title="再次确认"
+              description="执行操作时再次询问"
+              descriptionStyle={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}
+              style={{ backgroundColor: theme.colors.surfaceVariant }}
+              left={props => <List.Icon {...props} icon="alert-circle-check-outline" />}>
+              <List.Item
+                title="删除记录"
+                left={props => <List.Icon {...props} icon="delete" />}
+                onPress={() => {}}
+                right={() => <Switch value={confirmRemove} onValueChange={() => toggleConfirmRemove()} />}
+              />
+              <List.Item
+                title="退出编辑"
+                left={props => <List.Icon {...props} icon="exit-to-app" />}
+                onPress={() => {}}
+                right={() => <Switch value={confirmExitEdit} onValueChange={() => toggleConfirmExitEdit()} />}
+              />
+            </List.Accordion>
+            <List.Item
+              title="启用同步"
+              left={props => <List.Icon {...props} icon="cloud-upload-outline" />}
+              right={() => <Switch value={useOnline} onValueChange={onUseOnlinePress} />}
+            />
+            <List.Item
+              title="启用生物识别"
+              description="使用指纹或面容ID解锁应用"
+              descriptionStyle={{ fontSize: 12, color: theme.colors.onSurfaceVariant }}
+              left={props => <List.Icon {...props} icon="fingerprint" />}
+              right={() => <Switch value={useBiometrics} onValueChange={toggleUseBiometrics} />}
+            />
+            <List.Item
+              title="清除缓存"
+              left={props => <List.Icon {...props} icon="delete-forever-outline" />}
+              description={clearConfirm === 1 ? '再次点击清除' : undefined}
+              right={props =>
+                clearConfirm === 1 && <List.Icon {...props} icon="alert-circle-outline" color={theme.colors.error} />
+              }
+              onPress={clearCache}
+            />
+          </List.Section>
+          <List.Section title="关于软件">
+            <List.Item
+              title="检测更新"
+              left={props => <List.Icon {...props} icon="update" />}
+              onPress={() => handleUpdatePress()}
+            />
+            <List.Item
+              title="软件信息"
+              left={props => <List.Icon {...props} icon="information-outline" />}
+              onPress={() => navigation.navigate('AboutScreen', {})}
+            />
+          </List.Section>
+          <List.Section title="开发">
+            <List.Item title="数据修复" left={props => <List.Icon {...props} icon="auto-fix" />} onPress={fixData} />
+          </List.Section>
+        </ScrollView>
         <Snackbar
           visible={tips !== ''}
           onDismiss={onDismissSnackBar}
           rippleColor={theme.colors.primary}
           duration={2500}
-          style={{ marginTop: 'auto', backgroundColor: theme.colors.primary }}>
+          style={{ backgroundColor: theme.colors.inverseSurface }}>
           {tips}
         </Snackbar>
-        <List.Section title="基本设置">
-          <List.Accordion
-            title="主题设置"
-            description="设置应用的显示主题"
-            descriptionStyle={{ fontSize: 12 }}
-            style={{ backgroundColor: theme.colors.surfaceVariant }}
-            left={props => (
-              <List.Icon {...props} icon="theme-light-dark" />
-            )}>
-            <RadioButton.Group
-              onValueChange={value =>
-                setThemeMode(value as 'system' | 'light' | 'dark')
-              }
-              value={themeMode}>
-              <RadioButton.Item
-                label="跟随系统"
-                value="system"
-                labelStyle={{ color: theme.colors.onSurface }}
-              />
-              <RadioButton.Item
-                label="浅色模式"
-                value="light"
-                labelStyle={{ color: theme.colors.onSurface }}
-              />
-              <RadioButton.Item
-                label="深色模式"
-                value="dark"
-                labelStyle={{ color: theme.colors.onSurface }}
-              />
-            </RadioButton.Group>
-          </List.Accordion>
-          <List.Accordion
-            title="再次确认"
-            description="执行操作时再次询问"
-            descriptionStyle={{ fontSize: 12 }}
-            style={{ backgroundColor: theme.colors.surfaceVariant }}
-            left={props => (
-              <List.Icon {...props} icon="alert-circle-check-outline" />
-            )}>
-            <List.Item
-              title="删除记录"
-              left={props => <List.Icon {...props} icon="delete" />}
-              onPress={() => {}}
-              right={() => (
-                <Switch
-                  value={confirmRemove}
-                  onValueChange={() => toggleConfirmRemove()}
-                />
-              )}
-            />
-            <List.Item
-              title="退出编辑"
-              left={props => <List.Icon {...props} icon="exit-to-app" />}
-              onPress={() => {}}
-              right={() => (
-                <Switch
-                  value={confirmExitEdit}
-                  onValueChange={() => toggleConfirmExitEdit()}
-                />
-              )}
-            />
-          </List.Accordion>
-          <List.Item
-            title="启用同步"
-            left={props => <List.Icon {...props} icon="cloud-upload-outline" />}
-            right={() => (
-              <Switch value={useOnline} onValueChange={onUseOnlinePress} />
-            )}
-          />
-          <List.Item
-            title="启用生物识别"
-            description="使用指纹或面容ID解锁应用"
-            descriptionStyle={{ fontSize: 12 }}
-            left={props => <List.Icon {...props} icon="fingerprint" />}
-            right={() => (
-              <Switch
-                value={useBiometrics}
-                onValueChange={toggleUseBiometrics}
-              />
-            )}
-          />
-          <List.Item
-            title="清除缓存"
-            left={props => (
-              <List.Icon {...props} icon="delete-forever-outline" />
-            )}
-            description={clearConfirm === 1 ? '再次点击清除' : undefined}
-            right={props =>
-              clearConfirm === 1 && (
-                <List.Icon
-                  {...props}
-                  icon="alert-circle-outline"
-                  color="darkred"
-                />
-              )
-            }
-            onPress={clearCache}
-          />
-        </List.Section>
-        <List.Section title="关于软件">
-          <List.Item
-            title="检测更新"
-            left={props => <List.Icon {...props} icon="update" />}
-            onPress={() => handleUpdatePress()}
-          />
-          <List.Item
-            title="软件信息"
-            left={props => <List.Icon {...props} icon="information-outline" />}
-            onPress={() => navigation.navigate('AboutScreen', {})}
-          />
-        </List.Section>
-        <List.Section title="开发">
-          <List.Item
-            title="数据修复"
-            left={props => <List.Icon {...props} icon="auto-fix" />}
-            onPress={fixData}
-          />
-        </List.Section>
       </View>
       <Modal
         title={modal.title}
