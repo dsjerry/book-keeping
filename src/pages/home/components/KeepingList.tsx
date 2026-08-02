@@ -43,84 +43,50 @@ const getMenuActions = (theme: MD3Theme): MenuAction[] => [
   },
 ]
 
-const ListItem: React.FC<ItemProps> = memo(
-  ({ item, doNavigate, onLongPress, onMenuPress, toggle, theme }) => {
-    return (
-      <>
-        {item.isShow !== false && (
-          <CustomMenuView
-            actions={getMenuActions(theme)}
-            onPress={id => onMenuPress(id, item.id)}>
-            <Pressable
-              style={({ pressed }) => ({
-                ...style.item,
-                backgroundColor: pressed
-                  ? theme.colors.surfaceVariant
-                  : theme.colors.surface,
-                elevation: pressed ? 8 : 2,
-                borderColor: theme.colors.outline,
-              })}
-              onPress={() => doNavigate(item.id)}
-              onLongPress={e => onLongPress(item.id)}>
-              <View style={style.itemHeader}>
-                {item.note && (
-                  <Icon
-                    source={'note-text-outline'}
-                    size={14}
-                    color={theme.colors.primary}
-                  />
-                )}
-                {item.image && (
-                  <Icon
-                    source={'image-outline'}
-                    size={14}
-                    color={theme.colors.primary}
-                  />
-                )}
-                <Text style={{ color: theme.colors.primary, marginLeft: 5 }}>
-                  {_date(item.date)}
-                </Text>
-              </View>
-              <View style={style.itemBody}>
-                <Checkbox
-                  status={item.isChecked ? 'checked' : 'unchecked'}
-                  onPress={() => toggle(item.id)}
-                />
-                <Text style={{ color: theme.colors.primary }}>
-                  {item.type === 'in' ? '收入' : '支出'}
-                </Text>
-                <Text
-                  style={[style.itemCount, { color: theme.colors.primary }]}>
-                  {item.count}
-                </Text>
-                <Text style={{ color: theme.colors.primary }}>元</Text>
-              </View>
-              <View style={tag.pane}>
-                {item.tags.map(tagItem => (
-                  <Chip
-                    style={tag.item}
-                    icon={tagItem.icon}
-                    mode="outlined"
-                    key={tagItem.id}>
-                    {tagItem.name}
-                  </Chip>
-                ))}
-                {item.tags.length === 0 && (
-                  <Chip
-                    style={[tag.item, { opacity: 0.5 }]}
-                    mode="outlined"
-                    icon="tag-multiple-outline">
-                    分类
-                  </Chip>
-                )}
-              </View>
-            </Pressable>
-          </CustomMenuView>
-        )}
-      </>
-    )
-  },
-)
+const ListItem: React.FC<ItemProps> = memo(({ item, doNavigate, onLongPress, onMenuPress, toggle, theme }) => {
+  const amountColor = item.type === 'in' ? theme.colors.primary : theme.colors.error
+  return (
+    <>
+      {item.isShow !== false && (
+        <CustomMenuView actions={getMenuActions(theme)} onPress={id => onMenuPress(id, item.id)}>
+          <Pressable
+            style={({ pressed }) => ({
+              ...style.item,
+              backgroundColor: pressed ? theme.colors.elevation.level1 : theme.colors.surfaceVariant,
+            })}
+            onPress={() => doNavigate(item.id)}
+            onLongPress={e => onLongPress(item.id)}>
+            <View style={style.itemHeader}>
+              {item.note && <Icon source={'note-text-outline'} size={14} color={theme.colors.primary} />}
+              {item.image && <Icon source={'image-outline'} size={14} color={theme.colors.primary} />}
+              <Text style={[style.headerDate, { color: theme.colors.onSurfaceVariant }]}>{_date(item.date)}</Text>
+            </View>
+            <View style={style.itemBody}>
+              <Checkbox status={item.isChecked ? 'checked' : 'unchecked'} onPress={() => toggle(item.id)} />
+              <Text style={[style.itemType, { color: theme.colors.onSurfaceVariant }]}>
+                {item.type === 'in' ? '收入' : '支出'}
+              </Text>
+              <Text style={[style.itemCount, { color: amountColor }]}>{item.count}</Text>
+              <Text style={[style.itemUnit, { color: theme.colors.onSurfaceVariant }]}>元</Text>
+            </View>
+            <View style={tag.pane}>
+              {item.tags.map(tagItem => (
+                <Chip style={tag.item} icon={tagItem.icon} mode="flat" compact key={tagItem.id}>
+                  {tagItem.name}
+                </Chip>
+              ))}
+              {item.tags.length === 0 && (
+                <Chip style={[tag.item, { opacity: 0.5 }]} mode="flat" compact icon="tag-multiple-outline">
+                  分类
+                </Chip>
+              )}
+            </View>
+          </Pressable>
+        </CustomMenuView>
+      )}
+    </>
+  )
+})
 
 const KeepingList: React.FC<Props> = ({ item, toggle }) => {
   const navigation = useNavigation()
@@ -186,15 +152,7 @@ const KeepingList: React.FC<Props> = ({ item, toggle }) => {
         navigation.navigate('DetailScreen', { hideHeader: true, id: itemId })
       }
     },
-    [
-      dispatch,
-      confirmRemove,
-      activeKeeping,
-      modal,
-      navigation,
-      toggle,
-      removeItem,
-    ],
+    [dispatch, confirmRemove, activeKeeping, modal, navigation, toggle, removeItem],
   )
 
   const renderItem = useCallback(
@@ -217,6 +175,8 @@ const KeepingList: React.FC<Props> = ({ item, toggle }) => {
         data={item}
         renderItem={renderItem}
         keyExtractor={item => item.id}
+        contentContainerStyle={style.listContent}
+        showsVerticalScrollIndicator={false}
       />
     </View>
   )
@@ -225,32 +185,47 @@ const KeepingList: React.FC<Props> = ({ item, toggle }) => {
 const style = StyleSheet.create({
   container: {
     width: '100%',
-    paddingTop: 10,
+    flex: 1,
+    paddingTop: 4,
+  },
+  listContent: {
+    paddingBottom: 80,
   },
   item: {
-    width: '96%',
-    marginTop: 5,
-    marginBottom: 5,
-    marginLeft: 'auto',
-    marginRight: 'auto',
-    padding: 5,
-    paddingRight: 10,
-    borderRadius: 8,
-    elevation: 2,
+    width: '100%',
+    marginTop: 6,
+    marginBottom: 6,
+    padding: 14,
+    borderRadius: 12,
   },
   itemHeader: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
+    marginBottom: 4,
+  },
+  headerDate: {
+    marginLeft: 6,
+    fontSize: 12,
+    letterSpacing: 0.3,
   },
   itemBody: {
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
   },
+  itemType: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginLeft: 4,
+  },
   itemCount: {
-    fontSize: 20,
-    marginHorizontal: 5,
+    fontSize: 28,
+    fontWeight: 'bold',
+    marginHorizontal: 6,
+  },
+  itemUnit: {
+    fontSize: 12,
   },
 })
 
@@ -261,10 +236,10 @@ const tag = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     flexWrap: 'wrap',
-    marginLeft: 30,
+    marginTop: 6,
   },
   item: {
-    marginHorizontal: 4,
+    marginHorizontal: 3,
     marginVertical: 2,
   },
 })

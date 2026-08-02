@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
-import { View, Pressable } from 'react-native'
+import { View, Pressable, StyleSheet } from 'react-native'
+import { useTheme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 
 import { AddingButton, KeepingList, NothingHere } from './components'
@@ -10,6 +11,7 @@ import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
 import Modal from '~components/Modal'
 
 const HomeScreen = () => {
+  const theme = useTheme()
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
   const { items, toggle, addItems } = useKeepingStore()
@@ -31,11 +33,12 @@ const HomeScreen = () => {
   return (
     <>
       <Pressable
-        style={homeStyle.container}
+        style={[homeStyle.container, { backgroundColor: theme.colors.background }]}
         onPress={() => dispatch({ type: 'isShowMenu', payload: false })}>
-        <KeepingList item={renderItems} toggle={toggle} />
-        {renderItems.length === 0 && <NothingHere />}
-        <View style={homeStyle.btnArea}>
+        <View style={innerStyle.content}>
+          {renderItems.length === 0 ? <NothingHere /> : <KeepingList item={renderItems} toggle={toggle} />}
+        </View>
+        <View style={[homeStyle.btnArea, { borderTopColor: theme.colors.outlineVariant }]}>
           <AddingButton onPress={() => navigation.navigate('Adding', {})} />
         </View>
       </Pressable>
@@ -50,5 +53,13 @@ const HomeScreen = () => {
     </>
   )
 }
+
+const innerStyle = StyleSheet.create({
+  content: {
+    flex: 1,
+    width: '100%',
+    paddingHorizontal: 16,
+  },
+})
 
 export default HomeScreen

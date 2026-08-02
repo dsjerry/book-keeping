@@ -1,12 +1,22 @@
 import { useState, useEffect, useCallback } from 'react'
 
-import { View, Text, StyleSheet, Keyboard, KeyboardAvoidingView, Platform, TouchableOpacity, ScrollView } from 'react-native'
-import { TextInput, Chip, Button, Modal, Portal, IconButton, useTheme } from 'react-native-paper'
+import {
+  View,
+  Text,
+  StyleSheet,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native'
+import { TextInput, Button, Modal, Portal, IconButton, useTheme } from 'react-native-paper'
 import DateTimePicker from '@react-native-community/datetimepicker'
 import { format } from 'date-fns'
 import { useNavigation, useRoute } from '@react-navigation/native'
 
 import CustomChipPane from '~components/CustomChipPane'
+import SegmentedControl from '~components/SegmentedControl'
 import { CountTypePicker } from './components'
 import ImagePicker from '~components/ImagePicker'
 import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
@@ -14,9 +24,10 @@ import { useKeepingStore } from '~store/keepingStore'
 import { useAppSettingsStore } from '~store/settingStore'
 import { useUserStore } from '~store/userStore'
 import { CountTypeList, OutTypes } from '~consts/Data'
+import { withAlpha } from '~utils'
 
 const Adding: React.FC<Props> = ({ route }) => {
-  const theme = useTheme() // 获取当前主题
+  const theme = useTheme()
   const [tips, setTips] = useState('')
   const [keyboardStatus, setKeyboardStatus] = useState<'showed' | 'hidden'>('hidden')
   const [outTypes, setOutTypes] = useState<OutType[]>([])
@@ -36,7 +47,6 @@ const Adding: React.FC<Props> = ({ route }) => {
   const navigation = useNavigation()
   const { params }: ScreenParam.Adding = useRoute()
 
-  // 只把变更的字段交给 reducer，由 reducer 与当前表单合并
   const formChanged = (item: Partial<KeepingItem>) => {
     dispatch({ type: 'addForm', payload: item })
   }
@@ -82,7 +92,6 @@ const Adding: React.FC<Props> = ({ route }) => {
 
     setOutTypes([..._tags])
 
-    // 初始化日期为当前日期
     formChanged({ date: Date.now() })
 
     if (!currentUser && items.length === 0) {
@@ -122,7 +131,6 @@ const Adding: React.FC<Props> = ({ route }) => {
         }
       }
 
-      // 编辑模式下，按已保存的标签标记选中状态
       setOutTypes(
         newTag.map(t => ({
           ...t,
@@ -131,7 +139,6 @@ const Adding: React.FC<Props> = ({ route }) => {
       )
       dispatch({ type: 'fromEditing', payload: item })
 
-      // 如果是编辑模式，设置已保存的日期
       if (item.date) {
         setSelectedDate(new Date(item.date))
       }
@@ -162,16 +169,14 @@ const Adding: React.FC<Props> = ({ route }) => {
     return unsubscribe
   }, [navigation, isSubmit, handleBeforeRemove])
 
-  // 处理日期变更
   const onDateChange = (event: any, date?: Date) => {
     setShowDatePicker(false)
     if (date) {
       setSelectedDate(date)
-      formChanged({ date: date.getTime() }) // 转换为时间戳存储
+      formChanged({ date: date.getTime() })
     }
   }
 
-  // 格式化日期显示
   const formatDisplayDate = (date: Date) => {
     return format(date, 'yyyy年MM月dd日')
   }
@@ -190,7 +195,12 @@ const Adding: React.FC<Props> = ({ route }) => {
     navigation.navigate('HomeScreen', {})
   }
 
-  // 不可变地更新选中标签：同时更新表单 tags 和面板选中样式
+  const onTypeSwitch = (index: number) => {
+    const type = index === 1 ? 'out' : 'in'
+    if (form.type === type) return
+    formChanged({ type })
+  }
+
   const onChipPress = (chip: OutType) => {
     const checked = !chip.isChecked
     const current = form.tags || []
@@ -199,86 +209,149 @@ const Adding: React.FC<Props> = ({ route }) => {
       nextTags.push({ ...chip, isChecked: true })
     }
     formChanged({ tags: nextTags })
-    setOutTypes(prev =>
-      prev.map(t => (t.id === chip.id ? { ...t, isChecked: checked } : t)),
-    )
+    setOutTypes(prev => prev.map(t => (t.id === chip.id ? { ...t, isChecked: checked } : t)))
   }
 
   return (
     <View style={[style.container, { backgroundColor: theme.colors.background }]}>
-      <Text>记一笔</Text>
-      <View style={style.count}>
-        <TextInput
-          label="金额"
-          value={form.count}
-          onChangeText={text => formChanged({ count: text })}
-          keyboardType="numeric"
-          style={{ flex: 3 }}
-          right={tips && <TextInput.Icon icon="alert-circle-outline" color="#6750a4" />}
-        />
-        <CountTypePicker
-          index={countTypeIndex}
-          setIndex={index => {
-            setCountTypeIndex(index)
-            formChanged({ countType: CountTypeList[index] as any })
-          }}
-        />
+      {/* ===== Header ===== */}
+      <View style={[style.headerRow, { borderBottomColor: theme.colors.outlineVariant }]}>
+        <IconButton icon="close" size={24} onPress={() => navigation.goBack()} />
+        <Text style={[style.headerTitle, { color: theme.colors.onBackground }]}>
+          {params?.isEdit ? '编辑' : '记一笔'}
+        </Text>
+        <View style={{ width: 48 }} />
       </View>
 
-      {/* 日期选择器 */}
-      <TouchableOpacity
-        onPress={() => setShowDatePicker(true)}
-        style={[style.dateSelector, { borderBottomColor: theme.colors.outlineVariant }]}>
-        <Text style={[style.dateLabel, { color: theme.colors.onSurfaceVariant }]}>日期:</Text>
-        <Text style={[style.dateValue, { color: theme.colors.onBackground }]}>{formatDisplayDate(selectedDate)}</Text>
-        <IconButton icon="calendar" size={20} />
-      </TouchableOpacity>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <View style={{ flex: 1 }}>
+          {/* ===== Scrollable content ===== */}
+          <ScrollView
+            style={{ flex: 1 }}
+            contentContainerStyle={style.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}>
+            {/* ===== Amount hero section ===== */}
+            <View style={style.amountSection}>
+              <TextInput
+                value={form.count}
+                onChangeText={text => formChanged({ count: text })}
+                keyboardType="numeric"
+                placeholder="0.00"
+                placeholderTextColor={withAlpha(theme.colors.onSurfaceVariant, 0.38)}
+                style={[style.amountInput, { color: theme.colors.onBackground }]}
+                underlineColor="transparent"
+                activeUnderlineColor="transparent"
+                underlineStyle={{ display: 'none' }}
+              />
+              {tips ? <Text style={[style.tipsText, { color: theme.colors.error }]}>{tips}</Text> : null}
+              <View style={style.pickerWrapper}>
+                <CountTypePicker
+                  index={countTypeIndex}
+                  setIndex={index => {
+                    setCountTypeIndex(index)
+                    formChanged({ countType: CountTypeList[index] as any })
+                  }}
+                />
+              </View>
+            </View>
 
-      {showDatePicker && Platform.OS === 'android' && (
+            {/* ===== Income/Expense segmented control ===== */}
+            <SegmentedControl
+              options={['收入', '支出']}
+              activeIndex={form.type === 'out' ? 1 : 0}
+              onChange={onTypeSwitch}
+              style={{ marginBottom: 24 }}
+            />
+
+            {/* ===== 日期 section ===== */}
+            <View style={style.section}>
+              <Text style={[style.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>日期</Text>
+              <TouchableOpacity
+                onPress={() => setShowDatePicker(true)}
+                style={[style.outlinedCard, { borderColor: theme.colors.outlineVariant }]}>
+                <IconButton icon="calendar" size={20} />
+                <Text style={[style.dateValue, { color: theme.colors.onBackground }]}>
+                  {formatDisplayDate(selectedDate)}
+                </Text>
+                <IconButton icon="chevron-right" size={20} />
+              </TouchableOpacity>
+            </View>
+
+            {/* ===== 类别 section (only for out) ===== */}
+            {form.type === 'out' && (
+              <View style={style.section}>
+                <Text style={[style.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>类别</Text>
+                <CustomChipPane items={outTypes} onPress={onChipPress} />
+              </View>
+            )}
+
+            {/* ===== 地点 section ===== */}
+            <View style={style.section}>
+              <Text style={[style.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>地点</Text>
+              <Button
+                icon="map-marker"
+                mode="outlined"
+                style={style.addressBtn}
+                onPress={() => navigation.navigate('AddressDetailScreen')}>
+                {form?.address?.name || '获取地址'}
+              </Button>
+            </View>
+
+            {/* ===== 图片 section ===== */}
+            <View style={style.section}>
+              <Text style={[style.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>图片</Text>
+              <ImagePicker uploaded={assets => formChanged({ image: assets })} isShow={keyboardStatus !== 'showed'} />
+            </View>
+
+            {/* ===== 备注 section ===== */}
+            <View style={style.section}>
+              <Text style={[style.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>备注</Text>
+              <TouchableOpacity onPress={() => setNoteModalVisible(true)} style={{ width: '100%' }}>
+                <View
+                  style={[
+                    style.outlinedCard,
+                    { borderColor: theme.colors.outlineVariant, backgroundColor: theme.colors.surface },
+                  ]}>
+                  <Text
+                    style={[
+                      style.noteDisplayText,
+                      {
+                        color: form.note ? theme.colors.onBackground : theme.colors.onSurfaceVariant,
+                      },
+                    ]}
+                    numberOfLines={1}>
+                    {form.note || '添加备注...'}
+                  </Text>
+                  <IconButton icon="pencil-outline" size={18} />
+                </View>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ height: 16 }} />
+          </ScrollView>
+
+          {/* ===== Footer save button ===== */}
+          <View style={[style.footer, { borderTopColor: theme.colors.outlineVariant }]}>
+            <Button mode="contained-tonal" style={style.addBtn} onPress={onAddPress}>
+              保存
+            </Button>
+          </View>
+        </View>
+      </KeyboardAvoidingView>
+
+      {/* ===== Date picker ===== */}
+      {showDatePicker && (
         <DateTimePicker
           value={selectedDate}
           mode="date"
-          display="default"
-          onChange={onDateChange}
-          maximumDate={new Date()} // 限制最大日期为今天
-        />
-      )}
-      {showDatePicker && Platform.OS === 'ios' && (
-        <DateTimePicker
-          value={selectedDate}
-          mode="date"
-          display="spinner"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
           onChange={onDateChange}
           maximumDate={new Date()}
         />
       )}
-      <View style={style.countType}>
-        <Chip selected={form.type === 'in'} onPress={() => formChanged({ type: 'in' })}>
-          收入
-        </Chip>
-        <Chip selected={form.type === 'out'} style={{ marginLeft: 5 }} onPress={() => formChanged({ type: 'out' })}>
-          支出
-        </Chip>
-      </View>
-      {form.type === 'out' && <CustomChipPane items={outTypes} onPress={onChipPress} />}
-      <View style={addressStyle.pane}>
-        <Button icon={'map-marker'} style={addressStyle.btn} onPress={() => navigation.navigate('AddressDetailScreen')}>
-          {form?.address?.name || '获取地址'}
-        </Button>
-      </View>
-      <ImagePicker uploaded={assets => formChanged({ image: assets })} isShow={keyboardStatus !== 'showed'} />
-      <TouchableOpacity onPress={() => setNoteModalVisible(true)} style={{ width: '100%', marginTop: 20 }}>
-        <TextInput
-          label="备注"
-          style={{ width: '100%' }}
-          mode="outlined"
-          value={form.note}
-          showSoftInputOnFocus={false}
-          editable={false}
-          pointerEvents="none"
-        />
-      </TouchableOpacity>
 
+      {/* ===== Note modal ===== */}
       <Portal>
         <Modal
           visible={noteModalVisible}
@@ -303,9 +376,6 @@ const Adding: React.FC<Props> = ({ route }) => {
           </View>
         </Modal>
       </Portal>
-      <Button mode="contained-tonal" style={style.addBtn} onPress={onAddPress}>
-        保存
-      </Button>
     </View>
   )
 }
@@ -313,48 +383,83 @@ const Adding: React.FC<Props> = ({ route }) => {
 const style = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'flex-start',
-    alignItems: 'center',
-    padding: 20,
-    overflow: 'scroll',
   },
-  count: {
-    width: '100%',
-    height: 50,
-    marginTop: 20,
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-  },
-  dateSelector: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
     paddingVertical: 10,
-    marginTop: 10,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
   },
-  dateLabel: {
-    fontSize: 16,
-    marginRight: 10,
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  scrollContent: {
+    paddingHorizontal: 20,
+    paddingTop: 16,
+  },
+  amountSection: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  amountInput: {
+    fontSize: 40,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    height: 60,
+    backgroundColor: 'transparent',
+  },
+  tipsText: {
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  pickerWrapper: {
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  section: {
+    marginBottom: 20,
+  },
+  sectionLabel: {
+    fontSize: 12,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  outlinedCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
   },
   dateValue: {
     fontSize: 16,
     flex: 1,
+    marginLeft: 4,
   },
-  countType: {
+  addressBtn: {
     width: '100%',
-    height: 50,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    marginBottom: 20,
+    borderRadius: 12,
+  },
+  noteDisplayText: {
+    flex: 1,
+    fontSize: 15,
+  },
+  footer: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderTopWidth: 1,
   },
   addBtn: {
     width: '100%',
-    marginTop: 'auto',
-    borderRadius: 5,
+    borderRadius: 12,
+    paddingVertical: 4,
   },
   modalContainer: {
     padding: 20,
@@ -378,16 +483,6 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'flex-end',
     marginTop: 15,
-  },
-})
-
-const addressStyle = StyleSheet.create({
-  pane: {
-    width: '100%',
-    marginVertical: 20,
-  },
-  btn: {
-    alignSelf: 'flex-start',
   },
 })
 

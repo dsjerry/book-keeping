@@ -87,9 +87,7 @@ export const HomeProvider: React.FC<Props> = ({ children }) => {
 
   return (
     <HomeContext.Provider value={state}>
-      <HomeDispatchContext.Provider value={dispatch}>
-        {children}
-      </HomeDispatchContext.Provider>
+      <HomeDispatchContext.Provider value={dispatch}>{children}</HomeDispatchContext.Provider>
     </HomeContext.Provider>
   )
 }
