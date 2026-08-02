@@ -14,7 +14,7 @@ const HomeScreen = () => {
   const theme = useTheme()
   const navigation = useNavigation()
   const dispatch = useHomeStoreDispatch()
-  const { items, toggle, addItems } = useKeepingStore()
+  const { items, toggle, addItems, output } = useKeepingStore()
   const { modal } = useHomeStore()
   const { currentUser } = useUserStore()
   const { get } = userUsersKeepingStore()

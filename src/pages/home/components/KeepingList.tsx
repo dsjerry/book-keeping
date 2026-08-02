@@ -1,13 +1,14 @@
-import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native'
+import { View, Text, FlatList, StyleSheet, Pressable, Image } from 'react-native'
 import { Checkbox, Chip, Icon, useTheme } from 'react-native-paper'
 import type { MD3Theme } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import type { MenuAction } from '@react-native-menu/menu'
-import React, { useCallback, memo } from 'react'
+import React, { useCallback, memo, useState } from 'react'
+import LinearGradient from 'react-native-linear-gradient'
 
 import CustomMenuView from '~components/CustomMenuView'
 import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
-import { _date } from '~utils'
+import { _date, withAlpha } from '~utils'
 import { useAppSettingsStore } from '~store/settingStore'
 import { useKeepingStore } from '~store/keepingStore'
 
@@ -44,42 +45,79 @@ const getMenuActions = (theme: MD3Theme): MenuAction[] => [
 ]
 
 const ListItem: React.FC<ItemProps> = memo(({ item, doNavigate, onLongPress, onMenuPress, toggle, theme }) => {
-  const amountColor = item.type === 'in' ? theme.colors.primary : theme.colors.error
+  // 收入用青绿（tertiary）、支出用主题深紫（primary）——避免 error 红的生硬感，
+  // 两色均为主题色系，协调且收支一眼可辨
+  const amountColor = item.type === 'in' ? theme.colors.tertiary : theme.colors.primary
+  const hasImage = !!item.image
+  const [pressed, setPressed] = useState(false)
+
+  // 有图记录：图片作为卡片背景，叠加"左高→右低"渐变遮罩（左雾化保证文字可读、右侧渐显图片）
+  const backgroundLayer = hasImage ? (
+    <>
+      <Image source={{ uri: item.image }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+      <LinearGradient
+        colors={[
+          withAlpha(theme.colors.surfaceVariant, 0.95),
+          withAlpha(theme.colors.surfaceVariant, 0.4),
+          withAlpha(theme.colors.surfaceVariant, 0.05),
+        ]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFillObject}
+      />
+      {pressed && (
+        <View style={[StyleSheet.absoluteFillObject, { backgroundColor: withAlpha(theme.colors.onSurface, 0.06) }]} />
+      )}
+    </>
+  ) : null
+
   return (
     <>
       {item.isShow !== false && (
         <CustomMenuView actions={getMenuActions(theme)} onPress={id => onMenuPress(id, item.id)}>
           <Pressable
-            style={({ pressed }) => ({
-              ...style.item,
-              backgroundColor: pressed ? theme.colors.elevation.level1 : theme.colors.surfaceVariant,
-            })}
+            onPressIn={() => setPressed(true)}
+            onPressOut={() => setPressed(false)}
+            style={[
+              style.item,
+              !hasImage && { backgroundColor: pressed ? theme.colors.elevation.level2 : theme.colors.surfaceVariant },
+            ]}
             onPress={() => doNavigate(item.id)}
             onLongPress={e => onLongPress(item.id)}>
+            {backgroundLayer}
             <View style={style.itemHeader}>
-              {item.note && <Icon source={'note-text-outline'} size={14} color={theme.colors.primary} />}
-              {item.image && <Icon source={'image-outline'} size={14} color={theme.colors.primary} />}
+              {item.note && <Icon source={'note-text-outline'} size={14} color={theme.colors.tertiary} />}
+              {item.image && <Icon source={'image-outline'} size={14} color={theme.colors.tertiary} />}
+              {item.address && <Icon source={'map-marker-outline'} size={14} color={theme.colors.tertiary} />}
               <Text style={[style.headerDate, { color: theme.colors.onSurfaceVariant }]}>{_date(item.date)}</Text>
             </View>
             <View style={style.itemBody}>
               <Checkbox status={item.isChecked ? 'checked' : 'unchecked'} onPress={() => toggle(item.id)} />
-              <Text style={[style.itemType, { color: theme.colors.onSurfaceVariant }]}>
+              <Text
+                style={[style.itemType, { color: item.type === 'in' ? theme.colors.tertiary : theme.colors.primary }]}>
                 {item.type === 'in' ? '收入' : '支出'}
               </Text>
               <Text style={[style.itemCount, { color: amountColor }]}>{item.count}</Text>
               <Text style={[style.itemUnit, { color: theme.colors.onSurfaceVariant }]}>元</Text>
             </View>
             <View style={tag.pane}>
-              {item.tags.map(tagItem => (
-                <Chip style={tag.item} icon={tagItem.icon} mode="flat" compact key={tagItem.id}>
-                  {tagItem.name}
-                </Chip>
-              ))}
-              {item.tags.length === 0 && (
-                <Chip style={[tag.item, { opacity: 0.5 }]} mode="flat" compact icon="tag-multiple-outline">
-                  分类
-                </Chip>
-              )}
+              {item.tags.map(tagItem => {
+                const tagIconColor = (
+                  tagItem.color
+                    ? theme.colors[tagItem.color as keyof typeof theme.colors]
+                    : theme.colors.onSurfaceVariant
+                ) as string
+                return (
+                  <Chip
+                    style={[tag.item, { backgroundColor: withAlpha(theme.colors.tertiary, 0.08) }]}
+                    icon={({ size }) => <Icon source={tagItem.icon} size={size} color={tagIconColor} />}
+                    mode="flat"
+                    compact
+                    key={tagItem.id}>
+                    {tagItem.name}
+                  </Chip>
+                )
+              })}
             </View>
           </Pressable>
         </CustomMenuView>
@@ -193,20 +231,22 @@ const style = StyleSheet.create({
   },
   item: {
     width: '100%',
-    marginTop: 6,
-    marginBottom: 6,
-    padding: 14,
+    marginTop: 8,
+    marginBottom: 8,
+    padding: 16,
     borderRadius: 12,
+    overflow: 'hidden',
   },
   itemHeader: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
   },
   headerDate: {
     marginLeft: 6,
     fontSize: 12,
+    fontWeight: '500',
     letterSpacing: 0.3,
   },
   itemBody: {
@@ -220,8 +260,9 @@ const style = StyleSheet.create({
     marginLeft: 4,
   },
   itemCount: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: 'bold',
+    fontVariant: ['tabular-nums'],
     marginHorizontal: 6,
   },
   itemUnit: {
@@ -236,7 +277,7 @@ const tag = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'flex-start',
     flexWrap: 'wrap',
-    marginTop: 6,
+    marginTop: 10,
   },
   item: {
     marginHorizontal: 3,
