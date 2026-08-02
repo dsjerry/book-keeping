@@ -1,13 +1,11 @@
-import { useEffect, useRef } from 'react'
-import { View, StyleSheet } from 'react-native'
+import { useEffect, useRef, useState, memo } from 'react'
+import { View, StyleSheet, LayoutChangeEvent } from 'react-native'
 import * as echarts from 'echarts/core'
 import { LineChart, PieChart, BarChart } from 'echarts/charts'
 import { GridComponent, LegendComponent, TitleComponent } from 'echarts/components'
-import { SVGRenderer, SkiaChart, SvgChart } from '@wuba/react-native-echarts'
+import { SVGRenderer, SvgChart } from '@wuba/react-native-echarts'
 import type { EChartsOption, EChartsInitOpts } from 'echarts'
-import { Card } from 'react-native-paper'
-
-import { DEVICE_WIDTH } from '~consts/Data'
+import { Card, useTheme } from 'react-native-paper'
 
 interface ChartsProps {
   data: any
@@ -19,162 +17,164 @@ interface ChartsProps {
 
 echarts.use([SVGRenderer, LineChart, GridComponent, PieChart, LegendComponent, BarChart, TitleComponent])
 
-const DEFAULT_INIT: EChartsInitOpts = {
-  width: DEVICE_WIDTH * 0.9,
-  height: 350,
-  renderer: 'svg',
-}
+const CHART_HEIGHT = 300
 
 const style = StyleSheet.create({
   chartPane: {
-    flex: 1,
-    paddingTop: 20,
+    borderRadius: 12,
     marginVertical: 10,
+    paddingTop: 20,
+    overflow: 'hidden',
+  },
+  chartWrapper: {
+    height: CHART_HEIGHT,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 })
 
-export const PiePane: React.FC<ChartsProps> = ({
-  data,
-  isShowLabel = true,
-  title = '图表',
-  labelPosi = 'outside',
-  units = '',
-}) => {
-  const ref = useRef<any>(null)
-  useEffect(() => {
-    const option: EChartsOption = {
-      title: {
-        text: title,
-        left: 'center',
-      },
-      legend: {
-        orient: 'horizontal',
-        left: 'center',
-        top: '15%',
-      },
-      series: {
-        radius: '35%',
-        center: ['50%', '60%'],
-        type: 'pie',
-        data: data,
-        label: {
-          show: isShowLabel,
-          position: labelPosi,
-          formatter: '{b}: {c} ' + units,
-          fontWeight: 'bold',
+export const PiePane: React.FC<ChartsProps> = memo(
+  ({ data, isShowLabel = true, title = '图表', labelPosi = 'outside', units = '' }) => {
+    const theme = useTheme()
+    const ref = useRef<any>(null)
+    const [chartWidth, setChartWidth] = useState(0)
+
+    const onLayout = (e: LayoutChangeEvent) => {
+      const w = e.nativeEvent.layout.width
+      if (w > 0 && w !== chartWidth) {
+        setChartWidth(w)
+      }
+    }
+
+    useEffect(() => {
+      if (!ref.current || chartWidth <= 0) return
+      const initOpts: EChartsInitOpts = {
+        width: chartWidth - 32,
+        height: CHART_HEIGHT - 40,
+        renderer: 'svg',
+      }
+      const option: EChartsOption = {
+        backgroundColor: 'transparent',
+        title: {
+          text: title,
+          left: 'center',
+          textStyle: { color: theme.colors.onSurface },
         },
-      },
-    }
-    let chart: any
-    if (ref.current) {
-      chart = echarts.init(ref.current, 'light', {
-        ...DEFAULT_INIT,
-      })
+        legend: {
+          orient: 'horizontal',
+          left: 'center',
+          top: '22%',
+          textStyle: { color: theme.colors.onSurfaceVariant },
+        },
+        series: {
+          radius: '35%',
+          center: ['50%', '60%'],
+          type: 'pie',
+          data: data,
+          label: {
+            show: isShowLabel,
+            position: labelPosi,
+            formatter: '{b}: {c} ' + units,
+            fontWeight: 'bold',
+            color: theme.colors.onSurface,
+          },
+        },
+      }
+      let chart: any
+      chart = echarts.init(ref.current, theme.dark ? 'dark' : 'light', initOpts)
       chart.setOption(option)
-    }
-    return () => chart?.dispose()
-  }, [])
+      return () => chart?.dispose()
+    }, [
+      theme.dark,
+      chartWidth,
+      data,
+      title,
+      isShowLabel,
+      labelPosi,
+      units,
+      theme.colors.onSurface,
+      theme.colors.onSurfaceVariant,
+    ])
 
-  return (
-    <Card style={style.chartPane}>
-      <SvgChart ref={ref} />
-    </Card>
-  )
-}
+    return (
+      <Card style={style.chartPane} onLayout={onLayout}>
+        <View style={style.chartWrapper}>
+          <SvgChart ref={ref} />
+        </View>
+      </Card>
+    )
+  },
+)
 
-export const CountBarChart: React.FC<ChartsProps> = ({ data, title }) => {
+export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
+  const theme = useTheme()
   const ref = useRef<any>(null)
+  const [chartWidth, setChartWidth] = useState(0)
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width
+    if (w > 0 && w !== chartWidth) {
+      setChartWidth(w)
+    }
+  }
+
   useEffect(() => {
+    if (!ref.current || chartWidth <= 0) return
+    const initOpts: EChartsInitOpts = {
+      width: chartWidth - 32,
+      height: CHART_HEIGHT - 40,
+      renderer: 'svg',
+    }
     const option: EChartsOption = {
+      backgroundColor: 'transparent',
       title: {
         text: title,
         left: 'center',
+        textStyle: { color: theme.colors.onSurface },
       },
       xAxis: {
         type: 'category',
         data: data.dates,
         axisLabel: {
           rotate: 0,
+          color: theme.colors.onSurfaceVariant,
         },
+        axisLine: { lineStyle: { color: theme.colors.outlineVariant } },
       },
       yAxis: {
         type: 'value',
+        axisLabel: { color: theme.colors.onSurfaceVariant },
+        splitLine: { lineStyle: { color: theme.colors.outlineVariant } },
       },
       series: [
         {
           data: data.counts,
           type: 'bar',
-          barWidth: 30, // 设置柱子的固定宽度为30px
+          barWidth: 30,
+          itemStyle: { color: theme.colors.primary },
         },
       ],
     }
     let chart: any
-    if (ref.current) {
-      chart = echarts.init(ref.current, 'light', {
-        ...DEFAULT_INIT,
-      })
-      chart.setOption(option)
-    }
+    chart = echarts.init(ref.current, theme.dark ? 'dark' : 'light', initOpts)
+    chart.setOption(option)
     return () => chart?.dispose()
-  }, [])
+  }, [
+    theme.dark,
+    chartWidth,
+    data,
+    title,
+    theme.colors.onSurface,
+    theme.colors.onSurfaceVariant,
+    theme.colors.outlineVariant,
+    theme.colors.primary,
+  ])
 
   return (
-    <Card style={style.chartPane}>
-      <SvgChart ref={ref} />
+    <Card style={style.chartPane} onLayout={onLayout}>
+      <View style={style.chartWrapper}>
+        <SvgChart ref={ref} />
+      </View>
     </Card>
   )
-}
-
-export const RandingChart: React.FC<ChartsProps> = ({ data }) => {
-  const ref = useRef<any>(null)
-  useEffect(() => {
-    const option: EChartsOption = {
-      dataset: [
-        {
-          dimensions: ['name', 'age', 'profession', 'score', 'date'],
-          source: [
-            ['Hannah Krause', 41, 'Engineer', 314, '2011-02-12'],
-            ['Zhao Qian', 20, 'Teacher', 351, '2011-03-01'],
-            ['Jasmin Krause ', 52, 'Musician', 287, '2011-02-14'],
-            ['Li Lei', 37, 'Teacher', 219, '2011-02-18'],
-            ['Karle Neumann', 25, 'Engineer', 253, '2011-04-02'],
-            ['Adrian Groß', 19, 'Teacher', '-', '2011-01-16'],
-            ['Mia Neumann', 71, 'Engineer', 165, '2011-03-19'],
-            ['Böhm Fuchs', 36, 'Musician', 318, '2011-02-24'],
-            ['Han Meimei', 67, 'Engineer', 366, '2011-03-12'],
-          ],
-        },
-        {
-          transform: {
-            type: 'sort',
-            config: { dimension: 'score', order: 'desc' },
-          },
-        },
-      ],
-      xAxis: {
-        type: 'category',
-        axisLabel: { interval: 0, rotate: 30 },
-      },
-      yAxis: {},
-      series: {
-        type: 'bar',
-        encode: { x: 'name', y: 'score' },
-        datasetIndex: 1,
-      },
-    }
-    let chart: any
-    if (ref.current) {
-      chart = echarts.init(ref.current, 'light', {
-        ...DEFAULT_INIT,
-      })
-      chart.setOption(option)
-    }
-    return () => chart?.dispose()
-  }, [])
-
-  return (
-    <View style={style.chartPane}>
-      <SvgChart ref={ref} />
-    </View>
-  )
-}
+})
