@@ -15,6 +15,7 @@ interface AppSettings {
   confirmRemove: boolean
   useBiometrics: boolean
   themeMode: 'system' | 'light' | 'dark'
+  monthlyBudget: number // 月度预算（元）
 }
 
 interface User {
@@ -36,4 +37,5 @@ interface OutType {
   isChecked: boolean
   alias: string
   isCustom?: boolean
+  color?: string // 图标主题色名，如 'primary'/'tertiary'
 }

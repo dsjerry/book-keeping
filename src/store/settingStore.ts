@@ -11,6 +11,7 @@ export const useAppSettingsStore = create<AppSettingStore>()(
       confirmRemove: true,
       useBiometrics: false, // 是否启用生物识别
       themeMode: 'system', // 'system', 'light', 'dark'
+      monthlyBudget: 0,
       toggleUseOnline: () => {
         const useOnline = !get().useOnline
         logging.info('[同步状态]', useOnline ? '启用' : '禁用')
@@ -26,6 +27,7 @@ export const useAppSettingsStore = create<AppSettingStore>()(
         set({ useBiometrics })
       },
       setThemeMode: (mode: 'system' | 'light' | 'dark') => set({ themeMode: mode }),
+      setMonthlyBudget: (budget: number) => set({ monthlyBudget: budget }),
     }),
     {
       name: 'app-settings',
@@ -35,6 +37,7 @@ export const useAppSettingsStore = create<AppSettingStore>()(
         confirmRemove: state.confirmRemove,
         useBiometrics: state.useBiometrics,
         themeMode: state.themeMode,
+        monthlyBudget: state.monthlyBudget,
       }),
       storage: createJSONStorage(() => AsyncStorage),
     },
@@ -47,4 +50,5 @@ interface AppSettingStore extends AppSettings {
   toggleConfirmRemove: () => void
   toggleUseBiometrics: () => void
   setThemeMode: (mode: 'system' | 'light' | 'dark') => void
+  setMonthlyBudget: (budget: number) => void
 }
