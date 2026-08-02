@@ -45,11 +45,18 @@ const Home = () => {
   const shareRef = useRef<any>(null)
 
   const chartData = useMemo(() => new GetData(items), [items])
-  const { tagCounts, aliasCountArray } = useMemo(() => chartData.getTags(), [chartData])
+  // 支出统计数据（消费类型图、AI 分析用）；金额占比图需跟随 支出/收入 切换
+  const { tagCounts, aliasCountArray } = useMemo(() => chartData.getTags(false), [chartData])
+  const tagsIncome = useMemo(() => chartData.getTags(true), [chartData])
   const data = useMemo(() => chartData.getDate(), [chartData])
   // 地点分布数据也必须 useMemo 缓存稳定引用——直接调用会在每次渲染时生成新数组，
   // 导致图表组件 useEffect 依赖 data 变化而销毁重建（echarts.init 开销大，是卡顿根因）
   const locationData = useMemo(() => chartData.getLocation(false), [chartData])
+  // 金额占比：支出 tab 用支出数据，收入 tab 用收入数据
+  const amountPieData = useMemo(
+    () => (btnIndex === 0 ? aliasCountArray : tagsIncome.aliasCountArray),
+    [btnIndex, aliasCountArray, tagsIncome],
+  )
 
   useEffect(() => {
     setCounting()
@@ -93,6 +100,14 @@ const Home = () => {
       setShowReasoning(false) // 重置折叠状态
       setShowHistory(false) // 关闭历史记录面板
 
+      // 最近 10 条带备注的记录，供 AI 结合具体消费场景分析
+      const recentNotes = items
+        .filter(i => i.note)
+        .sort((a, b) => b.date - a.date)
+        .slice(0, 10)
+        .map(i => `${i.type === 'in' ? '收入' : '支出'} ${i.count}${i.countType || ''} - ${i.note}`)
+        .join('\n')
+
       // 构建提示词
       const prompt = `请用中文分析以下消费数据并给出建议。
 
@@ -102,8 +117,10 @@ const Home = () => {
 - 消费类型分布：${JSON.stringify(tagCounts)}
 - 金额占比：${JSON.stringify(aliasCountArray)}
 - 消费时间分布：${JSON.stringify(data)}
+- 近期消费备注：
+${recentNotes || '（无）'}
 
-请分析这些数据，找出消费模式，并给出合理的理财建议。`
+请结合消费备注，分析这些数据，找出消费模式，并给出合理的理财建议。`
 
       // 使用AI SDK的generateObject函数调用模型，获取结构化数据
       const { object: analysisResult } = await generateObject({
@@ -192,7 +209,7 @@ const Home = () => {
             </Card>
             {/* 各个图表 */}
             {btnIndex === 0 && <PiePane data={tagCounts} units="次" title="消费类型" />}
-            <PiePane data={aliasCountArray} units="元" title="金额占比" />
+            <PiePane data={amountPieData} units="元" title="金额占比" />
             {/* 消费地点分布图表 */}
             {btnIndex === 0 && <PiePane data={locationData} units="元" title="消费地点" />}
             {btnIndex === 0 && <CountBarChart data={data} title="消费时间" />}
