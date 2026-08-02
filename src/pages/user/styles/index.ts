@@ -1,41 +1,54 @@
 import { StyleSheet } from 'react-native'
 
 export const loginStyle = StyleSheet.create({
-  container: {
-    height: '95%',
-    justifyContent: 'center',
+  heroSection: {
     alignItems: 'center',
-    // backgroundColor: '#e7e0ec',
+    marginBottom: 32,
+    paddingTop: 20,
   },
-  title: {
-    fontSize: 18,
+  appTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#6750a4',
+    marginTop: 12,
+  },
+  tagline: {
+    fontSize: 12,
+    letterSpacing: 0.5,
+    marginTop: 4,
   },
   formPane: {
-    width: '90%',
-    height: '50%',
-    // minHeight: 400,
-    justifyContent: 'center',
+    width: '100%',
     alignItems: 'center',
-  },
-  formBtn: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  submitPane: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  submitBtn: {
-    width: '90%',
-    marginHorizontal: 'auto',
-    borderRadius: 4,
   },
   inputPane: {
-    width: '90%',
-    borderRadius: 4,
+    width: '100%',
+    marginBottom: 4,
+  },
+  helperText: {
+    marginTop: -4,
+  },
+  submitPane: {
+    width: '100%',
+    marginTop: 8,
+  },
+  submitBtn: {
+    width: '100%',
+    borderRadius: 12,
+    height: 48,
+    justifyContent: 'center',
+  },
+  submitLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  checkboxRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginTop: 12,
+  },
+  checkboxLabel: {
+    fontSize: 12,
+    marginLeft: 4,
   },
 })

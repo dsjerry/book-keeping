@@ -12,25 +12,14 @@ const Stack = createStackNavigator()
 const User = () => {
   return (
     <UserProvider>
-      <Stack.Navigator
-        screenOptions={{ headerShown: false }}
-        initialRouteName="UserHomeScreen">
-        <Stack.Screen
-          name="UserHomeScreen"
-          options={{ title: '个人中心' }}
-          component={UserScreen}></Stack.Screen>
-        <Stack.Screen
-          name="LoginScreen"
-          component={LoginScreen}
-          options={{ title: '登录' }}></Stack.Screen>
+      <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName="UserHomeScreen">
+        <Stack.Screen name="UserHomeScreen" options={{ title: '个人中心' }} component={UserScreen}></Stack.Screen>
+        <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ title: '登录' }}></Stack.Screen>
         <Stack.Screen
           name="ProfileEditScreen"
           component={ProfileEditScreen}
           options={{ title: '编辑信息' }}></Stack.Screen>
-        <Stack.Screen
-          name="AddTagsScreen"
-          component={AddTagsScreen}
-          options={{ title: '添加标签' }}></Stack.Screen>
+        <Stack.Screen name="AddTagsScreen" component={AddTagsScreen} options={{ title: '添加标签' }}></Stack.Screen>
       </Stack.Navigator>
     </UserProvider>
   )
