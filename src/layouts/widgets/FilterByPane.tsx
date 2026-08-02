@@ -6,14 +6,11 @@ import { OutTypes, CountTypeWithIconList } from '~consts/Data'
 import CustomDivider from '~components/CustomDivider'
 import { useKeepingStore, FilterBy } from '~store/keepingStore'
 
-interface FilterPaneProps {
-  onFilterChange?: (value: string) => void
-}
-export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
-  const [outTypes, setOutTypes] = useState([...OutTypes])
-  const [countType, setCountType] = useState([...CountTypeWithIconList])
+export const FilterByPane: React.FC = () => {
+  const [outTypes] = useState([...OutTypes])
+  const [countType] = useState([...CountTypeWithIconList])
   const { filterBy, setFilterBy } = useKeepingStore()
-  const theme = useTheme() // 获取当前主题
+  const theme = useTheme()
 
   const onChipPress = (item: FilterBy) => {
     const array = [...filterBy]
@@ -26,18 +23,14 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
   }
 
   return (
-    <View style={{ 
-      paddingHorizontal: 10, 
-      paddingVertical: 10,
-      backgroundColor: theme.colors.background // 使用主题背景色
-    }}>
+    <View style={[style.container, { backgroundColor: theme.colors.background }]}>
       <CustomDivider text="内容" textPosi="left" />
 
-      <View style={{ flexDirection: 'row' }}>
+      <View style={style.row}>
         <Chip
           icon={'note-text-outline'}
           mode="outlined"
-          style={{ marginRight: 10 }}
+          style={style.chip}
           selected={filterBy.includes('note')}
           showSelectedOverlay
           onPress={() => onChipPress('note')}>
@@ -46,6 +39,7 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
         <Chip
           icon={'image-outline'}
           mode="outlined"
+          style={style.chip}
           selected={filterBy.includes('image')}
           showSelectedOverlay
           onPress={() => onChipPress('image')}>
@@ -55,7 +49,7 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
 
       <CustomDivider text="类型" textPosi="left" />
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+      <View style={style.wrapRow}>
         {outTypes.map(item => (
           <Chip
             key={item.id}
@@ -74,7 +68,7 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
 
       <CustomDivider text="货币" textPosi="left" />
 
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+      <View style={style.wrapRow}>
         {countType.map(item => (
           <Chip
             key={item.id}
@@ -93,6 +87,17 @@ export const FilterByPane: React.FC<FilterPaneProps> = ({ onFilterChange }) => {
 }
 
 const style = StyleSheet.create({
+  container: {
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+  },
+  row: {
+    flexDirection: 'row',
+  },
+  wrapRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
   chip: {
     marginRight: 10,
     marginBottom: 10,
