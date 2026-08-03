@@ -6,6 +6,7 @@ import { GridComponent, LegendComponent, TitleComponent } from 'echarts/componen
 import { SVGRenderer, SvgChart } from '@wuba/react-native-echarts'
 import type { EChartsOption, EChartsInitOpts } from 'echarts'
 import { Card, useTheme } from 'react-native-paper'
+import { withAlpha } from '~utils'
 
 interface ChartsProps {
   data: any
@@ -120,6 +121,7 @@ export const PiePane: React.FC<ChartsProps> = memo(
   },
 )
 
+/** 折线图（消费时间趋势） */
 export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
   const theme = useTheme()
   const ref = useRef<any>(null)
@@ -163,9 +165,24 @@ export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
       series: [
         {
           data: data.counts,
-          type: 'bar',
-          barWidth: 30,
+          type: 'line',
+          smooth: true,
+          symbolSize: 6,
+          lineStyle: { color: theme.colors.tertiary, width: 2.5 },
           itemStyle: { color: theme.colors.tertiary },
+          areaStyle: {
+            color: {
+              type: 'linear',
+              x: 0,
+              y: 0,
+              x2: 0,
+              y2: 1,
+              colorStops: [
+                { offset: 0, color: withAlpha(theme.colors.tertiary, 0.25) },
+                { offset: 1, color: withAlpha(theme.colors.tertiary, 0.02) },
+              ],
+            },
+          },
         },
       ],
     }
@@ -178,6 +195,90 @@ export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
     chartWidth,
     data,
     title,
+    theme.colors.onSurface,
+    theme.colors.onSurfaceVariant,
+    theme.colors.outlineVariant,
+    theme.colors.tertiary,
+  ])
+
+  return (
+    <Card style={style.chartPane} onLayout={onLayout}>
+      <View style={style.chartWrapper}>
+        <SvgChart ref={ref} />
+      </View>
+    </Card>
+  )
+})
+
+/** 水平柱状图（消费地点分布） */
+export const LocationBarChart: React.FC<ChartsProps> = memo(({ data, title = '图表', units = '' }) => {
+  const theme = useTheme()
+  const ref = useRef<any>(null)
+  const [chartWidth, setChartWidth] = useState(0)
+
+  const onLayout = (e: LayoutChangeEvent) => {
+    const w = e.nativeEvent.layout.width
+    if (w > 0 && w !== chartWidth) {
+      setChartWidth(w)
+    }
+  }
+
+  useEffect(() => {
+    if (!ref.current || chartWidth <= 0) return
+    // 按金额降序排序，取前 10 条
+    const sorted = [...(data || [])].sort((a: any, b: any) => b.value - a.value).slice(0, 10)
+    const initOpts: EChartsInitOpts = {
+      width: chartWidth - 32,
+      height: CHART_HEIGHT - 40,
+      renderer: 'svg',
+    }
+    const option: EChartsOption = {
+      backgroundColor: 'transparent',
+      title: {
+        text: title,
+        left: 'center',
+        textStyle: { color: theme.colors.onSurface },
+      },
+      grid: { left: 90, right: 30, top: 50, bottom: 20 },
+      xAxis: {
+        type: 'value',
+        axisLabel: { color: theme.colors.onSurfaceVariant, fontSize: 11 },
+        splitLine: { lineStyle: { color: theme.colors.outlineVariant } },
+      },
+      yAxis: {
+        type: 'category',
+        data: sorted.map((d: any) => d.name).reverse(),
+        axisLabel: { color: theme.colors.onSurfaceVariant, fontSize: 12, width: 80, overflow: 'truncate' },
+        axisLine: { show: false },
+      },
+      series: [
+        {
+          type: 'bar',
+          data: sorted.map((d: any) => ({
+            value: d.value,
+            itemStyle: { color: theme.colors.tertiary, borderRadius: [0, 4, 4, 0] },
+          })),
+          barWidth: 20,
+          label: {
+            show: true,
+            position: 'right',
+            formatter: `{c}${units}`,
+            fontSize: 11,
+            color: theme.colors.onSurfaceVariant,
+          },
+        },
+      ],
+    }
+    let chart: any
+    chart = echarts.init(ref.current, theme.dark ? 'dark' : 'light', initOpts)
+    chart.setOption(option)
+    return () => chart?.dispose()
+  }, [
+    theme.dark,
+    chartWidth,
+    data,
+    title,
+    units,
     theme.colors.onSurface,
     theme.colors.onSurfaceVariant,
     theme.colors.outlineVariant,
