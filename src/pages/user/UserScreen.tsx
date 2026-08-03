@@ -255,6 +255,7 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
               title="API KEY"
               left={props => <List.Icon {...props} icon="file-key-outline" />}
               right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('ApiSettings', {})}
             />
           </List.Section>
           <List.Section
@@ -276,6 +277,7 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
               title="数据管理"
               left={props => <List.Icon {...props} icon="database-search-outline" />}
               right={props => <List.Icon {...props} icon="chevron-right" />}
+              onPress={() => navigation.navigate('DataManagement', {})}
             />
             <List.Item
               title="立即同步"
