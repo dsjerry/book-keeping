@@ -195,13 +195,8 @@ const LoginPane = () => {
           showsVerticalScrollIndicator={false}>
           {/* Branding hero */}
           <View style={loginStyle.heroSection}>
-            <Avatar.Icon
-              icon="wallet"
-              size={64}
-              style={{ backgroundColor: theme.colors.primaryContainer }}
-              color={theme.colors.onPrimaryContainer}
-            />
-            <Text style={[loginStyle.appTitle, { color: theme.colors.primary }]}>记账本</Text>
+            <Avatar.Image size={64} source={require('../../../assets/icon.png')} />
+            <Text style={[loginStyle.appTitle, { color: theme.colors.primary }]}>JKeep 随心记</Text>
             <Text style={[loginStyle.tagline, { color: theme.colors.onSurfaceVariant }]}>记录每一笔，掌握每一刻</Text>
           </View>
 

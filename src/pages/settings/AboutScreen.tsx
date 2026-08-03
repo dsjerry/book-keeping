@@ -3,6 +3,8 @@ import { Avatar, useTheme, List } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
 import Config from 'react-native-config'
 
+const logoImg = require('../../../assets/icon.png')
+
 interface AboutItem {
   title: string
   icon: string
@@ -57,14 +59,9 @@ export default function AboutScreen() {
       {/* 顶部信息卡 */}
       <View style={[styles.infoCard, { backgroundColor: theme.colors.surfaceVariant }]}>
         <View style={[styles.logoContainer, { backgroundColor: theme.colors.primaryContainer }]}>
-          <Avatar.Icon
-            icon="book-open-variant"
-            size={56}
-            color={theme.colors.onPrimaryContainer}
-            style={{ backgroundColor: 'transparent' }}
-          />
+          <Avatar.Image size={56} source={logoImg} />
         </View>
-        <Text style={[styles.appName, { color: theme.colors.primary }]}>{Config.APP_NAME}</Text>
+        <Text style={[styles.appName, { color: theme.colors.primary }]}>{Config.APP_NAME} 随心记</Text>
         <Text style={[styles.description, { color: theme.colors.onSurfaceVariant }]}>
           一款简洁易用的个人记账应用，支持多币种、统计分析、AI 辅助等功能，让记账变得简单高效。
         </Text>

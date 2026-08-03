@@ -8,17 +8,14 @@ import { useAppSettingsStore } from '~store/settingStore'
 import { useKeepingStore } from '~store/keepingStore'
 import { withAlpha } from '~utils'
 
+const logoImg = require('../../assets/icon.png')
+
 const ToLoginWidget: React.FC<LoginWidget> = ({ onLogin }) => {
   const theme = useTheme()
   return (
     <Pressable onPress={onLogin} android_ripple={{ color: theme.colors.onPrimaryContainer, borderless: false }}>
       <View style={toLogin.row}>
-        <Avatar.Icon
-          icon="wallet"
-          size={40}
-          style={{ backgroundColor: 'transparent' }}
-          color={theme.colors.onPrimaryContainer}
-        />
+        <Avatar.Image size={40} source={logoImg} />
         <View style={toLogin.textArea}>
           <Text style={[toLogin.title, { color: theme.colors.onPrimaryContainer }]}>登录 / 注册</Text>
           <Text style={[toLogin.subtitle, { color: theme.colors.onPrimaryContainer }]}>开启记账之旅</Text>
