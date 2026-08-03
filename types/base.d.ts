@@ -15,7 +15,9 @@ interface AppSettings {
   confirmRemove: boolean
   useBiometrics: boolean
   themeMode: 'system' | 'light' | 'dark'
-  monthlyBudget: number // 月度预算（元）
+  monthlyBudget: number
+  deepseekApiKey: string
+  deepseekModel: string
 }
 
 interface User {

@@ -6,6 +6,8 @@ import LoginScreen from './LoginScreen'
 import ProfileEditScreen from './ProfileEdit'
 import AddTagsScreen from './AddTagsScreen'
 import BudgetSettingsScreen from './BudgetSettingsScreen'
+import ApiSettingsScreen from './ApiSettingsScreen'
+import DataManagementScreen from './DataManagementScreen'
 import { UserProvider } from './contexts/UserContext'
 
 const Stack = createStackNavigator()
@@ -25,6 +27,11 @@ const User = () => {
           name="BudgetSettings"
           component={BudgetSettingsScreen}
           options={{ title: '额度设置' }}></Stack.Screen>
+        <Stack.Screen name="ApiSettings" component={ApiSettingsScreen} options={{ title: 'API 设置' }}></Stack.Screen>
+        <Stack.Screen
+          name="DataManagement"
+          component={DataManagementScreen}
+          options={{ title: '数据管理' }}></Stack.Screen>
       </Stack.Navigator>
     </UserProvider>
   )

@@ -13,12 +13,13 @@ import { useKeepingStore } from '~store/keepingStore'
 import { useAnalyzeStore, AnalysisResult } from '~store/analyzeStore'
 import { GetData } from '~utils'
 import SegmentedControl from '~components/SegmentedControl'
-import { PiePane, CountBarChart, LoadingIndicator } from './components'
+import { PiePane, LocationBarChart, CountBarChart, LoadingIndicator } from './components'
 
-// 初始化DeepSeek客户端
-const deepseekClient = createDeepSeek({
-  apiKey: Config.DEEPSEEK_API_KEY || '',
-})
+// 初始化DeepSeek客户端（优先用用户自定义配置，fallback 到 .env）
+const deepseekClient = (() => {
+  const settings = require('~store/settingStore').useAppSettingsStore.getState()
+  return createDeepSeek({ apiKey: settings.deepseekApiKey || Config.DEEPSEEK_API_KEY || '' })
+})()
 
 // 定义AI分析结果的数据模式
 const AnalysisResultSchema = z.object({
@@ -109,28 +110,39 @@ const Home = () => {
         .join('\n')
 
       // 构建提示词
-      const prompt = `请用中文分析以下消费数据并给出建议。
+      const tagDetail = (tagCounts as any[]).map((t: any) => `${t.name}(${t.value}次)`).join('、')
+      const amountDetail = (aliasCountArray as any[]).map((t: any) => `${t.name}(¥${t.value})`).join('、')
+      const recentContext = recentNotes ? `\n近期消费场景备注（可用于理解消费动机）：\n${recentNotes}` : ''
 
-消费数据：
-- 总支出：${output}元
-- 总收入：${income}元
-- 消费类型分布：${JSON.stringify(tagCounts)}
-- 金额占比：${JSON.stringify(aliasCountArray)}
+      const prompt = `你是一位专业的个人理财分析师，请基于以下真实消费数据为用户做一份简洁实用的消费分析报告。
+
+## 消费数据概览
+- 总支出：¥${output.toLocaleString()}
+- 总收入：¥${income.toLocaleString()}
+- 结余：¥${(income - output).toLocaleString()}（${income > output ? '盈余' : '亏损'}）
+- 消费次数：${tagCounts.reduce((s: number, t: any) => s + t.value, 0)}笔
+- 消费分类：${tagDetail}
+- 各分类金额：${amountDetail}
 - 消费时间分布：${JSON.stringify(data)}
-- 近期消费备注：
-${recentNotes || '（无）'}
+${recentContext}
 
-请结合消费备注，分析这些数据，找出消费模式，并给出合理的理财建议。`
+## 要求
+请从以下几个维度分析，给出简短、可执行的建议：
+1. **消费结构**：哪些类别支出最多？是否合理？
+2. **收支平衡**：收入与支出的比例关系，结余情况
+3. **消费习惯**：从时间分布和备注中发现的消费模式
+4. **改进建议**：2-3条具体可操作的节省建议（不要空泛的鸡汤）`
 
       // 使用AI SDK的generateObject函数调用模型，获取结构化数据
+      const settings = require('~store/settingStore').useAppSettingsStore.getState()
       const { object: analysisResult } = await generateObject({
-        model: deepseekClient('deepseek-chat'), // 使用DeepSeek模型
+        model: deepseekClient(settings.deepseekModel || 'deepseek-v4-flash'), // 使用DeepSeek模型
         schema: AnalysisResultSchema, // 使用Zod模式定义结构
         prompt: prompt,
         temperature: 0.2, // 降低随机性，使回答更加确定
         maxTokens: 1000, // 增加token限制以容纳推理过程
         system:
-          '你是一个专业的财务分析师，擅长分析消费数据并给出合理的理财建议。请使用中文回答。请直接返回一个包含reasoning和answer字段的JSON对象，其中reasoning是你的思考过程，answer是你的最终建议。不要在回答中使用 thinking或<answer>等标签。',
+          '你是一位资深个人财务分析师，擅长从消费数据中识别消费模式和优化机会。请使用中文输出，风格简洁专业，避免空泛建议。请直接返回JSON对象，包含reasoning（思考过程）和answer（分析报告）字段，不要使用thinking或<answer>等标签。',
       })
 
       // 设置结果到状态中
@@ -210,8 +222,8 @@ ${recentNotes || '（无）'}
             {/* 各个图表 */}
             {btnIndex === 0 && <PiePane data={tagCounts} units="次" title="消费类型" />}
             <PiePane data={amountPieData} units="元" title="金额占比" />
-            {/* 消费地点分布图表 */}
-            {btnIndex === 0 && <PiePane data={locationData} units="元" title="消费地点" />}
+            {/* 消费地点水平柱状图 */}
+            {btnIndex === 0 && <LocationBarChart data={locationData} units="元" title="消费地点" />}
             {btnIndex === 0 && <CountBarChart data={data} title="消费时间" />}
           </View>
 

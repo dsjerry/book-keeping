@@ -45,6 +45,10 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options, toggleDrawe
         return { title: '编辑标签', type: 'back' }
       case 'BudgetSettings':
         return { title: '额度设置', type: 'back' }
+      case 'ApiSettings':
+        return { title: 'API 设置', type: 'back' }
+      case 'DataManagement':
+        return { title: '数据管理', type: 'back' }
       case 'PermissionScreen':
         return { title: '权限管理', type: 'back' }
       case 'LicensesScreen':

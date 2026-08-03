@@ -12,6 +12,8 @@ export const useAppSettingsStore = create<AppSettingStore>()(
       useBiometrics: false, // 是否启用生物识别
       themeMode: 'system', // 'system', 'light', 'dark'
       monthlyBudget: 0,
+      deepseekApiKey: '',
+      deepseekModel: 'deepseek-v4-flash',
       toggleUseOnline: () => {
         const useOnline = !get().useOnline
         logging.info('[同步状态]', useOnline ? '启用' : '禁用')
@@ -28,6 +30,8 @@ export const useAppSettingsStore = create<AppSettingStore>()(
       },
       setThemeMode: (mode: 'system' | 'light' | 'dark') => set({ themeMode: mode }),
       setMonthlyBudget: (budget: number) => set({ monthlyBudget: budget }),
+      setDeepseekApiKey: (key: string) => set({ deepseekApiKey: key }),
+      setDeepseekModel: (model: string) => set({ deepseekModel: model }),
     }),
     {
       name: 'app-settings',
@@ -38,6 +42,8 @@ export const useAppSettingsStore = create<AppSettingStore>()(
         useBiometrics: state.useBiometrics,
         themeMode: state.themeMode,
         monthlyBudget: state.monthlyBudget,
+        deepseekApiKey: state.deepseekApiKey,
+        deepseekModel: state.deepseekModel,
       }),
       storage: createJSONStorage(() => AsyncStorage),
     },
@@ -51,4 +57,6 @@ interface AppSettingStore extends AppSettings {
   toggleUseBiometrics: () => void
   setThemeMode: (mode: 'system' | 'light' | 'dark') => void
   setMonthlyBudget: (budget: number) => void
+  setDeepseekApiKey: (key: string) => void
+  setDeepseekModel: (model: string) => void
 }
