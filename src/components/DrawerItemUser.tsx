@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { View, StyleSheet, Pressable, Text } from 'react-native'
 import { Avatar, useTheme, List } from 'react-native-paper'
 import { useNavigation } from '@react-navigation/native'
@@ -54,9 +55,14 @@ const DrawerItemUser: React.FC<DrawerItemUserProps> = ({ toggleDrawer }) => {
   const navigation = useNavigation()
   const { currentUser } = useUserStore()
   const { monthlyBudget } = useAppSettingsStore()
-  const { output } = useKeepingStore()
+  const { output, setCounting } = useKeepingStore()
   const theme = useTheme()
   const insets = useSafeAreaInsets()
+
+  // 确保首次进入时支出总额已计算（setCounting 可能还没在其他页面触发过）
+  useEffect(() => {
+    if (currentUser) setCounting()
+  }, [currentUser, setCounting])
 
   const onLoginPress = () => {
     navigation.navigate('User', { screen: 'LoginScreen' })
