@@ -162,10 +162,14 @@ const AddressList = () => {
   const onWebViewMessage = (event: { nativeEvent: { data: string } }) => {
     try {
       const data = JSON.parse(event.nativeEvent.data)
-      if (data?.address) setSelectedAddress({ name: data.name || data.address, address: data.address } as NearByItem)
-    } catch (error) {
-      logging.error('[地图] WebView 消息解析失败:', error)
-    }
+      if (data?.address) {
+        setSelectedAddress({
+          name: data.name || data.address,
+          address: data.address,
+          location: `${data.lng},${data.lat}`,
+        } as NearByItem)
+      }
+    } catch (error) { logging.error('[地图] WebView 消息解析失败:', error) }
   }
 
   const handleSearch = useCallback(async () => {
@@ -198,7 +202,7 @@ const AddressList = () => {
     webViewRef.current?.injectJavaScript(
       `window.__selectResult && window.__selectResult(${item.lng}, ${item.lat}, '${item.name.replace(/'/g, "\\'")}');`,
     )
-    setSelectedAddress({ name: item.name, address: item.address } as NearByItem)
+    setSelectedAddress({ name: item.name, address: item.address, location: `${item.lng},${item.lat}` } as NearByItem)
     setSearchResults([])
     setShowSearch(false)
   }, [])
