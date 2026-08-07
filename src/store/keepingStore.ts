@@ -41,16 +41,9 @@ interface CountingSlice {
   setCounting: () => void
 }
 
-export interface CommonSlice
-  extends SortSlice,
-    FilterSlice,
-    KeepingSlice,
-    CountingSlice {}
+export interface CommonSlice extends SortSlice, FilterSlice, KeepingSlice, CountingSlice {}
 
-const createCountingSlice: StateCreator<CommonSlice, [], [], CountingSlice> = (
-  set,
-  get,
-) => ({
+const createCountingSlice: StateCreator<CommonSlice, [], [], CountingSlice> = (set, get) => ({
   record: 0,
   output: 0,
   income: 0,
@@ -61,9 +54,9 @@ const createCountingSlice: StateCreator<CommonSlice, [], [], CountingSlice> = (
     items.forEach(item => {
       const amount = Number(item.count) || 0
       if (item.type === 'out') {
-        output += amount
+        output = parseFloat((output + amount).toFixed(2))
       } else if (item.type === 'in') {
-        income += amount
+        income = parseFloat((income + amount).toFixed(2))
       }
     })
     set({ record: items.length, output, income })
@@ -77,20 +70,12 @@ const createSortSlice: StateCreator<CommonSlice, [], [], SortSlice> = set => ({
   setSortOrder: sortOrder => set({ sortOrder }),
 })
 
-const createFilterSlice: StateCreator<
-  CommonSlice,
-  [],
-  [],
-  FilterSlice
-> = set => ({
+const createFilterSlice: StateCreator<CommonSlice, [], [], FilterSlice> = set => ({
   filterBy: [],
   setFilterBy: filterBy => set({ filterBy }),
 })
 
-const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
-  set,
-  get,
-) => ({
+const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (set, get) => ({
   items: [],
   add: item => {
     const newItem: KeepingItem = {
@@ -98,10 +83,7 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
       id: item.id || `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       date: item.date || Date.now(),
       no: item.no || get().items.length + 1,
-      useToFilter: [
-        ...item.tags.map(tag => tag.alias),
-        CountType[item.countType],
-      ],
+      useToFilter: [...item.tags.map(tag => tag.alias), CountType[item.countType]],
     }
     set(state => ({ items: [...state.items, newItem] }))
 
@@ -121,17 +103,13 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
   remove: id => {
     // 软删除，等待同步时上报服务端
     set(state => ({
-      items: state.items.map(item =>
-        item.id === id ? { ...item, syncStatus: 'deleted' } : item,
-      ),
+      items: state.items.map(item => (item.id === id ? { ...item, syncStatus: 'deleted' } : item)),
     }))
   },
   removeChecked: () => {
     set(state => ({
       items: state.items.map(item =>
-        item.isChecked
-          ? { ...item, isChecked: false, syncStatus: 'deleted' as SyncStatus }
-          : item,
+        item.isChecked ? { ...item, isChecked: false, syncStatus: 'deleted' as SyncStatus } : item,
       ),
     }))
   },
@@ -142,9 +120,7 @@ const createKeepingSlice: StateCreator<CommonSlice, [], [], KeepingSlice> = (
   },
   toggle: id => {
     set(state => ({
-      items: state.items.map(i =>
-        i.id === id ? { ...i, isChecked: !i.isChecked } : i,
-      ),
+      items: state.items.map(i => (i.id === id ? { ...i, isChecked: !i.isChecked } : i)),
     }))
   },
   selectAll: () => {
@@ -224,9 +200,7 @@ export const userUsersKeepingStore = create<UsersKeepingSlice>()(
           const exists = state.items.some(user => user.userid === item.userid)
           return exists
             ? {
-                items: state.items.map(user =>
-                  user.userid === item.userid ? item : user,
-                ),
+                items: state.items.map(user => (user.userid === item.userid ? item : user)),
               }
             : { items: [...state.items, item] }
         })
