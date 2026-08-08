@@ -85,12 +85,25 @@ jobs:
       - name: Clean Gradle Build
         run: cd android && ./gradlew clean
 
-      # 如果指定了版本号，更新 build.gradle 中的 versionName
-      - name: Update Version Name
-        if: ${{ github.event.inputs.version_name != '' }}
+      # Gradle 通过 -PAPP_VERSION 接收手动指定的版本号
+      - name: Resolve Version Name
+        id: version
+        shell: bash
+        env:
+          INPUT_VERSION_NAME: ${{ github.event.inputs.version_name }}
         run: |
-          sed -i 's/versionName "[0-9.]*"/versionName "${{ github.event.inputs.version_name }}"/' android/app/build.gradle
-          echo "Updated versionName to ${{ github.event.inputs.version_name }}"
+          if [[ -n "$INPUT_VERSION_NAME" && ! "$INPUT_VERSION_NAME" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "版本号必须符合 x.y.z 格式，例如 1.0.6"
+            exit 1
+          fi
+
+          if [[ -n "$INPUT_VERSION_NAME" ]]; then
+            echo "gradle_args=-PAPP_VERSION=$INPUT_VERSION_NAME" >> "$GITHUB_OUTPUT"
+            echo "将使用版本号: $INPUT_VERSION_NAME"
+          else
+            echo "gradle_args=" >> "$GITHUB_OUTPUT"
+            echo "未指定版本号，使用 Gradle 默认版本号"
+          fi
 
       # 仅在需要构建发布版本时执行
       - name: Decode Keystore
@@ -111,19 +124,19 @@ jobs:
       - name: Build Debug APK
         if: ${{ github.event.inputs.build_type == 'debug' && !startsWith(github.ref, 'refs/tags/v') }}
         run: |
-          cd android && ./gradlew assembleDebug --no-daemon
+          cd android && ./gradlew assembleDebug --no-daemon ${{ steps.version.outputs.gradle_args }}
 
       # 构建 Release APK (包含全量包和各架构分包)
       - name: Build Release APK
         if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
         run: |
-          cd android && ./gradlew assembleRelease --no-daemon
+          cd android && ./gradlew assembleRelease --no-daemon ${{ steps.version.outputs.gradle_args }}
 
       # 构建 Release Bundle (AAB)
       - name: Build Release Bundle
         if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
         run: |
-          cd android && ./gradlew bundleRelease --no-daemon
+          cd android && ./gradlew bundleRelease --no-daemon ${{ steps.version.outputs.gradle_args }}
 
       # 重命名 APK 文件，添加架构标识
       - name: Rename APKs
