@@ -16,6 +16,9 @@ import { logging } from '~utils'
 // 清除缓存时保留用户核心数据（各 store 的持久化 key）
 const KEEP_STORAGE_KEYS = ['user', 'users-keeping', 'app-settings', 'analyze-results']
 
+// 控制是否显示"数据修复"功能
+const SHOW_DATA_FIX = false
+
 const Settings = () => {
   const [isShowDialog, setIsShowDialog] = useState(false)
   const [tips, setTips] = useState('')
@@ -214,9 +217,11 @@ const Settings = () => {
               onPress={() => navigation.navigate('AboutScreen', {})}
             />
           </List.Section>
-          <List.Section title="开发">
-            <List.Item title="数据修复" left={props => <List.Icon {...props} icon="auto-fix" />} onPress={fixData} />
-          </List.Section>
+          {SHOW_DATA_FIX && (
+            <List.Section title="开发">
+              <List.Item title="数据修复" left={props => <List.Icon {...props} icon="auto-fix" />} onPress={fixData} />
+            </List.Section>
+          )}
         </ScrollView>
         <Snackbar
           visible={tips !== ''}

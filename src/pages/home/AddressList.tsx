@@ -176,9 +176,21 @@ const AddressList = () => {
     const keyword = searchText.trim()
     if (!keyword) return
     try {
-      const { data } = await axios.get('https://restapi.amap.com/v3/place/text', {
-        params: { key: Config.AMAP_API_KEY, keywords: keyword, output: 'json' },
-      })
+      // 构建搜索参数，添加当前位置信息以限制搜索范围
+      const params: Record<string, string> = {
+        key: Config.AMAP_API_KEY || '',
+        keywords: keyword,
+        output: 'json',
+      }
+
+      // 如果有当前位置，添加 location 参数进行附近搜索
+      if (mapCenter) {
+        params.location = `${mapCenter.lng},${mapCenter.lat}`
+        params.radius = '5000' // 搜索半径 5 公里
+        params.sortrule = 'distance' // 按距离排序
+      }
+
+      const { data } = await axios.get('https://restapi.amap.com/v3/place/text', { params })
       if (data.status === '1') {
         setSearchResults(
           (data.pois || []).map((poi: any) => ({
@@ -196,7 +208,7 @@ const AddressList = () => {
     } catch (error) {
       logging.error('[搜索] 地点搜索失败:', error)
     }
-  }, [searchText])
+  }, [searchText, mapCenter])
 
   const handleSelectResult = useCallback((item: { name: string; address: string; lng: number; lat: number }) => {
     webViewRef.current?.injectJavaScript(

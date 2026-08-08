@@ -79,8 +79,14 @@ android {
         applicationId "com.dsjerry.bk"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 102
-        versionName "1.0.2"
+        // 从 .env 文件读取版本号，如果未设置则使用默认值
+        def appVersion = project.hasProperty('APP_VERSION') ? APP_VERSION : '1.0.2'
+        def versionParts = appVersion.split('\\.')
+        def versionCode = versionParts.size() >= 3 ?
+            versionParts[0].toInteger() * 10000 + versionParts[1].toInteger() * 100 + versionParts[2].toInteger() :
+            100
+        versionCode versionCode
+        versionName appVersion
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
