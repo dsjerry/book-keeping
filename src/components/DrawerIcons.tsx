@@ -1,7 +1,7 @@
 import React from 'react'
 import { View } from 'react-native'
 import { useTheme } from 'react-native-paper'
-import Svg, { Defs, LinearGradient, Stop, Path, Rect, Circle, Polyline, G } from 'react-native-svg'
+import Svg, { Defs, LinearGradient, Stop, Path, Rect, Circle, Polyline, G, Line } from 'react-native-svg'
 
 interface DrawerIconProps {
   size?: number
@@ -100,3 +100,31 @@ export const SettingsColorIcon: React.FC<DrawerIconProps> = ({ size = 24 }) => {
     </IconWrapper>
   )
 }
+
+/** 小助手：紫色渐变机器人头像 + 蓝色渐变眼睛 */
+export const AssistantColorIcon: React.FC<DrawerIconProps> = ({ size = 24 }) => (
+  <IconWrapper>
+    <Svg width={size} height={size} viewBox="0 0 24 24">
+      <Defs>
+        <LinearGradient id="robotHead" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#BA68C8" />
+          <Stop offset="1" stopColor="#7B1FA2" />
+        </LinearGradient>
+        <LinearGradient id="robotEye" x1="0" y1="0" x2="0" y2="1">
+          <Stop offset="0" stopColor="#64B5F6" />
+          <Stop offset="1" stopColor="#1E88E5" />
+        </LinearGradient>
+      </Defs>
+      {/* 机器人头部 */}
+      <Rect x="4" y="6" width="16" height="12" rx="3" fill="url(#robotHead)" />
+      {/* 天线 */}
+      <Circle cx="12" cy="4" r="1.5" fill="#BA68C8" />
+      <Line x1="12" y1="5.5" x2="12" y2="6" stroke="#BA68C8" strokeWidth="1.5" />
+      {/* 眼睛 */}
+      <Circle cx="8.5" cy="11" r="2" fill="url(#robotEye)" />
+      <Circle cx="15.5" cy="11" r="2" fill="url(#robotEye)" />
+      {/* 嘴巴 */}
+      <Path d="M8 15 Q12 17 16 15" stroke="#fff" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+    </Svg>
+  </IconWrapper>
+)

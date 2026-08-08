@@ -9,13 +9,14 @@ import { SafeAreaProvider } from 'react-native-safe-area-context'
 import Home from '~pages/home'
 import Settings from '~pages/settings'
 import Analyze from '~pages/analyze'
+import Chat from '~pages/chat'
 import Header from './Header'
 import DetailScreen from '~pages/home/DetailScreen'
 import UserScreen from '~pages/user'
 import DrawerItemUser from '~components/DrawerItemUser'
 import DrawerItemBottom from '~components/DrawerItemBottom'
 import AuthGuard from '~components/AuthGuard'
-import { HomeColorIcon, AnalyzeColorIcon, SettingsColorIcon } from '~components/DrawerIcons'
+import { HomeColorIcon, AnalyzeColorIcon, SettingsColorIcon, AssistantColorIcon } from '~components/DrawerIcons'
 
 import { HeaderProvider } from '../contexts/HeaderContext'
 import { useNavigationTheme } from '../contexts/NavigationThemeContext'
@@ -25,6 +26,7 @@ const RootStack = createStackNavigator()
 const routeNameToTarget: Record<string, string> = {
   Home: 'HomeScreen',
   AnalyzeScreen: 'AnalyzeScreen',
+  ChatScreen: 'ChatScreen',
   SettingsScreen: 'SettingsScreen',
 }
 
@@ -50,6 +52,11 @@ const CustomDrawerContent: React.FC<DrawerContent> = ({ toggleDrawer }) => {
       icon: <AnalyzeColorIcon />,
     },
     {
+      title: '小助手',
+      target: 'ChatScreen',
+      icon: <AssistantColorIcon />,
+    },
+    {
       title: '设置',
       target: 'SettingsScreen',
       icon: <SettingsColorIcon />,
@@ -63,6 +70,9 @@ const CustomDrawerContent: React.FC<DrawerContent> = ({ toggleDrawer }) => {
         break
       case 'AnalyzeScreen':
         navigation.navigate('AnalyzeScreen', {})
+        break
+      case 'ChatScreen':
+        navigation.navigate('ChatScreen', {})
         break
       default:
         navigation.navigate('HomeScreen', {})
@@ -143,6 +153,7 @@ export default function AppLayout() {
                   <RootStack.Screen name="Home" component={Home} options={{ title: '首页' }} />
                   <RootStack.Screen name="SettingsScreen" component={Settings} options={{ title: '设置' }} />
                   <RootStack.Screen name="AnalyzeScreen" component={Analyze} options={{ title: '分析' }} />
+                  <RootStack.Screen name="ChatScreen" component={Chat} options={{ title: '小助手' }} />
                   <RootStack.Screen name="User" component={UserScreen} options={{ title: '个人中心' }} />
                   <RootStack.Screen name="DetailScreen" component={DetailScreen} options={{ title: '详情' }} />
                 </RootStack.Group>
