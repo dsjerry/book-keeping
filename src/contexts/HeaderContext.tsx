@@ -1,10 +1,13 @@
 import { createContext, useContext, useReducer, Dispatch } from 'react'
+import type { TimeFilter } from '~utils/getData'
 
 const initialState: State = {
   isShowRightMenu: false,
+  isShowAnalyzeMenu: false,
   isShowBottomModal: false,
   halfModalType: 'sort',
   loading: false,
+  timeFilter: 'all',
 }
 
 const reducer = (state: State, action: Action): State => {
@@ -13,6 +16,13 @@ const reducer = (state: State, action: Action): State => {
       return {
         ...state,
         isShowRightMenu: action.payload,
+        isShowAnalyzeMenu: false,
+      }
+    case 'isShowAnalyzeMenu':
+      return {
+        ...state,
+        isShowAnalyzeMenu: action.payload,
+        isShowRightMenu: false,
       }
     case 'isShowBottomModal':
       return {
@@ -25,11 +35,17 @@ const reducer = (state: State, action: Action): State => {
         halfModalType: action.payload,
         isShowBottomModal: true,
         isShowRightMenu: false,
+        isShowAnalyzeMenu: false,
       }
     case 'loading':
       return {
         ...state,
         loading: action.payload,
+      }
+    case 'timeFilter':
+      return {
+        ...state,
+        timeFilter: action.payload,
       }
     default:
       return state
@@ -62,14 +78,20 @@ interface Props {
 
 interface State {
   isShowRightMenu: boolean
+  isShowAnalyzeMenu: boolean
   isShowBottomModal: boolean
   loading: boolean
   halfModalType: 'sort' | 'filter'
+  timeFilter: TimeFilter
 }
 
 type Action =
   | {
       type: 'isShowRightMenu'
+      payload: boolean
+    }
+  | {
+      type: 'isShowAnalyzeMenu'
       payload: boolean
     }
   | {
@@ -83,6 +105,10 @@ type Action =
   | {
       type: 'loading'
       payload: boolean
+    }
+  | {
+      type: 'timeFilter'
+      payload: TimeFilter
     }
 
 type Context = {

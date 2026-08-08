@@ -14,36 +14,46 @@ const logoImg = require('../../assets/icon.png')
 const ToLoginWidget: React.FC<LoginWidget> = ({ onLogin }) => {
   const theme = useTheme()
   return (
-    <Pressable onPress={onLogin} android_ripple={{ color: theme.colors.onPrimaryContainer, borderless: false }}>
-      <View style={toLogin.row}>
-        <Avatar.Image size={40} source={logoImg} />
-        <View style={toLogin.textArea}>
-          <Text style={[toLogin.title, { color: theme.colors.onPrimaryContainer }]}>登录 / 注册</Text>
-          <Text style={[toLogin.subtitle, { color: theme.colors.onPrimaryContainer }]}>开启记账之旅</Text>
+    <View style={{ borderRadius: 12, overflow: 'hidden' }}>
+      <Pressable
+        onPress={onLogin}
+        android_ripple={{ color: theme.colors.onPrimaryContainer, borderless: false }}
+        style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
+        <View style={toLogin.row}>
+          <Avatar.Image size={40} source={logoImg} />
+          <View style={toLogin.textArea}>
+            <Text style={[toLogin.title, { color: theme.colors.onPrimaryContainer }]}>登录 / 注册</Text>
+            <Text style={[toLogin.subtitle, { color: theme.colors.onPrimaryContainer }]}>开启记账之旅</Text>
+          </View>
+          <List.Icon icon="chevron-right" color={theme.colors.onPrimaryContainer} />
         </View>
-        <List.Icon icon="chevron-right" color={theme.colors.onPrimaryContainer} />
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   )
 }
 
 const UserWidget: React.FC<UserWidget> = ({ username, avatar, onUser }) => {
   const theme = useTheme()
   return (
-    <Pressable onPress={onUser} android_ripple={{ color: theme.colors.primary, borderless: false }}>
-      <View style={userWidget.row}>
-        {avatar ? (
-          <Avatar.Image size={48} source={{ uri: avatar }} />
-        ) : (
-          <Avatar.Text size={48} label={username?.substring(0, 1)} />
-        )}
-        <View style={userWidget.textArea}>
-          <Text style={[userWidget.username, { color: theme.colors.onSurface }]}>{username}</Text>
-          <Text style={[userWidget.subtitle, { color: theme.colors.onSurfaceVariant }]}>我的账户</Text>
+    <View style={{ borderRadius: 12, overflow: 'hidden' }}>
+      <Pressable
+        onPress={onUser}
+        android_ripple={{ color: theme.colors.primary, borderless: false }}
+        style={({ pressed }) => [pressed && { opacity: 0.8 }]}>
+        <View style={userWidget.row}>
+          {avatar ? (
+            <Avatar.Image size={48} source={{ uri: avatar }} />
+          ) : (
+            <Avatar.Text size={48} label={username?.substring(0, 1)} />
+          )}
+          <View style={userWidget.textArea}>
+            <Text style={[userWidget.username, { color: theme.colors.onSurface }]}>{username}</Text>
+            <Text style={[userWidget.subtitle, { color: theme.colors.onSurfaceVariant }]}>我的账户</Text>
+          </View>
+          <List.Icon icon="chevron-right" color={theme.colors.onSurfaceVariant} />
         </View>
-        <List.Icon icon="chevron-right" color={theme.colors.onSurfaceVariant} />
-      </View>
-    </Pressable>
+      </Pressable>
+    </View>
   )
 }
 
@@ -83,7 +93,7 @@ const DrawerItemUser: React.FC<DrawerItemUserProps> = ({ toggleDrawer }) => {
       style={[
         style.container,
         {
-          paddingTop: insets.top,
+          paddingTop: insets.top + 16,
           backgroundColor: currentUser ? theme.colors.elevation.level1 : theme.colors.primaryContainer,
         },
       ]}>
@@ -122,6 +132,7 @@ const DrawerItemUser: React.FC<DrawerItemUserProps> = ({ toggleDrawer }) => {
 const style = StyleSheet.create({
   container: {
     borderRadius: 12,
+    overflow: 'hidden',
     marginBottom: 12,
     paddingHorizontal: 16,
     paddingTop: 16,

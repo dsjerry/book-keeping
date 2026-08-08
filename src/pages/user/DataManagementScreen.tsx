@@ -24,6 +24,9 @@ const DataManagement: React.FC = () => {
   const [showImportDialog, setShowImportDialog] = useState(false)
   const [importData, setImportData] = useState<any>(null)
   const [tips, setTips] = useState('')
+  const [loadingExcel, setLoadingExcel] = useState(false)
+  const [loadingZip, setLoadingZip] = useState(false)
+  const [loadingImport, setLoadingImport] = useState(false)
 
   const showTip = (msg: string) => {
     setTips(msg)
@@ -32,6 +35,7 @@ const DataManagement: React.FC = () => {
 
   // ========== 导出 Excel ==========
   const exportExcel = async () => {
+    setLoadingExcel(true)
     try {
       const wsData = [
         ['ID', '类型', '金额', '币种', '标签', '日期', '备注', '地址名称', '地址详情'],
@@ -62,11 +66,14 @@ const DataManagement: React.FC = () => {
     } catch (error) {
       logging.error('[导出] Excel 导出失败:', error)
       showTip('导出失败')
+    } finally {
+      setLoadingExcel(false)
     }
   }
 
   // ========== 导出 ZIP ==========
   const exportZip = async () => {
+    setLoadingZip(true)
     try {
       const zip = new JSZip()
       // 1. 账单数据 JSON
@@ -103,11 +110,14 @@ const DataManagement: React.FC = () => {
     } catch (error) {
       logging.error('[导出] ZIP 导出失败:', error)
       showTip('导出失败')
+    } finally {
+      setLoadingZip(false)
     }
   }
 
   // ========== 导入 ZIP ==========
   const importZip = async () => {
+    setLoadingImport(true)
     try {
       const result = await DocumentPicker.pickSingle({ type: [DocumentPicker.types.zip] })
       if (!result.uri) return
@@ -128,6 +138,8 @@ const DataManagement: React.FC = () => {
     } catch (error) {
       logging.error('[导入] 读取 ZIP 失败:', error)
       showTip('文件读取失败')
+    } finally {
+      setLoadingImport(false)
     }
   }
 
@@ -142,28 +154,63 @@ const DataManagement: React.FC = () => {
       return
     }
 
+    setLoadingImport(true)
     try {
-      const { add, clearItems } = useKeepingStore.getState()
+      const { add, update, clearItems, items: currentItems } = useKeepingStore.getState()
       const { items: newItems } = importData
 
       if (importMode === 'overwrite') {
         clearItems()
       }
+
+      // 先添加所有 item
       for (const item of newItems) {
         add(item)
       }
 
-      // 恢复图片文件
+      // 重新获取添加后的 items（包含新生成的 id 等字段）
+      const { items: addedItems } = useKeepingStore.getState()
+
+      // 恢复图片文件并更新 item 的 image 字段
       if (importData.zip) {
-        const imageEntries = importData.zip.folder('images') || {}
-        for (const [name, entry] of Object.entries(imageEntries)) {
-          try {
-            const imgData = await (entry as any).async('base64')
-            const destPath = `${RNFS.DocumentDirectoryPath}/${name}`
-            await RNFS.writeFile(destPath, imgData, 'base64')
-          } catch (e) {
-            logging.warn('[导入] 图片恢复失败:', e)
-          }
+        const imagesFolder = importData.zip.folder('images')
+        if (imagesFolder) {
+          // 收集所有图片恢复的 Promise
+          const restorePromises: Promise<void>[] = []
+
+          // 使用 JSZip 的 forEach 方法遍历文件
+          imagesFolder.forEach((relativePath, file) => {
+            // 跳过目录
+            if (!file.dir) {
+              const restorePromise = file.async('base64')
+                .then(async imgData => {
+                  // 文件名格式：images/123.jpg，提取文件名部分
+                  const fileName = relativePath.split('/').pop()
+                  if (fileName) {
+                    const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`
+                    await RNFS.writeFile(destPath, imgData, 'base64')
+
+                    // 更新对应 item 的 image 字段
+                    const itemId = fileName.replace('.jpg', '')
+                    const updatedItem = addedItems.find(item => item.id === itemId)
+                    if (updatedItem) {
+                      // 更新 item 的 image 字段为新的本地路径
+                      update({
+                        ...updatedItem,
+                        image: `file://${destPath}`,
+                      })
+                    }
+                  }
+                })
+                .catch(e => {
+                  logging.warn('[导入] 图片恢复失败:', e)
+                })
+              restorePromises.push(restorePromise)
+            }
+          })
+
+          // 等待所有图片恢复完成
+          await Promise.all(restorePromises)
         }
       }
 
@@ -174,6 +221,8 @@ const DataManagement: React.FC = () => {
     } catch (error) {
       logging.error('[导入] 导入失败:', error)
       showTip('导入失败')
+    } finally {
+      setLoadingImport(false)
     }
   }
 
@@ -184,10 +233,22 @@ const DataManagement: React.FC = () => {
         <View style={[style.card, { backgroundColor: theme.colors.surfaceVariant }]}>
           <Text style={[style.cardTitle, { color: theme.colors.onSurfaceVariant }]}>导出数据</Text>
           <Text style={[style.desc, { color: theme.colors.onSurfaceVariant }]}>共 {items.length} 条记录</Text>
-          <Button icon="file-document-outline" mode="contained" onPress={exportExcel} style={style.btn}>
+          <Button
+            icon="file-document-outline"
+            mode="contained"
+            onPress={exportExcel}
+            loading={loadingExcel}
+            disabled={loadingExcel || loadingZip || loadingImport}
+            style={style.btn}>
             导出 Excel
           </Button>
-          <Button icon="folder-zip-outline" mode="contained-tonal" onPress={exportZip} style={style.btn}>
+          <Button
+            icon="folder-zip-outline"
+            mode="contained-tonal"
+            onPress={exportZip}
+            loading={loadingZip}
+            disabled={loadingExcel || loadingZip || loadingImport}
+            style={style.btn}>
             导出 ZIP（含图片）
           </Button>
         </View>
@@ -196,7 +257,13 @@ const DataManagement: React.FC = () => {
         <View style={[style.card, { backgroundColor: theme.colors.surfaceVariant }]}>
           <Text style={[style.cardTitle, { color: theme.colors.onSurfaceVariant }]}>导入数据</Text>
           <Text style={[style.desc, { color: theme.colors.onSurfaceVariant }]}>从 ZIP 备份文件导入账单数据</Text>
-          <Button icon="file-import-outline" mode="contained-tonal" onPress={importZip} style={style.btn}>
+          <Button
+            icon="file-import-outline"
+            mode="contained-tonal"
+            onPress={importZip}
+            loading={loadingImport}
+            disabled={loadingExcel || loadingZip || loadingImport}
+            style={style.btn}>
             选择 ZIP 文件
           </Button>
         </View>
@@ -211,6 +278,7 @@ const DataManagement: React.FC = () => {
           setConfirmUsername('')
         }}
         onAccess={confirmImport}
+        loading={loadingImport}
         title="确认导入"
         content={
           <View>

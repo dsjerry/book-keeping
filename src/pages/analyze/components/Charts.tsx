@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, memo } from 'react'
+import { useEffect, useRef, useState, memo, useCallback } from 'react'
 import { View, StyleSheet, LayoutChangeEvent } from 'react-native'
 import * as echarts from 'echarts/core'
 import { LineChart, PieChart, BarChart } from 'echarts/charts'
@@ -20,6 +20,27 @@ echarts.use([SVGRenderer, LineChart, GridComponent, PieChart, LegendComponent, B
 
 const CHART_HEIGHT = 300
 
+// 图表性能优化Hook：懒加载和防抖
+const useChartPerformance = (delay = 300) => {
+  const [isVisible, setIsVisible] = useState(false)
+  const timerRef = useRef<NodeJS.Timeout>()
+
+  useEffect(() => {
+    // 延迟显示图表，避免同时渲染多个图表导致卡顿
+    timerRef.current = setTimeout(() => {
+      setIsVisible(true)
+    }, delay)
+
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [delay])
+
+  return isVisible
+}
+
 const style = StyleSheet.create({
   chartPane: {
     borderRadius: 12,
@@ -32,6 +53,11 @@ const style = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  // LocationBarChart 使用的动态高度样式
+  dynamicChartWrapper: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 })
 
 export const PiePane: React.FC<ChartsProps> = memo(
@@ -39,16 +65,18 @@ export const PiePane: React.FC<ChartsProps> = memo(
     const theme = useTheme()
     const ref = useRef<any>(null)
     const [chartWidth, setChartWidth] = useState(0)
+    const isVisible = useChartPerformance(100) // 延迟100ms渲染
 
-    const onLayout = (e: LayoutChangeEvent) => {
+    const onLayout = useCallback((e: LayoutChangeEvent) => {
       const w = e.nativeEvent.layout.width
       if (w > 0 && w !== chartWidth) {
         setChartWidth(w)
       }
-    }
+    }, [chartWidth])
 
     useEffect(() => {
-      if (!ref.current || chartWidth <= 0) return
+      if (!ref.current || chartWidth <= 0 || !isVisible) return
+
       const initOpts: EChartsInitOpts = {
         width: chartWidth - 32,
         height: CHART_HEIGHT - 40,
@@ -96,6 +124,7 @@ export const PiePane: React.FC<ChartsProps> = memo(
     }, [
       theme.dark,
       chartWidth,
+      isVisible,
       data,
       title,
       isShowLabel,
@@ -114,7 +143,7 @@ export const PiePane: React.FC<ChartsProps> = memo(
     return (
       <Card style={style.chartPane} onLayout={onLayout}>
         <View style={style.chartWrapper}>
-          <SvgChart ref={ref} />
+          {isVisible && <SvgChart ref={ref} />}
         </View>
       </Card>
     )
@@ -126,16 +155,18 @@ export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
   const theme = useTheme()
   const ref = useRef<any>(null)
   const [chartWidth, setChartWidth] = useState(0)
+  const isVisible = useChartPerformance(200) // 延迟200ms渲染
 
-  const onLayout = (e: LayoutChangeEvent) => {
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width
     if (w > 0 && w !== chartWidth) {
       setChartWidth(w)
     }
-  }
+  }, [chartWidth])
 
   useEffect(() => {
-    if (!ref.current || chartWidth <= 0) return
+    if (!ref.current || chartWidth <= 0 || !isVisible) return
+
     const initOpts: EChartsInitOpts = {
       width: chartWidth - 32,
       height: CHART_HEIGHT - 40,
@@ -193,6 +224,7 @@ export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
   }, [
     theme.dark,
     chartWidth,
+    isVisible,
     data,
     title,
     theme.colors.onSurface,
@@ -204,7 +236,7 @@ export const CountBarChart: React.FC<ChartsProps> = memo(({ data, title }) => {
   return (
     <Card style={style.chartPane} onLayout={onLayout}>
       <View style={style.chartWrapper}>
-        <SvgChart ref={ref} />
+        {isVisible && <SvgChart ref={ref} />}
       </View>
     </Card>
   )
@@ -215,23 +247,35 @@ export const LocationBarChart: React.FC<ChartsProps> = memo(({ data, title = '�
   const theme = useTheme()
   const ref = useRef<any>(null)
   const [chartWidth, setChartWidth] = useState(0)
+  const [chartHeight, setChartHeight] = useState(CHART_HEIGHT)
+  const isVisible = useChartPerformance(300) // 延迟300ms渲染，让前两个图表先渲染
 
-  const onLayout = (e: LayoutChangeEvent) => {
+  const onLayout = useCallback((e: LayoutChangeEvent) => {
     const w = e.nativeEvent.layout.width
     if (w > 0 && w !== chartWidth) {
       setChartWidth(w)
     }
-  }
+  }, [chartWidth])
 
   useEffect(() => {
-    if (!ref.current || chartWidth <= 0) return
+    if (!ref.current || chartWidth <= 0 || !isVisible) return
+
     // 按金额降序排序，取前 10 条
     const sorted = [...(data || [])].sort((a: any, b: any) => b.value - a.value).slice(0, 10)
+    // 根据数据量动态计算图表高度：每项至少30px，上限400px
+    const dataCount = sorted.length
+    const dynamicHeight = Math.min(Math.max(dataCount * 30 + 100, 200), 400)
+    setChartHeight(dynamicHeight)
+
     const initOpts: EChartsInitOpts = {
       width: chartWidth - 32,
-      height: CHART_HEIGHT - 40,
+      height: dynamicHeight - 40,
       renderer: 'svg',
     }
+
+    // 根据数据量动态计算柱子宽度
+    const barWidth = dataCount <= 5 ? 20 : dataCount <= 8 ? 16 : 12
+
     const option: EChartsOption = {
       backgroundColor: 'transparent',
       title: {
@@ -258,7 +302,7 @@ export const LocationBarChart: React.FC<ChartsProps> = memo(({ data, title = '�
             value: d.value,
             itemStyle: { color: theme.colors.tertiary, borderRadius: [0, 4, 4, 0] },
           })),
-          barWidth: 20,
+          barWidth: barWidth,
           label: {
             show: true,
             position: 'right',
@@ -276,6 +320,7 @@ export const LocationBarChart: React.FC<ChartsProps> = memo(({ data, title = '�
   }, [
     theme.dark,
     chartWidth,
+    isVisible,
     data,
     title,
     units,
@@ -287,8 +332,8 @@ export const LocationBarChart: React.FC<ChartsProps> = memo(({ data, title = '�
 
   return (
     <Card style={style.chartPane} onLayout={onLayout}>
-      <View style={style.chartWrapper}>
-        <SvgChart ref={ref} />
+      <View style={[style.dynamicChartWrapper, { height: chartHeight }]}>
+        {isVisible && <SvgChart ref={ref} />}
       </View>
     </Card>
   )

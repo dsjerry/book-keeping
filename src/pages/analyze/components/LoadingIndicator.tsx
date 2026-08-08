@@ -1,3 +1,4 @@
+import React, { memo } from 'react'
 import { View, Text, Modal, ActivityIndicator, StyleSheet, ViewStyle } from 'react-native'
 import { useTheme } from 'react-native-paper'
 
@@ -8,7 +9,7 @@ interface Props {
   children?: React.ReactNode
 }
 
-export const LoadingIndicator: React.FC<Props> = ({ animating, text, indicatorBoxStyle, children }) => {
+export const LoadingIndicator: React.FC<Props> = memo(({ animating, text, indicatorBoxStyle, children }) => {
   const theme = useTheme()
 
   return (
@@ -25,7 +26,7 @@ export const LoadingIndicator: React.FC<Props> = ({ animating, text, indicatorBo
       </View>
     </Modal>
   )
-}
+})
 
 const styles = StyleSheet.create({
   container: {

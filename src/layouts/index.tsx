@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { View } from 'react-native'
+import { View, StyleSheet } from 'react-native'
 import { NavigationContainer, useNavigation, useNavigationState } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import { Drawer } from 'react-native-drawer-layout'
@@ -16,7 +16,6 @@ import DrawerItemUser from '~components/DrawerItemUser'
 import DrawerItemBottom from '~components/DrawerItemBottom'
 import AuthGuard from '~components/AuthGuard'
 import { HomeColorIcon, AnalyzeColorIcon, SettingsColorIcon } from '~components/DrawerIcons'
-import { CustomHeaderWithTitle } from './widgets'
 
 import { HeaderProvider } from '../contexts/HeaderContext'
 import { useNavigationTheme } from '../contexts/NavigationThemeContext'
@@ -93,24 +92,23 @@ const CustomDrawerContent: React.FC<DrawerContent> = ({ toggleDrawer }) => {
         {list.map(item => {
           const isActive = currentTarget === item.target
           return (
-            <List.Item
-              style={{
-                paddingHorizontal: 10,
-                borderRadius: 8,
-                backgroundColor: isActive ? theme.colors.primaryContainer : 'transparent',
-              }}
+            <View
               key={item.title}
-              title={item.title}
-              titleStyle={{ color: isActive ? theme.colors.onPrimaryContainer : theme.colors.primary }}
-              left={() => item.icon}
-              right={props => (
-                <List.Icon
-                  color={isActive ? theme.colors.onPrimaryContainer : theme.colors.primary}
-                  icon="chevron-right"
-                />
-              )}
-              onPress={() => onListItemPress(item.target)}
-            />
+              style={[drawerStyles.itemWrapper, isActive && { backgroundColor: theme.colors.primaryContainer }]}>
+              <List.Item
+                style={drawerStyles.item}
+                title={item.title}
+                titleStyle={{ color: isActive ? theme.colors.onPrimaryContainer : theme.colors.primary }}
+                left={() => item.icon}
+                right={props => (
+                  <List.Icon
+                    color={isActive ? theme.colors.onPrimaryContainer : theme.colors.primary}
+                    icon="chevron-right"
+                  />
+                )}
+                onPress={() => onListItemPress(item.target)}
+              />
+            </View>
           )
         })}
       </List.Section>
@@ -128,46 +126,45 @@ export default function AppLayout() {
     <SafeAreaProvider>
       <NavigationContainer theme={navigationTheme}>
         <AuthGuard>
-          <Drawer
-            open={isShowDrawer}
-            onOpen={() => setIsShowDrawer(true)}
-            onClose={() => setIsShowDrawer(false)}
-            renderDrawerContent={() => <CustomDrawerContent toggleDrawer={() => setIsShowDrawer(prev => !prev)} />}>
-            <RootStack.Navigator
-              initialRouteName="HomeScreen"
-              screenOptions={{
-                header: props => (
-                  <HeaderProvider>
-                    <Header {...props} toggleDrawer={() => setIsShowDrawer(prev => !prev)} />
-                  </HeaderProvider>
-                ),
-              }}>
-              <RootStack.Group screenOptions={{ headerShown: true }}>
-                <RootStack.Screen name="Home" component={Home} options={{ title: '首页' }} />
-                <RootStack.Screen name="SettingsScreen" component={Settings} options={{ title: '设置' }} />
-                <RootStack.Screen name="AnalyzeScreen" component={Analyze} options={{ title: '分析' }} />
-                <RootStack.Screen name="User" component={UserScreen} options={{ title: '个人中心' }} />
-              </RootStack.Group>
-              <RootStack.Group
+          <HeaderProvider>
+            <Drawer
+              open={isShowDrawer}
+              onOpen={() => setIsShowDrawer(true)}
+              onClose={() => setIsShowDrawer(false)}
+              renderDrawerContent={() => <CustomDrawerContent toggleDrawer={() => setIsShowDrawer(prev => !prev)} />}>
+              <RootStack.Navigator
+                initialRouteName="HomeScreen"
                 screenOptions={{
-                  headerShown: true,
-                  header: props => <CustomHeaderWithTitle {...props} />,
+                  header: props => (
+                    <Header {...props} toggleDrawer={() => setIsShowDrawer(prev => !prev)} />
+                  ),
                 }}>
-                <RootStack.Screen
-                  name="DetailScreen"
-                  component={DetailScreen}
-                  options={{
-                    title: '详情',
-                  }}
-                />
-              </RootStack.Group>
-              {/* <RootStack.Group screenOptions={{ presentation: 'modal' }}> */}
-              {/* <RootStack.Screen name="Adding" component={AddingScreen} /> */}
-              {/* </RootStack.Group> */}
-            </RootStack.Navigator>
-          </Drawer>
+                <RootStack.Group screenOptions={{ headerShown: true }}>
+                  <RootStack.Screen name="Home" component={Home} options={{ title: '首页' }} />
+                  <RootStack.Screen name="SettingsScreen" component={Settings} options={{ title: '设置' }} />
+                  <RootStack.Screen name="AnalyzeScreen" component={Analyze} options={{ title: '分析' }} />
+                  <RootStack.Screen name="User" component={UserScreen} options={{ title: '个人中心' }} />
+                  <RootStack.Screen name="DetailScreen" component={DetailScreen} options={{ title: '详情' }} />
+                </RootStack.Group>
+                {/* <RootStack.Group screenOptions={{ presentation: 'modal' }}> */}
+                {/* <RootStack.Screen name="Adding" component={AddingScreen} /> */}
+                {/* </RootStack.Group> */}
+              </RootStack.Navigator>
+            </Drawer>
+          </HeaderProvider>
         </AuthGuard>
       </NavigationContainer>
     </SafeAreaProvider>
   )
 }
+
+const drawerStyles = StyleSheet.create({
+  itemWrapper: {
+    borderRadius: 8,
+    overflow: 'hidden',
+    marginBottom: 2,
+  },
+  item: {
+    paddingHorizontal: 10,
+  },
+})

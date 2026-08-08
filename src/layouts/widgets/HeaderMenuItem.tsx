@@ -24,3 +24,14 @@ export const MenuItemFroChecked: React.FC<MenuItemProps> = ({ onPress }) => {
     </>
   )
 }
+
+export const MenuItemForAnalyze: React.FC<MenuItemProps> = ({ onPress }) => {
+  return (
+    <>
+      <Menu.Item title="全部" leadingIcon={'calendar-range'} onPress={() => onPress('time-all')} />
+      <Menu.Item title="本月" leadingIcon={'calendar-month'} onPress={() => onPress('time-month')} />
+      <Menu.Item title="本周" leadingIcon={'calendar-week'} onPress={() => onPress('time-week')} />
+      <Menu.Item title="今日" leadingIcon={'calendar-today'} onPress={() => onPress('time-day')} />
+    </>
+  )
+}

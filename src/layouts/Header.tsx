@@ -8,15 +8,15 @@ import type { StackHeaderProps } from '@react-navigation/stack'
 
 import HalfModal from '~components/HalfModal'
 import { useKeepingStore } from '~store/keepingStore'
-import { logging } from '~utils'
-import { SortByPane, FilterByPane, MenuItemFroChecked, MenuItemForNormal } from './widgets'
+import { logging, TimeFilter } from '~utils'
+import { SortByPane, FilterByPane, MenuItemFroChecked, MenuItemForNormal, MenuItemForAnalyze } from './widgets'
 import { useHeaderContext } from '../contexts/HeaderContext'
 
 interface HeaderProps extends StackHeaderProps {
   menu?: MenuItem
   toggleDrawer?: () => void
 }
-export type RightMenuItem = 'sort' | 'filter' | 'all' | 'invert' | 'delete'
+export type RightMenuItem = 'sort' | 'filter' | 'all' | 'invert' | 'delete' | 'time-all' | 'time-month' | 'time-week' | 'time-day'
 
 const Header: React.FC<HeaderProps> = ({ route, navigation, options, toggleDrawer }) => {
   const insets = useSafeAreaInsets()
@@ -25,7 +25,7 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options, toggleDrawe
   const { items, sort, sortBy, sortOrder, filterBy, filter, selectAll, selectInverse, removeChecked } =
     useKeepingStore()
   const {
-    state: { isShowRightMenu, isShowBottomModal, halfModalType },
+    state: { isShowRightMenu, isShowAnalyzeMenu, isShowBottomModal, halfModalType },
     dispatch,
   } = useHeaderContext()
 
@@ -49,6 +49,8 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options, toggleDrawe
         return { title: 'API 设置', type: 'back' }
       case 'DataManagement':
         return { title: '数据管理', type: 'back' }
+      case 'DetailScreen':
+        return { title: '详情', type: 'back' }
       case 'PermissionScreen':
         return { title: '权限管理', type: 'back' }
       case 'LicensesScreen':
@@ -68,6 +70,9 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options, toggleDrawe
   const setIsShowRightMenu = (flag: boolean) => {
     dispatch({ type: 'isShowRightMenu', payload: flag })
   }
+  const setIsShowAnalyzeMenu = (flag: boolean) => {
+    dispatch({ type: 'isShowAnalyzeMenu', payload: flag })
+  }
   const setIsShowBottomModal = (flag: boolean) => {
     dispatch({ type: 'isShowBottomModal', payload: flag })
   }
@@ -84,8 +89,23 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options, toggleDrawe
       removeChecked()
     } else if (item === 'invert') {
       selectInverse()
+    } else if (item === 'time-all') {
+      dispatch({ type: 'timeFilter', payload: 'all' })
+      setIsShowAnalyzeMenu(false)
+    } else if (item === 'time-month') {
+      dispatch({ type: 'timeFilter', payload: 'month' })
+      setIsShowAnalyzeMenu(false)
+    } else if (item === 'time-week') {
+      dispatch({ type: 'timeFilter', payload: 'week' })
+      setIsShowAnalyzeMenu(false)
+    } else if (item === 'time-day') {
+      dispatch({ type: 'timeFilter', payload: 'day' })
+      setIsShowAnalyzeMenu(false)
     }
-    setIsShowRightMenu(false)
+    // 只有首页菜单才关闭 isShowRightMenu
+    if (!item.startsWith('time-')) {
+      setIsShowRightMenu(false)
+    }
   }
   const onSortChange: SortChange = value => {
     sort({ sortBy: value.sortBy, sortOrder: value.sortOrder })
@@ -154,6 +174,23 @@ const Header: React.FC<HeaderProps> = ({ route, navigation, options, toggleDrawe
             {itemSelected === 0 && <MenuItemForNormal onPress={value => onRightMenuItemPress(value)} />}
             <Divider />
             <Menu.Item onPress={() => setIsShowRightMenu(false)} title="取消" leadingIcon={'close'} />
+          </Menu>
+        )}
+        {page === 'AnalyzeScreen' && (
+          <Menu
+            visible={isShowAnalyzeMenu}
+            onDismiss={() => setIsShowAnalyzeMenu(false)}
+            statusBarHeight={insets.top}
+            anchor={
+              <IconButton
+                icon="filter-variant"
+                size={24}
+                onPress={() => setIsShowAnalyzeMenu(true)}
+              />
+            }>
+            <MenuItemForAnalyze onPress={value => onRightMenuItemPress(value)} />
+            <Divider />
+            <Menu.Item onPress={() => setIsShowAnalyzeMenu(false)} title="取消" leadingIcon={'close'} />
           </Menu>
         )}
       </View>

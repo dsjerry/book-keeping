@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react'
+import React, { useEffect, useState, useRef, useMemo, useCallback } from 'react'
 import { StyleSheet, ScrollView, View, Text, TouchableOpacity } from 'react-native'
 import { Card, Button, Divider, List, useTheme } from 'react-native-paper'
 import { captureRef } from 'react-native-view-shot'
@@ -11,9 +11,10 @@ import { format } from 'date-fns'
 
 import { useKeepingStore } from '~store/keepingStore'
 import { useAnalyzeStore, AnalysisResult } from '~store/analyzeStore'
-import { GetData } from '~utils'
+import { GetData, TimeFilter } from '~utils'
 import SegmentedControl from '~components/SegmentedControl'
 import { PiePane, LocationBarChart, CountBarChart, LoadingIndicator } from './components'
+import { useHeaderContext } from '../../contexts/HeaderContext'
 
 // 初始化DeepSeek客户端（优先用用户自定义配置，fallback 到 .env）
 const deepseekClient = (() => {
@@ -30,6 +31,9 @@ const AnalysisResultSchema = z.object({
 const Home = () => {
   const theme = useTheme() // 获取当前主题
   const [btnIndex, setBtnIndex] = useState(0)
+  const {
+    state: { timeFilter },
+  } = useHeaderContext()
   const [display, setDisplay] = useState({ count: 0 })
   const [loading, setLoading] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
@@ -45,7 +49,11 @@ const Home = () => {
 
   const shareRef = useRef<any>(null)
 
-  const chartData = useMemo(() => new GetData(items), [items])
+  const chartData = useMemo(() => {
+    const gd = new GetData(items, timeFilter)
+    return gd
+  }, [items, timeFilter])
+
   // 支出统计数据（消费类型图、AI 分析用）；金额占比图需跟随 支出/收入 切换
   const { tagCounts, aliasCountArray } = useMemo(() => chartData.getTags(false), [chartData])
   const tagsIncome = useMemo(() => chartData.getTags(true), [chartData])
@@ -68,13 +76,13 @@ const Home = () => {
     }, 1000)
   }, [output, income])
 
-  const onCountTypePress = (index: number) => {
+  const onCountTypePress = useCallback((index: number) => {
     if (index === btnIndex) return
     setBtnIndex(index)
     setDisplay({ count: index === 0 ? output : income })
-  }
+  }, [btnIndex, output, income])
 
-  const onShare = async () => {
+  const onShare = useCallback(async () => {
     try {
       const uri = await captureRef(shareRef.current, {
         format: 'png',
@@ -91,9 +99,9 @@ const Home = () => {
     } catch (error) {
       console.error('捕获失败:', error)
     }
-  }
+  }, [shareRef])
 
-  const aiAnalysis = async () => {
+  const aiAnalysis = useCallback(async () => {
     try {
       setAiLoading(true)
       setAiResult('')
@@ -169,30 +177,30 @@ ${recentContext}
     } finally {
       setAiLoading(false)
     }
-  }
+  }, [items, output, income, tagCounts, aliasCountArray, data, addResult])
 
   // 切换推理过程的显示/隐藏
-  const toggleReasoning = () => {
-    setShowReasoning(!showReasoning)
-  }
+  const toggleReasoning = useCallback(() => {
+    setShowReasoning(prev => !prev)
+  }, [])
 
   // 切换历史记录的显示/隐藏
-  const toggleHistory = () => {
-    setShowHistory(!showHistory)
-  }
+  const toggleHistory = useCallback(() => {
+    setShowHistory(prev => !prev)
+  }, [])
 
   // 加载历史分析结果
-  const loadHistoryResult = (item: AnalysisResult) => {
+  const loadHistoryResult = useCallback((item: AnalysisResult) => {
     setAiResult(item.result)
     setAiReasoning(item.reasoning || '')
     setShowReasoning(false)
     setShowHistory(false) // 关闭历史面板
-  }
+  }, [])
 
   // 格式化时间戳为可读日期
-  const formatDate = (timestamp: number) => {
+  const formatDate = useCallback((timestamp: number) => {
     return format(new Date(timestamp), 'yyyy-MM-dd HH:mm')
-  }
+  }, [])
 
   return (
     <ScrollView
