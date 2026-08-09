@@ -1,5 +1,5 @@
-import React, { useState, useCallback } from 'react'
-import { View, TextInput, TouchableOpacity, StyleSheet, Image, Alert, Keyboard } from 'react-native'
+import React, { useState, useCallback, useEffect, useRef } from 'react'
+import { View, TextInput, TouchableOpacity, StyleSheet, Image, Alert, Keyboard, Animated } from 'react-native'
 import { useTheme, Icon } from 'react-native-paper'
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker'
 import SegmentedControl from '~components/SegmentedControl'
@@ -18,6 +18,31 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, onSend, isLoadin
   const theme = useTheme()
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [inputMode, setInputMode] = useState(0) // 0: flash, 1: pro
+  const [isFocused, setIsFocused] = useState(false)
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false)
+  // 输入框高度动画（单行 20 ↔ 三行 60）
+  const inputHeightAnim = useRef(new Animated.Value(20)).current
+
+  // 监听键盘显隐：键盘收起时强制单行（即使输入框仍聚焦）
+  useEffect(() => {
+    const showSub = Keyboard.addListener('keyboardDidShow', () => setIsKeyboardVisible(true))
+    const hideSub = Keyboard.addListener('keyboardDidHide', () => setIsKeyboardVisible(false))
+    return () => {
+      showSub.remove()
+      hideSub.remove()
+    }
+  }, [])
+
+  const isExpanded = isFocused && isKeyboardVisible
+
+  // 高度平滑过渡
+  useEffect(() => {
+    Animated.timing(inputHeightAnim, {
+      toValue: isExpanded ? 60 : 20,
+      duration: 180,
+      useNativeDriver: false,
+    }).start()
+  }, [isExpanded, inputHeightAnim])
 
   const isFlashModel = selectedModel === 'deepseek-v4-flash'
 
@@ -104,17 +129,21 @@ const ChatInput: React.FC<ChatInputProps> = ({ input, setInput, onSend, isLoadin
           { backgroundColor: theme.colors.surfaceVariant, borderColor: theme.colors.outlineVariant },
         ]}>
         {/* 输入框 */}
-        <TextInput
-          style={[styles.textInput, { color: theme.colors.onSurface }]}
-          value={input}
-          onChangeText={setInput}
-          placeholder="有什么可以帮到你..."
-          placeholderTextColor={theme.colors.onSurfaceVariant}
-          multiline
-          numberOfLines={3}
-          maxLength={2000}
-          editable={!isLoading}
-        />
+        <Animated.View style={{ minHeight: inputHeightAnim }}>
+          <TextInput
+            style={[styles.textInput, { color: theme.colors.onSurface }]}
+            value={input}
+            onChangeText={setInput}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            placeholder="有什么可以帮到你..."
+            placeholderTextColor={theme.colors.onSurfaceVariant}
+            multiline
+            numberOfLines={isExpanded ? 3 : 1}
+            maxLength={2000}
+            editable={!isLoading}
+          />
+        </Animated.View>
 
         {/* 底部栏：模式切换 + 按钮组 */}
         <View style={styles.bottomBar}>

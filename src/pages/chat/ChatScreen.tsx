@@ -1,5 +1,5 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { View, FlatList, StyleSheet, Text, Animated, ScrollView } from 'react-native'
+import { View, FlatList, StyleSheet, Text, Animated, KeyboardAvoidingView, Platform } from 'react-native'
 import { useTheme, IconButton, Divider, Chip } from 'react-native-paper'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import Config from 'react-native-config'
@@ -117,7 +117,10 @@ const ChatScreen: React.FC = () => {
   )
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <KeyboardAvoidingView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
       {/* 消息列表 */}
       <FlatList
         ref={flatListRef}
@@ -160,7 +163,7 @@ const ChatScreen: React.FC = () => {
           </Text>
         </View>
       )}
-    </View>
+    </KeyboardAvoidingView>
   )
 }
 
