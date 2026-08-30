@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import RNFS from 'react-native-fs'
 
 import type { Message } from '../ChatScreen'
 
@@ -15,6 +16,32 @@ interface UseChatOptions {
 }
 
 const DEEPSEEK_BASE_URL = 'https://api.deepseek.com'
+// 支持视觉输入（图片理解）的模型
+const VISION_MODEL = 'deepseek-v4-flash-vision-exp'
+
+// 根据图片文件扩展名推断 MIME 类型，用于构造 data URI
+const getImageMimeType = (uri: string): string => {
+  const ext = (uri.split('.').pop() || '').toLowerCase()
+  switch (ext) {
+    case 'png':
+      return 'image/png'
+    case 'gif':
+      return 'image/gif'
+    case 'webp':
+      return 'image/webp'
+    case 'heic':
+    case 'heif':
+      return 'image/heic'
+    default:
+      return 'image/jpeg'
+  }
+}
+
+// 将本地图片 URI 读取为 base64 字符串
+const readImageAsBase64 = async (uri: string): Promise<string> => {
+  const filePath = uri.replace(/^file:\/\//, '')
+  return RNFS.readFile(filePath, 'base64')
+}
 
 /**
  * 使用 XMLHttpRequest + SSE 流式调用 DeepSeek API。
@@ -325,7 +352,49 @@ ${financeSummary}
       setStreamingText('')
 
       try {
-        throw new Error('当前 DeepSeek API 仅支持文本，不支持图片识别。请接入支持视觉输入的模型后再使用图片聊天。')
+        // 读取图片为 base64，构造 data URI（参考 DeepSeek Vision API 的 content 数组格式）
+        const imageBase64 = await readImageAsBase64(imageUri)
+        const imageDataUri = `data:${getImageMimeType(imageUri)};base64,${imageBase64}`
+
+        const chatMessages = [
+          { role: 'system', content: getSystemPrompt() },
+          ...messages.map(msg => ({
+            role: msg.role === 'assistant' ? 'assistant' : 'user',
+            content: msg.content,
+          })),
+          {
+            role: 'user',
+            content: [
+              { type: 'text', text: text || '请分析这张图片' },
+              { type: 'image_url', image_url: { url: imageDataUri } },
+            ],
+          },
+        ]
+
+        const controller = new AbortController()
+        abortControllerRef.current = controller
+
+        // 图片理解使用支持视觉输入的模型
+        const fullText = await streamChatRequest(
+          apiKey,
+          {
+            model: VISION_MODEL,
+            messages: chatMessages,
+            stream: true,
+          },
+          controller.signal,
+        )
+        await animateText(fullText, setStreamingText, controller.signal)
+
+        // 完成时添加完整消息
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: fullText,
+          timestamp: Date.now(),
+        }
+        setMessages(prev => [...prev, assistantMessage])
+        setStreamingText('')
       } catch (error: any) {
         if (error.name === 'AbortError') {
           console.log('用户取消了生成')
@@ -345,7 +414,7 @@ ${financeSummary}
         setStreamingText('')
       }
     },
-    [isLoading],
+    [messages, apiKey, isLoading, getSystemPrompt],
   )
 
   // 停止生成

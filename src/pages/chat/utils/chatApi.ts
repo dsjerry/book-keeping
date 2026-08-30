@@ -66,12 +66,12 @@ export const generateChat = async ({
  */
 export const analyzeImage = async ({
   apiKey,
-  model,
+  model = 'deepseek-v4-flash-vision-exp',
   prompt,
   imageBase64,
 }: {
   apiKey: string
-  model: string
+  model?: string
   prompt: string
   imageBase64: string
 }) => {
