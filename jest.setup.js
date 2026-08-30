@@ -137,12 +137,48 @@ jest.mock('@sbaiahmed1/react-native-biometrics', () => ({
   simplePrompt: jest.fn(() => Promise.resolve({ success: false })),
 }))
 
-jest.mock('react-native-amap3d', () => {
+// virtual: amap3d 已从依赖中移除（地图改用 WebView 实现），保留 mock 以防旧代码/快照引用时 Jest 崩溃
+jest.mock(
+  'react-native-amap3d',
+  () => {
+    const React = require('react')
+    const { View } = require('react-native')
+    return {
+      AMapSdk: { init: jest.fn(), setKey: jest.fn() },
+      MapView: props => React.createElement(View, props),
+      MapType: { Standard: 1, Satellite: 2 },
+    }
+  },
+  { virtual: true },
+)
+
+// WebView 依赖原生 TurboModule（RNCWebViewModule），Jest 环境没有原生层，用 View 代替渲染
+jest.mock('react-native-webview', () => {
   const React = require('react')
   const { View } = require('react-native')
-  return {
-    AMapSdk: { init: jest.fn(), setKey: jest.fn() },
-    MapView: props => React.createElement(View, props),
-    MapType: { Standard: 1, Satellite: 2 },
-  }
+  const WebView = props => React.createElement(View, props)
+  return { __esModule: true, default: WebView, WebView }
 })
+
+// react-native-fs 在 import 时就会创建 NativeEventEmitter（需要原生层），整体 mock 掉
+jest.mock('react-native-fs', () => ({
+  __esModule: true,
+  default: {
+    readFile: jest.fn(() => Promise.resolve('')),
+    exists: jest.fn(() => Promise.resolve(false)),
+    readDir: jest.fn(() => Promise.resolve([])),
+    DocumentDirectoryPath: '/mock/documents',
+    CachesDirectoryPath: '/mock/caches',
+  },
+}))
+
+// document-picker 同样依赖原生 TurboModule（RNDocumentPicker）
+jest.mock('react-native-document-picker', () => ({
+  __esModule: true,
+  default: {
+    pick: jest.fn(() => Promise.resolve([])),
+    pickSingle: jest.fn(() => Promise.resolve({})),
+    isSupported: jest.fn(() => Promise.resolve(true)),
+    types: { allFiles: 'public.item', zip: 'public.zip-archive' },
+  },
+}))

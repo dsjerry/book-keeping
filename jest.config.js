@@ -3,7 +3,7 @@ module.exports = {
   setupFiles: ['./jest.setup.js', 'react-native-gesture-handler/jestSetup'],
   testMatch: ['**/__tests__/**/*.[jt]s?(x)'],
   transformIgnorePatterns: [
-    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-config|react-native-image-picker|react-native-safe-area-context|react-native-gesture-handler|react-native-drawer-layout|react-native-vector-icons|react-native-reanimated|react-native-size-matters|react-native-ratings|react-native-animatable|@rneui|react-native-paper|@shopify|@wuba|echarts|zrender)/)',
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?|react-native-config|react-native-image-picker|react-native-safe-area-context|react-native-gesture-handler|react-native-drawer-layout|react-native-vector-icons|react-native-reanimated|react-native-reanimated-carousel|react-native-size-matters|react-native-ratings|react-native-animatable|@rneui|react-native-paper|@shopify|@wuba|echarts|zrender|react-native-webview|react-native-fs|react-native-image-crop-picker|@sbaiahmed1/react-native-biometrics)/)',
   ],
   moduleNameMapper: {
     '\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$':
