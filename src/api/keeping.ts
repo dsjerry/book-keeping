@@ -2,6 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import http from '../utils/http'
 import { useKeepingStore } from '~store/keepingStore'
 import { useUserStore } from '~store/userStore'
+import { useAppSettingsStore } from '~store/settingStore'
 import { LastSyncAtKey } from '~consts/StorageKey'
 import { OutTypes, CountType } from '~consts/Data'
 import { logging } from '~utils'
@@ -70,12 +71,20 @@ export interface KeepingRes {
   localId: string
   createTime?: string
   tags?: string
+  currency?: string
 }
 
 interface BatchReq {
   creates?: KeepingRes[]
   updates?: KeepingRes[]
   deletes?: number[]
+}
+
+/** 文件上传接口返回（含可直接渲染的带 token 地址） */
+interface UploadRes {
+  url: string
+  viewUrl: string
+  filename: string
 }
 
 /**
@@ -139,6 +148,8 @@ export const KeepingService = {
       const type = item.type === 'in' ? '收入' : '支出'
       const name = type + item.count + item.countType
 
+      // 地图选点时客户端保存了 "lng,lat"，拆成经纬度上报（服务端为"附近消费"预留）
+      const [lng, lat] = (item.address?.location || '').split(',')
       const keepingData = {
         name,
         transactionType: item.type === 'in' ? 1 : 2,
@@ -148,6 +159,10 @@ export const KeepingService = {
         remark: item.note,
         localId: item.id,
         tags: item.tags.map(tag => tag.alias).join(','),
+        // 币种独立上报：此前只编码在 name 字符串里，服务端无法按币种统计
+        currency: item.countType,
+        longitude: lng ? +lng : undefined,
+        latitude: lat ? +lat : undefined,
       }
 
       // 如果是修改的记录且有服务端ID
@@ -201,7 +216,8 @@ export const KeepingService = {
             if (!existingItem) {
               const count = serverItem.amount + ''
               const type = serverItem.transactionType === 1 ? 'in' : 'out'
-              const countType = parseCountType(serverItem.name || '')
+              // 优先用服务端的 currency 字段，老数据回退到从 name 解析
+              const countType = (serverItem.currency as keyof typeof CountType) || parseCountType(serverItem.name || '')
               const tags = getFullTags(serverItem.tags!)
               add({
                 id: Math.random().toString(36).substring(2, 15),
@@ -318,5 +334,37 @@ export const KeepingService = {
         resolvedData,
       }
     })
+  },
+
+  /**
+   * 记账图片云备份：启用同步且是本地文件时上传到 /file/upload，
+   * 换取可直接渲染的 viewUrl（带 file token）。
+   * 未启用同步 / 上传失败时原样返回本地路径 —— 上传失败不阻塞记账。
+   * viewUrl 是相对地址，这里拼成绝对 URL 供 <Image source={{uri}}> 直接使用。
+   * 注意：file token 有效期 1 天（FILE_TOKEN_EXPIRED），过期后老图片需要重新换取。
+   */
+  async uploadKeepingImage(image?: string): Promise<string | undefined> {
+    if (!image || !image.startsWith('file://')) return image
+    const { useOnline } = useAppSettingsStore.getState()
+    if (!useOnline) return image
+    try {
+      const formData = new FormData()
+      formData.append('file', {
+        uri: image,
+        name: image.split('/').pop() || 'photo.jpg',
+        type: 'image/jpeg',
+      } as any)
+      const res = await http.upload<UploadRes>('/file/upload', formData)
+      if (res.success && res.data?.viewUrl) {
+        return res.data.viewUrl.startsWith('http')
+          ? res.data.viewUrl
+          : `${http.getOrigin()}/v1${res.data.viewUrl}`
+      }
+      logging.info('[上传] 图片上传失败，回退本地路径:', res.message)
+      return image
+    } catch (error) {
+      logging.error('[上传] 图片上传异常', error)
+      return image
+    }
   },
 }

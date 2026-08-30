@@ -7,7 +7,7 @@ import axios, {
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import Config from 'react-native-config'
 import { logging } from './logger'
-import { Auth } from '../api/auth'
+import { Auth, Token } from '../api/auth'
 
 // 默认配置
 const DEFAULT_TIMEOUT = 30000 // 30秒超时
@@ -40,9 +40,14 @@ const STATUS_MESSAGES: Record<number, string> = {
 class HttpClient {
   private instance: AxiosInstance
   private baseURL: string
+  private origin: string
 
   constructor() {
-    this.baseURL = Config.API_URL || 'http://127.0.0.1:3031'
+    // 服务端已启用 URI 版本控制，所有路由挂在 /v1 下（与 server 的 enableVersioning 对应）
+    const origin = (Config.API_URL || 'http://127.0.0.1:3031').replace(/\/+$/, '')
+    this.baseURL = `${origin}/v1`
+    // 记录不带版本前缀的源站地址：拼接文件下载等相对 URL 时使用
+    this.origin = origin
 
     this.instance = axios.create({
       baseURL: this.baseURL,
@@ -53,6 +58,11 @@ class HttpClient {
     })
 
     this.setupInterceptors()
+  }
+
+  /** 源站地址（不含 /v1），用于把服务端返回的相对文件地址拼成绝对 URL */
+  getOrigin() {
+    return this.origin
   }
 
   private setupInterceptors() {
@@ -74,12 +84,48 @@ class HttpClient {
       (response: AxiosResponse) => {
         return response.data
       },
-      error => {
+      async error => {
+        const original = error?.config as (AxiosRequestConfig & { _retry?: boolean }) | undefined
+        // 401 = access token 过期：用 refresh_token 换新 token 并重放原请求（只重试一次防止循环）
+        if (error?.response?.status === 401 && original && !original._retry) {
+          const token = await Auth.getToken()
+          if (token?.refresh_token) {
+            const refreshed = await this.refreshToken(token.refresh_token)
+            if (refreshed) {
+              original._retry = true
+              original.headers = { ...original.headers, Authorization: 'Bearer ' + refreshed.access_token }
+              return this.instance.request(original)
+            }
+          }
+          // 刷新也失败：凭证已彻底过期，清除后由调用方按未登录处理
+          await Auth.removeToken()
+        }
         const normalized = this.toErrorResponse(error)
         logging.error('[RES]', normalized.message, normalized.code)
         return Promise.reject(error)
       },
     )
+  }
+
+  /**
+   * 用 refresh_token 换新的 token 对。
+   * 走独立 axios 实例（不经过本类的拦截器），避免刷新请求自身 401 时递归。
+   */
+  private async refreshToken(refreshToken: string): Promise<Token | null> {
+    try {
+      const res = await axios.post<ApiResponse<Token>>(`${this.baseURL}/auth/refresh`, { refreshToken }, {
+        timeout: DEFAULT_TIMEOUT,
+      })
+      const data = res.data?.data
+      if (res.data?.success && data?.access_token) {
+        await Auth.saveToken(data)
+        return data
+      }
+      return null
+    } catch (error) {
+      logging.error('[AUTH] 刷新 token 失败', error)
+      return null
+    }
   }
 
   /**

@@ -215,7 +215,8 @@ const UserHome: React.FC<UserHomeProps> = ({ route }) => {
           if (userId) return startSync(userId)
           AuthService.signup({ username, password, password2: password }).then(res => {
             if (res.success) {
-              startSync(res.data.id)
+              // 服务端 signup 现在返回 user.id（旧版在顶层 id，做兼容读取）
+              startSync(res.data.user?.id ?? res.data.id)
             }
           })
         },

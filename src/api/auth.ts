@@ -17,6 +17,8 @@ export interface Token {
     access_token: string;
     refresh_token: string;
     expires_in: number;
+    /** 服务端登录后返回的用户信息（server 会在 login/refresh 响应里带上） */
+    user?: { id: number; username: string };
 }
 
 export const AuthService = {
@@ -38,6 +40,9 @@ export const Auth = {
         const token = await AsyncStorage.getItem(TOKEN_KEY)
         if (!token) return null
         return JSON.parse(token) as Token
+    },
+    async saveToken(token: Token) {
+        await AsyncStorage.setItem(TOKEN_KEY, JSON.stringify(token))
     },
     removeToken: () => AsyncStorage.removeItem(TOKEN_KEY)
 }

@@ -130,7 +130,8 @@ const Settings = () => {
             if (res.success) {
               setTips('同步功能已启用')
               setModal(prev => ({ ...prev, isShow: false }))
-              updateCurrentUser({ serverId: res.data.id })
+              // 服务端 signup 现在返回 user.id（旧版在顶层 id，做兼容读取）
+              updateCurrentUser({ serverId: res.data.user?.id ?? res.data.id })
               toggleUseOnline()
             } else {
               setTips(res.message || '启用同步失败')

@@ -21,6 +21,7 @@ import { CountTypePicker } from './components'
 import ImagePicker from '~components/ImagePicker'
 import { useHomeStore, useHomeStoreDispatch } from './contexts/HomeContext'
 import { useKeepingStore } from '~store/keepingStore'
+import { KeepingService } from '~api/keeping'
 import { useAppSettingsStore } from '~store/settingStore'
 import { useUserStore } from '~store/userStore'
 import { CountTypeList, OutTypes } from '~consts/Data'
@@ -191,16 +192,19 @@ const Adding: React.FC<Props> = ({ route }) => {
     return format(date, 'yyyy年MM月dd日')
   }
 
-  const onAddPress = () => {
+  const onAddPress = async () => {
     setIsSubmit(true)
     if (form.count === `0` || !form.count) {
       setTimeout(() => setTips(''), 1500)
       return setTips('请输入金额')
     }
+    // 启用同步时把本地图片上传到服务器，换成可跨设备访问的 URL（失败自动回退本地路径）
+    const uploadedImage = await KeepingService.uploadKeepingImage(form.image)
+    const saved = uploadedImage === form.image ? form : { ...form, image: uploadedImage }
     if (params?.isEdit) {
-      update(form as KeepingItem)
+      update(saved as KeepingItem)
     } else {
-      add(form as KeepingItem)
+      add(saved as KeepingItem)
     }
     navigation.navigate('HomeScreen', {})
   }
