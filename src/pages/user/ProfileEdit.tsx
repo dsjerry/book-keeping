@@ -6,6 +6,10 @@ import ImagePicker from 'react-native-image-crop-picker'
 import { useUserContext } from './contexts/UserContext'
 import { handleImage, logging } from '~utils'
 import HalfModal from '~components/HalfModal'
+import { KeepingService } from '~api/keeping'
+import { Auth } from '~api/auth'
+import http from '~utils/http'
+import { useAppSettingsStore } from '~store/settingStore'
 
 type HalfModalType = 'nickname' | 'note'
 
@@ -47,7 +51,21 @@ const ProfileEdit = () => {
 
       if (!cropResult) return
 
-      userStore.updateCurrentUser({ avatar: cropResult.path })
+      // 启用同步且已登录时上传头像，换取跨设备可访问的服务端地址；失败回退本地路径
+      let avatar = cropResult.path
+      const token = await Auth.getToken()
+      const { useOnline } = useAppSettingsStore.getState()
+      if (useOnline && token?.access_token) {
+        const uploaded = await KeepingService.uploadImage(cropResult.path)
+        if (uploaded) {
+          avatar = uploaded
+          // 同步到服务端用户资料（失败不影响本地头像更新）
+          if (_currentUser.serverId) {
+            await http.patch(`/user/${_currentUser.serverId}`, { avatar }).catch(() => null)
+          }
+        }
+      }
+      userStore.updateCurrentUser({ avatar })
     } catch (error) {
       logging.error('[头像] 裁剪失败:', error)
     }

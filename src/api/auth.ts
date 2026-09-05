@@ -32,6 +32,13 @@ export const AuthService = {
 
     async signup(params: SignupParams) {
         return http.post('/auth/signup', params)
+    },
+
+    /** 登出：通知服务端吊销 refresh token，并清除本地存储的凭证 */
+    async logout() {
+        const res = await http.post('/auth/logout')
+        await Auth.removeToken()
+        return res
     }
 }
 

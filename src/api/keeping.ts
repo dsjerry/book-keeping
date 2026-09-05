@@ -337,16 +337,10 @@ export const KeepingService = {
   },
 
   /**
-   * 记账图片云备份：启用同步且是本地文件时上传到 /file/upload，
-   * 换取可直接渲染的 viewUrl（带 file token）。
-   * 未启用同步 / 上传失败时原样返回本地路径 —— 上传失败不阻塞记账。
-   * viewUrl 是相对地址，这里拼成绝对 URL 供 <Image source={{uri}}> 直接使用。
-   * 注意：file token 有效期 1 天（FILE_TOKEN_EXPIRED），过期后老图片需要重新换取。
+   * 通用图片上传：本地 file:// 路径 → 服务器，返回可直接渲染的绝对地址（带 file token）。
+   * 失败返回 null，由调用方决定回退策略
    */
-  async uploadKeepingImage(image?: string): Promise<string | undefined> {
-    if (!image || !image.startsWith('file://')) return image
-    const { useOnline } = useAppSettingsStore.getState()
-    if (!useOnline) return image
+  async uploadImage(image: string): Promise<string | null> {
     try {
       const formData = new FormData()
       formData.append('file', {
@@ -360,11 +354,44 @@ export const KeepingService = {
           ? res.data.viewUrl
           : `${http.getOrigin()}/v1${res.data.viewUrl}`
       }
-      logging.info('[上传] 图片上传失败，回退本地路径:', res.message)
-      return image
+      logging.info('[上传] 图片上传失败:', res.message)
+      return null
     } catch (error) {
       logging.error('[上传] 图片上传异常', error)
-      return image
+      return null
     }
+  },
+
+  /**
+   * 记账图片云备份：启用同步且是本地文件时上传，失败回退本地路径（不阻塞记账）。
+   * 注意：file token 有效期 1 天（FILE_TOKEN_EXPIRED），过期后由 renewImageUrl 自动续期
+   */
+  async uploadKeepingImage(image?: string): Promise<string | undefined> {
+    if (!image || !image.startsWith('file://')) return image
+    const { useOnline } = useAppSettingsStore.getState()
+    if (!useOnline) return image
+    return (await this.uploadImage(image)) ?? image
+  },
+
+  /**
+   * 图片 token 自动续期：服务端图片地址里的 file token 过期后 <Image> 加载会失败，
+   * 在 onError 里调用本方法：用 filename 重新换取新地址，并同步更新本地记录
+   */
+  async renewImageUrl(item: KeepingItem): Promise<string | null> {
+    const current = item.image
+    if (!current || !current.includes('/file/get/') || !item.serverId) return null
+    const filename = decodeURIComponent(current.split('/file/get/')[1]?.split('?')[0] || '')
+    if (!filename) return null
+
+    const res = await http.get<{ url: string }>('/file/info', { filename })
+    if (!res.success || !res.data?.url) return null
+    const absolute = res.data.url.startsWith('http') ? res.data.url : `${http.getOrigin()}/v1${res.data.url}`
+
+    const { items, update } = useKeepingStore.getState()
+    const target = items.find(i => i.id === item.id)
+    if (target && target.image === current) {
+      update({ ...target, image: absolute })
+    }
+    return absolute
   },
 }

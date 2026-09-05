@@ -9,11 +9,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import LinearCard from './components/LinearCard'
 import { layout } from './style'
 import { useKeepingStore } from '~store/keepingStore'
+import { KeepingService } from '~api/keeping'
 import { logging, withAlpha } from '~utils'
 
 const Detail = () => {
   const [isShowNote, setIsShowNote] = useState(true)
   const [item, setItem] = useState<KeepingItem>(defaultItem)
+  // 图片地址可被 token 续期逻辑更新（与服务端换取的新地址联动）
+  const [imageUri, setImageUri] = useState<string | undefined>(item.image)
   const { params }: ScreenParam.Detail = useRoute()
   const { items } = useKeepingStore()
   const navigation = useNavigation()
@@ -26,8 +29,9 @@ const Detail = () => {
     const dataFound = items.find(item => item.id === params.id)
     if (dataFound) {
       setItem(prev => ({ ...prev, ...dataFound }))
+      setImageUri(dataFound.image)
     }
-  }, [params.id])
+  }, [params.id, items])
 
   const onEdit = () => {
     navigation.navigate('Adding', { item, isEdit: true })
@@ -139,10 +143,14 @@ const Detail = () => {
                   </View>
                   <Image
                     style={detailStyle.infoImage}
-                    source={{
-                      uri: item.image ? item.image : 'https://picsum.photos/700',
-                    }}
+                    source={{ uri: imageUri || 'https://picsum.photos/700' }}
                     resizeMode="cover"
+                    // file token 过期时自动续期并刷新显示
+                    onError={() => {
+                      KeepingService.renewImageUrl(item).then(renwed => {
+                        if (renwed) setImageUri(renwed)
+                      })
+                    }}
                   />
                 </View>
               )}

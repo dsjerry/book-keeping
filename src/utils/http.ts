@@ -187,6 +187,19 @@ class HttpClient {
     }
   }
 
+  // PATCH请求
+  public async patch<T = any>(
+    url: string,
+    data?: any,
+    config?: AxiosRequestConfig,
+  ): Promise<ApiResponse<T>> {
+    try {
+      return await this.instance.patch(url, data, config)
+    } catch (error) {
+      return this.toErrorResponse<T>(error)
+    }
+  }
+
   // DELETE请求
   public async delete<T = any>(
     url: string,

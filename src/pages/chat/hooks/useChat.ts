@@ -3,6 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import RNFS from 'react-native-fs'
 
 import type { Message } from '../ChatScreen'
+import { Auth } from '~api/auth'
+import http from '~utils/http'
+import { useAppSettingsStore } from '~store/settingStore'
 
 // 聊天记录持久化存储 key
 const CHAT_STORAGE_KEY = '@jkeep/chat_messages'
@@ -48,12 +51,12 @@ const readImageAsBase64 = async (uri: string): Promise<string> => {
  * React Native 的 XHR 支持 onprogress 增量读取（readyState=3），
  * 不依赖 Web Streams，可兼容 React Native。
  */
-const streamChatRequest = (apiKey: string, body: any, signal: AbortSignal): Promise<string> => {
+const streamChatRequest = (url: string, token: string, body: any, signal: AbortSignal): Promise<string> => {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest()
-    xhr.open('POST', `${DEEPSEEK_BASE_URL}/chat/completions`)
+    xhr.open('POST', url)
     xhr.setRequestHeader('Content-Type', 'application/json')
-    xhr.setRequestHeader('Authorization', `Bearer ${apiKey}`)
+    xhr.setRequestHeader('Authorization', `Bearer ${token}`)
 
     let fullText = ''
     let responseLength = 0
@@ -107,9 +110,10 @@ const streamChatRequest = (apiKey: string, body: any, signal: AbortSignal): Prom
           let message = `API 请求失败 (${xhr.status})`
           try {
             const json = JSON.parse(xhr.responseText)
-            message = json.error?.message || message
+            // 兼容 DeepSeek 原生错误结构与自建服务端的统一响应包装
+            message = json.error?.message || json.message || message
           } catch (e) {}
-          reject(new Error(message))
+          reject(Object.assign(new Error(message), { status: xhr.status }))
         }
       }
     }
@@ -257,6 +261,30 @@ ${financeSummary}
     return systemPrompt
   }, [model, getFinanceSummary])
 
+  /**
+   * 统一的流式请求入口：登录且启用同步时走服务端 /v1/ai/chat 代理
+   * （密钥收归服务端，客户端不再持有/暴露 DeepSeek key）。
+   * 服务端未配置 AI（503）且本地有 key 时回退直连，保证功能不中断
+   */
+  const streamChat = useCallback(
+    async (body: any, signal: AbortSignal): Promise<string> => {
+      const token = await Auth.getToken()
+      const { useOnline } = useAppSettingsStore.getState()
+      if (token?.access_token && useOnline) {
+        try {
+          return await streamChatRequest(`${http.getOrigin()}/v1/ai/chat`, token.access_token, body, signal)
+        } catch (error: any) {
+          if (apiKey && error?.status === 503 && !signal.aborted) {
+            return streamChatRequest(`${DEEPSEEK_BASE_URL}/chat/completions`, apiKey, body, signal)
+          }
+          throw error
+        }
+      }
+      return streamChatRequest(`${DEEPSEEK_BASE_URL}/chat/completions`, apiKey, body, signal)
+    },
+    [apiKey],
+  )
+
   // 发送消息
   const handleSend = useCallback(
     async (text: string) => {
@@ -292,15 +320,7 @@ ${financeSummary}
          * 注意：当前实现会等待接口完整返回后，才启动客户端打字机动画。
          * 因此接口请求期间页面不会显示增量文字；请求完成后才开始逐字显示。
          */
-        const fullText = await streamChatRequest(
-          apiKey,
-          {
-            model,
-            messages: chatMessages,
-            stream: true,
-          },
-          controller.signal,
-        )
+        const fullText = await streamChat({ model, messages: chatMessages, stream: true }, controller.signal)
         await animateText(fullText, setStreamingText, controller.signal)
 
         // 完成时添加完整消息
@@ -331,7 +351,7 @@ ${financeSummary}
         setStreamingText('')
       }
     },
-    [messages, apiKey, model, isLoading, getSystemPrompt],
+    [messages, apiKey, model, isLoading, getSystemPrompt, streamChat],
   )
 
   // 发送图片消息
@@ -375,15 +395,7 @@ ${financeSummary}
         abortControllerRef.current = controller
 
         // 图片理解使用支持视觉输入的模型
-        const fullText = await streamChatRequest(
-          apiKey,
-          {
-            model: VISION_MODEL,
-            messages: chatMessages,
-            stream: true,
-          },
-          controller.signal,
-        )
+        const fullText = await streamChat({ model: VISION_MODEL, messages: chatMessages, stream: true }, controller.signal)
         await animateText(fullText, setStreamingText, controller.signal)
 
         // 完成时添加完整消息
@@ -414,7 +426,7 @@ ${financeSummary}
         setStreamingText('')
       }
     },
-    [messages, apiKey, isLoading, getSystemPrompt],
+    [messages, apiKey, isLoading, getSystemPrompt, streamChat],
   )
 
   // 停止生成

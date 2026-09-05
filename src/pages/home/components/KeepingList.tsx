@@ -11,6 +11,7 @@ import { useHomeStore, useHomeStoreDispatch } from '../contexts/HomeContext'
 import { _date, withAlpha } from '~utils'
 import { useAppSettingsStore } from '~store/settingStore'
 import { useKeepingStore } from '~store/keepingStore'
+import { KeepingService } from '~api/keeping'
 
 interface Props {
   item: KeepingItem[]
@@ -54,7 +55,15 @@ const ListItem: React.FC<ItemProps> = memo(({ item, doNavigate, onLongPress, onM
   // 有图记录：图片作为卡片背景，叠加"左高→右低"渐变遮罩（左雾化保证文字可读、右侧渐显图片）
   const backgroundLayer = hasImage ? (
     <>
-      <Image source={{ uri: item.image }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+      <Image
+        source={{ uri: item.image }}
+        style={StyleSheet.absoluteFillObject}
+        resizeMode="cover"
+        // 服务端图片的 file token 过期后加载失败：自动换取新地址并更新记录
+        onError={() => {
+          KeepingService.renewImageUrl(item).catch(() => {})
+        }}
+      />
       <LinearGradient
         colors={[
           withAlpha(theme.colors.surfaceVariant, 0.95),
